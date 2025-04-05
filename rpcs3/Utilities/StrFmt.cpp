@@ -8,6 +8,7 @@
 #include <codecvt>
 #include <algorithm>
 #include <string_view>
+#include <string>
 #include "Thread.h"
 
 #ifdef _WIN32
@@ -861,7 +862,7 @@ std::string fmt::to_lower(std::string_view string)
 
 std::string fmt::truncate(std::string_view src, usz length)
 {
-	return std::string(src.begin(), src.begin() + std::min(src.size(), length));
+	return std::string(src.data(), src.data() + std::min(src.size(), length));
 }
 
 bool fmt::match(const std::string& source, const std::string& mask)
