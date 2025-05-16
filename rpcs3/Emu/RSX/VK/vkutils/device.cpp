@@ -557,11 +557,11 @@ namespace vk
 			requested_extensions.push_back(VK_EXT_DEVICE_FAULT_EXTENSION_NAME);
 		}
 
-		enabled_features.robustBufferAccess = ensure(pgpu->features.robustBufferAccess, "robustBufferAccess is unsupported");
+		enabled_features.robustBufferAccess = VK_TRUE;
 		enabled_features.fullDrawIndexUint32 = VK_TRUE;
-		enabled_features.independentBlend = ensure(pgpu->features.independentBlend, "independentBlend is unsupported");
+		enabled_features.independentBlend = VK_TRUE;
 		enabled_features.logicOp = VK_TRUE;
-		enabled_features.depthClamp = ensure(pgpu->features.depthClamp, "depthClamp is unsupported");
+		enabled_features.depthClamp = VK_TRUE;
 		enabled_features.depthBounds = VK_TRUE;
 		enabled_features.wideLines = VK_TRUE;
 		enabled_features.largePoints = VK_TRUE;
