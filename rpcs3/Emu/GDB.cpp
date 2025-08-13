@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "GDB.h"
-#include "util/bit_set.h"
+#include "rx/bitset.h"
 #include "util/logs.hpp"
 #include "util/StrUtil.h"
 #include "Emu/Memory/vm.h"
@@ -823,7 +823,7 @@ bool gdb_thread::cmd_vcont(gdb_cmd& cmd)
 
 		if (ppu)
 		{
-			bs_t<cpu_flag> add_flags{};
+			rx::BitSet<cpu_flag> add_flags{};
 
 			if (cmd.data[1] == 's')
 			{

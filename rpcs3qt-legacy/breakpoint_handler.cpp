@@ -12,14 +12,14 @@ void breakpoint_handler::SetBreakOnBPM(bool break_on_bpm)
 	m_break_on_bpm = break_on_bpm;
 }
 
-bool breakpoint_handler::HasBreakpoint(u32 loc, bs_t<breakpoint_types> type)
+bool breakpoint_handler::HasBreakpoint(u32 loc, rx::BitSet<breakpoint_types> type)
 {
 	std::lock_guard lock(mutex_breakpoints);
 
 	return m_breakpoints.contains(loc) && ((m_breakpoints.at(loc) & type) == type);
 }
 
-bool breakpoint_handler::AddBreakpoint(u32 loc, bs_t<breakpoint_types> type)
+bool breakpoint_handler::AddBreakpoint(u32 loc, rx::BitSet<breakpoint_types> type)
 {
 	std::lock_guard lock(mutex_breakpoints);
 
@@ -35,7 +35,7 @@ bool breakpoint_handler::RemoveBreakpoint(u32 loc)
 {
 	std::lock_guard lock(mutex_breakpoints);
 
-	bs_t<breakpoint_types> bp_type{};
+	rx::BitSet<breakpoint_types> bp_type{};
 	if (m_breakpoints.contains(loc))
 	{
 		bp_type = m_breakpoints.at(loc);

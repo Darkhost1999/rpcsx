@@ -1374,7 +1374,7 @@ error_code sys_spu_thread_group_terminate(ppu_thread& ppu, u32 id, s32 value)
 	{
 		if (thread)
 		{
-			thread->state.fetch_op([](bs_t<cpu_flag>& flags)
+			thread->state.fetch_op([](rx::BitSet<cpu_flag>& flags)
 				{
 					if (flags & cpu_flag::stop)
 					{

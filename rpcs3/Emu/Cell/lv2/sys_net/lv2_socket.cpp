@@ -54,17 +54,17 @@ void lv2_socket::set_lv2_id(u32 id)
 	lv2_id = id;
 }
 
-bs_t<lv2_socket::poll_t> lv2_socket::get_events() const
+rx::BitSet<lv2_socket::poll_t> lv2_socket::get_events() const
 {
 	return events.load();
 }
 
-void lv2_socket::set_poll_event(bs_t<lv2_socket::poll_t> event)
+void lv2_socket::set_poll_event(rx::BitSet<lv2_socket::poll_t> event)
 {
 	events += event;
 }
 
-void lv2_socket::poll_queue(shared_ptr<ppu_thread> ppu, bs_t<lv2_socket::poll_t> event, std::function<bool(bs_t<lv2_socket::poll_t>)> poll_cb)
+void lv2_socket::poll_queue(shared_ptr<ppu_thread> ppu, rx::BitSet<lv2_socket::poll_t> event, std::function<bool(rx::BitSet<lv2_socket::poll_t>)> poll_cb)
 {
 	set_poll_event(event);
 	queue.emplace_back(std::move(ppu), poll_cb);
@@ -116,7 +116,7 @@ u32 lv2_socket::clear_queue(ppu_thread* ppu)
 
 void lv2_socket::handle_events(const pollfd& native_pfd, [[maybe_unused]] bool unset_connecting)
 {
-	bs_t<lv2_socket::poll_t> events_happening{};
+	rx::BitSet<lv2_socket::poll_t> events_happening{};
 
 	if (native_pfd.revents & (POLLIN | POLLHUP) && events.test_and_reset(lv2_socket::poll_t::read))
 		events_happening += lv2_socket::poll_t::read;

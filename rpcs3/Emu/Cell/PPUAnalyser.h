@@ -8,7 +8,7 @@
 #include "util/asm.hpp"
 #include "util/to_endian.hpp"
 
-#include "util/bit_set.h"
+#include "rx/bitset.h"
 #include "PPUOpcodes.h"
 
 // PPU Function Attributes
@@ -131,7 +131,7 @@ struct ppu_module : public Type
 	std::string name{};                                                                                   // Filename
 	std::string path{};                                                                                   // Filepath
 	s64 offset = 0;                                                                                       // Offset of file
-	mutable bs_t<ppu_attr> attr{};                                                                        // Shared module attributes
+	mutable rx::BitSet<ppu_attr> attr{};                                                                  // Shared module attributes
 	std::string cache{};                                                                                  // Cache file path
 	std::vector<ppu_reloc> relocs{};                                                                      // Relocations
 	std::vector<ppu_segment> segs{};                                                                      // Segments

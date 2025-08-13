@@ -54,7 +54,7 @@ void lv2_socket_p2p::handle_new_data(sys_net_sockaddr_in_p2p p2p_addr, std::vect
 	// Check if poll is happening
 	if (events.test_and_reset(lv2_socket::poll_t::read))
 	{
-		bs_t<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
+		rx::BitSet<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
 		for (auto it = queue.begin(); it != queue.end();)
 		{
 			if (it->second(read_event))
@@ -385,7 +385,7 @@ s32 lv2_socket_p2p::poll(sys_net_pollfd& sn_pfd, [[maybe_unused]] pollfd& native
 	return sn_pfd.revents ? 1 : 0;
 }
 
-std::tuple<bool, bool, bool> lv2_socket_p2p::select(bs_t<lv2_socket::poll_t> selected, [[maybe_unused]] pollfd& native_pfd)
+std::tuple<bool, bool, bool> lv2_socket_p2p::select(rx::BitSet<lv2_socket::poll_t> selected, [[maybe_unused]] pollfd& native_pfd)
 {
 	std::lock_guard lock(mutex);
 

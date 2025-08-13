@@ -338,7 +338,7 @@ bool lv2_socket_p2ps::handle_connected(p2ps_encapsulated_tcp* tcp_header, u8* da
 		// check if polling is happening
 		if (data_available && events.test_and_reset(lv2_socket::poll_t::read))
 		{
-			bs_t<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
+			rx::BitSet<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
 			for (auto it = queue.begin(); it != queue.end();)
 			{
 				if (it->second(read_event))
@@ -486,7 +486,7 @@ bool lv2_socket_p2ps::handle_listening(p2ps_encapsulated_tcp* tcp_header, [[mayb
 		backlog.push_back(new_sock_id);
 		if (events.test_and_reset(lv2_socket::poll_t::read))
 		{
-			bs_t<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
+			rx::BitSet<lv2_socket::poll_t> read_event = lv2_socket::poll_t::read;
 			for (auto it = queue.begin(); it != queue.end();)
 			{
 				if (it->second(read_event))
@@ -1013,7 +1013,7 @@ s32 lv2_socket_p2ps::poll(sys_net_pollfd& sn_pfd, [[maybe_unused]] pollfd& nativ
 	return 0;
 }
 
-std::tuple<bool, bool, bool> lv2_socket_p2ps::select(bs_t<lv2_socket::poll_t> selected, [[maybe_unused]] pollfd& native_pfd)
+std::tuple<bool, bool, bool> lv2_socket_p2ps::select(rx::BitSet<lv2_socket::poll_t> selected, [[maybe_unused]] pollfd& native_pfd)
 {
 	std::lock_guard lock(mutex);
 

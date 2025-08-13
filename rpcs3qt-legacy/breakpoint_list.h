@@ -18,7 +18,7 @@ public:
 	void UpdateCPUData(std::shared_ptr<CPUDisAsm> disasm);
 	void ClearBreakpoints();
 	void RemoveBreakpoint(u32 addr);
-	bool AddBreakpoint(u32 pc, bs_t<breakpoint_types> type);
+	bool AddBreakpoint(u32 pc, rx::BitSet<breakpoint_types> type);
 
 	QColor m_text_color_bp;
 	QColor m_color_bp;

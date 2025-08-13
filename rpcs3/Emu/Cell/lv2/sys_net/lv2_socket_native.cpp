@@ -266,7 +266,7 @@ std::optional<s32> lv2_socket_native::connect(const sys_net_sockaddr& addr)
 #ifdef _WIN32
 			connecting = true;
 #endif
-			this->poll_queue(null_ptr, lv2_socket::poll_t::write, [this](bs_t<lv2_socket::poll_t> events) -> bool
+			this->poll_queue(null_ptr, lv2_socket::poll_t::write, [this](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::write)
 					{
@@ -1171,7 +1171,7 @@ s32 lv2_socket_native::poll(sys_net_pollfd& sn_pfd, pollfd& native_pfd)
 	return 0;
 }
 
-std::tuple<bool, bool, bool> lv2_socket_native::select(bs_t<lv2_socket::poll_t> selected, pollfd& native_pfd)
+std::tuple<bool, bool, bool> lv2_socket_native::select(rx::BitSet<lv2_socket::poll_t> selected, pollfd& native_pfd)
 {
 	native_pfd.fd = native_socket;
 	if (selected & lv2_socket::poll_t::read)

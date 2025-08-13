@@ -31,7 +31,7 @@ public:
 	s32 shutdown(s32 how) override;
 
 	s32 poll(sys_net_pollfd& sn_pfd, pollfd& native_pfd) override;
-	std::tuple<bool, bool, bool> select(bs_t<poll_t> selected, pollfd& native_pfd) override;
+	std::tuple<bool, bool, bool> select(rx::BitSet<poll_t> selected, pollfd& native_pfd) override;
 
 	void handle_new_data(sys_net_sockaddr_in_p2p p2p_addr, std::vector<u8> p2p_data);
 

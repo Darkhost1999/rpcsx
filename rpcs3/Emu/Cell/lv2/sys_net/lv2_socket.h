@@ -65,9 +65,9 @@ public:
 	std::unique_lock<shared_mutex> lock();
 
 	void set_lv2_id(u32 id);
-	bs_t<poll_t> get_events() const;
-	void set_poll_event(bs_t<poll_t> event);
-	void poll_queue(shared_ptr<ppu_thread> ppu, bs_t<poll_t> event, std::function<bool(bs_t<poll_t>)> poll_cb);
+	rx::BitSet<poll_t> get_events() const;
+	void set_poll_event(rx::BitSet<poll_t> event);
+	void poll_queue(shared_ptr<ppu_thread> ppu, rx::BitSet<poll_t> event, std::function<bool(rx::BitSet<poll_t>)> poll_cb);
 	u32 clear_queue(ppu_thread*);
 	void handle_events(const pollfd& native_fd, bool unset_connecting = false);
 	void queue_wake(ppu_thread* ppu);
@@ -105,7 +105,7 @@ public:
 	virtual s32 shutdown(s32 how) = 0;
 
 	virtual s32 poll(sys_net_pollfd& sn_pfd, pollfd& native_pfd) = 0;
-	virtual std::tuple<bool, bool, bool> select(bs_t<poll_t> selected, pollfd& native_pfd) = 0;
+	virtual std::tuple<bool, bool, bool> select(rx::BitSet<poll_t> selected, pollfd& native_pfd) = 0;
 
 	error_code abort_socket(s32 flags);
 
@@ -128,10 +128,10 @@ protected:
 	lv2_ip_protocol protocol{};
 
 	// Events selected for polling
-	atomic_bs_t<poll_t> events{};
+	rx::AtomicBitSet<poll_t> events{};
 
 	// Event processing workload (pair of thread id and the processing function)
-	std::vector<std::pair<shared_ptr<ppu_thread>, std::function<bool(bs_t<poll_t>)>>> queue;
+	std::vector<std::pair<shared_ptr<ppu_thread>, std::function<bool(rx::BitSet<poll_t>)>>> queue;
 
 	// Socket options value keepers
 	// Non-blocking IO option

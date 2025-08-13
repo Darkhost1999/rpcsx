@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/bit_set.h"
+#include "rx/bitset.h"
 #include "util/mutex.h"
 
 #include "Emu/Memory/vm_ptr.h"

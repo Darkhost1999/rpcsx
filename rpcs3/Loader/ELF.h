@@ -2,7 +2,7 @@
 
 #include "util/types.hpp"
 #include "util/File.h"
-#include "util/bit_set.h"
+#include "rx/bitset.h"
 #include "util/endian.hpp"
 
 #include <span>
@@ -59,7 +59,7 @@ enum class sh_flag : u32
 	__bitset_enum_max
 };
 
-constexpr bool is_memorizable_section(sec_type type, bs_t<sh_flag> flags)
+constexpr bool is_memorizable_section(sec_type type, rx::BitSet<sh_flag> flags)
 {
 	switch (type)
 	{
@@ -184,9 +184,9 @@ struct elf_shdr
 	en_t<sz_t> sh_addralign;
 	en_t<sz_t> sh_entsize;
 
-	bs_t<sh_flag> sh_flags() const
+	rx::BitSet<sh_flag> sh_flags() const
 	{
-		return std::bit_cast<bs_t<sh_flag>>(static_cast<u32>(+_sh_flags));
+		return std::bit_cast<rx::BitSet<sh_flag>>(static_cast<u32>(+_sh_flags));
 	}
 };
 
@@ -266,12 +266,12 @@ public:
 public:
 	elf_object() = default;
 
-	elf_object(const fs::file& stream, u64 offset = 0, bs_t<elf_opt> opts = {})
+	elf_object(const fs::file& stream, u64 offset = 0, rx::BitSet<elf_opt> opts = {})
 	{
 		open(stream, offset, opts);
 	}
 
-	elf_error open(const fs::file& stream, u64 offset = 0, bs_t<elf_opt> opts = {})
+	elf_error open(const fs::file& stream, u64 offset = 0, rx::BitSet<elf_opt> opts = {})
 	{
 		highest_offset = 0;
 

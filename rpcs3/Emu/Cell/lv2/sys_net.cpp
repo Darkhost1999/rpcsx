@@ -363,7 +363,7 @@ error_code sys_net_bnet_accept(ppu_thread& ppu, s32 s, vm::ptr<sys_net_sockaddr>
 
 			auto lock = sock.lock();
 
-			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::read, [&](bs_t<lv2_socket::poll_t> events) -> bool
+			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::read, [&](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::read)
 					{
@@ -529,7 +529,7 @@ error_code sys_net_bnet_connect(ppu_thread& ppu, s32 s, vm::ptr<sys_net_sockaddr
 
 			auto lock = sock.lock();
 
-			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](bs_t<lv2_socket::poll_t> events) -> bool
+			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::write)
 					{
@@ -806,7 +806,7 @@ error_code sys_net_bnet_recvfrom(ppu_thread& ppu, s32 s, vm::ptr<void> buf, u32 
 
 			auto lock = sock.lock();
 
-			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::read, [&](bs_t<lv2_socket::poll_t> events) -> bool
+			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::read, [&](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::read)
 					{
@@ -926,7 +926,7 @@ error_code sys_net_bnet_sendmsg(ppu_thread& ppu, s32 s, vm::cptr<sys_net_msghdr>
 				return true;
 			}
 
-			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](bs_t<lv2_socket::poll_t> events) -> bool
+			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::write)
 					{
@@ -1021,7 +1021,7 @@ error_code sys_net_bnet_sendto(ppu_thread& ppu, s32 s, vm::cptr<void> buf, u32 l
 			auto lock = sock.lock();
 
 			// Enable write event
-			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](bs_t<lv2_socket::poll_t> events) -> bool
+			sock.poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), lv2_socket::poll_t::write, [&](rx::BitSet<lv2_socket::poll_t> events) -> bool
 				{
 					if (events & lv2_socket::poll_t::write)
 					{
@@ -1348,7 +1348,7 @@ error_code sys_net_bnet_poll(ppu_thread& ppu, vm::ptr<sys_net_pollfd> fds, s32 n
 				sock->set_connecting(connecting[i]);
 #endif
 
-				bs_t<lv2_socket::poll_t> selected = +lv2_socket::poll_t::error;
+				rx::BitSet<lv2_socket::poll_t> selected = +lv2_socket::poll_t::error;
 
 				if (fds_buf[i].events & SYS_NET_POLLIN)
 					selected += lv2_socket::poll_t::read;
@@ -1357,7 +1357,7 @@ error_code sys_net_bnet_poll(ppu_thread& ppu, vm::ptr<sys_net_pollfd> fds, s32 n
 				// if (fds_buf[i].events & SYS_NET_POLLPRI) // Unimplemented
 				//	selected += lv2_socket::poll::error;
 
-				sock->poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), selected, [sock, selected, &fds_buf, i, &signaled, &ppu](bs_t<lv2_socket::poll_t> events)
+				sock->poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), selected, [sock, selected, &fds_buf, i, &signaled, &ppu](rx::BitSet<lv2_socket::poll_t> events)
 					{
 						if (events & selected)
 						{
@@ -1474,7 +1474,7 @@ error_code sys_net_bnet_select(ppu_thread& ppu, s32 nfds, vm::ptr<sys_net_fd_set
 		for (s32 i = 0; i < nfds; i++)
 		{
 			_fds[i].fd = -1;
-			bs_t<lv2_socket::poll_t> selected{};
+			rx::BitSet<lv2_socket::poll_t> selected{};
 
 			if (readfds && _readfds.bit(i))
 				selected += lv2_socket::poll_t::read;
@@ -1558,7 +1558,7 @@ error_code sys_net_bnet_select(ppu_thread& ppu, s32 nfds, vm::ptr<sys_net_fd_set
 
 		for (s32 i = 0; i < nfds; i++)
 		{
-			bs_t<lv2_socket::poll_t> selected{};
+			rx::BitSet<lv2_socket::poll_t> selected{};
 
 			if (readfds && _readfds.bit(i))
 				selected += lv2_socket::poll_t::read;
@@ -1583,7 +1583,7 @@ error_code sys_net_bnet_select(ppu_thread& ppu, s32 nfds, vm::ptr<sys_net_fd_set
 				sock->set_connecting(connecting[i]);
 #endif
 
-				sock->poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), selected, [sock, selected, i, &rread, &rwrite, &rexcept, &signaled, &ppu](bs_t<lv2_socket::poll_t> events)
+				sock->poll_queue(idm::get_unlocked<named_thread<ppu_thread>>(ppu.id), selected, [sock, selected, i, &rread, &rwrite, &rexcept, &signaled, &ppu](rx::BitSet<lv2_socket::poll_t> events)
 					{
 						if (events & selected)
 						{

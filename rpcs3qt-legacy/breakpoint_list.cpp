@@ -73,7 +73,7 @@ void breakpoint_list::RemoveBreakpoint(u32 addr)
 	}
 }
 
-bool breakpoint_list::AddBreakpoint(u32 pc, bs_t<breakpoint_types> type)
+bool breakpoint_list::AddBreakpoint(u32 pc, rx::BitSet<breakpoint_types> type)
 {
 	if (!m_ppu_breakpoint_handler->AddBreakpoint(pc, type))
 	{
@@ -159,7 +159,7 @@ void breakpoint_list::HandleBreakpointRequest(u32 loc, bool only_add)
 		{
 			if (!spu->has_active_local_bps.exchange(true))
 			{
-				spu->state.atomic_op([](bs_t<cpu_flag>& flags)
+				spu->state.atomic_op([](rx::BitSet<cpu_flag>& flags)
 					{
 						if (flags & cpu_flag::pending)
 						{

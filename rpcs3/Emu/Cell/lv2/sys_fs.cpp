@@ -768,7 +768,7 @@ lv2_file::open_raw_result_t lv2_file::open_raw(const std::string& local_path, s3
 		return {CELL_EISDIR};
 	}
 
-	bs_t<fs::open_mode> open_mode{};
+	rx::BitSet<fs::open_mode> open_mode{};
 
 	switch (flags & CELL_FS_O_ACCMODE)
 	{

@@ -1514,7 +1514,7 @@ bool lv2_obj::sleep_unlocked(cpu_thread& thread, u64 timeout, u64 current_time)
 			return_val = false;
 		}
 
-		const auto [_, ok] = ppu->state.fetch_op([&](bs_t<cpu_flag>& val)
+		const auto [_, ok] = ppu->state.fetch_op([&](rx::BitSet<cpu_flag>& val)
 			{
 				if (!(val & cpu_flag::signal))
 				{
@@ -1856,7 +1856,7 @@ void lv2_obj::schedule_all(u64 current_time)
 				ppu_log.trace("schedule(): %s", target->id);
 
 				// Remove yield if it was sleeping until now
-				const bs_t<cpu_flag> remove_yield = target->start_time == 0 ? +cpu_flag::suspend : (cpu_flag::yield + cpu_flag::preempt);
+				const rx::BitSet<cpu_flag> remove_yield = target->start_time == 0 ? +cpu_flag::suspend : (cpu_flag::yield + cpu_flag::preempt);
 
 				target->start_time = 0;
 
@@ -2131,7 +2131,7 @@ bool lv2_obj::wait_timeout(u64 usec, ppu_thread* cpu, bool scale, bool is_usleep
 
 	u64 passed = 0;
 
-	atomic_bs_t<cpu_flag> dummy{};
+	rx::AtomicBitSet<cpu_flag> dummy{};
 	const auto& state = cpu ? cpu->state : dummy;
 	auto old_state = +state;
 

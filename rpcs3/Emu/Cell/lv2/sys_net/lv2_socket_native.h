@@ -51,7 +51,7 @@ public:
 	std::optional<s32> sendmsg(s32 flags, const sys_net_msghdr& msg, bool is_lock = true) override;
 
 	s32 poll(sys_net_pollfd& sn_pfd, pollfd& native_pfd) override;
-	std::tuple<bool, bool, bool> select(bs_t<poll_t> selected, pollfd& native_pfd) override;
+	std::tuple<bool, bool, bool> select(rx::BitSet<poll_t> selected, pollfd& native_pfd) override;
 
 	bool is_socket_connected();
 

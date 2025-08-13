@@ -1652,7 +1652,7 @@ void debugger_frame::DoStep(bool step_over)
 				m_last_step_over_breakpoint = next_instruction_pc;
 			}
 
-			cpu->state.atomic_op([&](bs_t<cpu_flag>& state)
+			cpu->state.atomic_op([&](rx::BitSet<cpu_flag>& state)
 				{
 					state -= s_pause_flags;
 
@@ -1691,7 +1691,7 @@ void debugger_frame::RunBtnPress()
 	{
 		// If paused, unpause.
 		// If not paused, add dbg_pause.
-		const auto old = cpu->state.fetch_op([](bs_t<cpu_flag>& state)
+		const auto old = cpu->state.fetch_op([](rx::BitSet<cpu_flag>& state)
 			{
 				if (state & s_pause_flags)
 				{

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/Thread.h"
-#include "util/bit_set.h"
+#include "rx/bitset.h"
 
 #include <vector>
 #include <any>
@@ -37,13 +37,13 @@ enum class cpu_flag : u32
 };
 
 // Test stopped state
-constexpr bool is_stopped(bs_t<cpu_flag> state)
+constexpr bool is_stopped(rx::BitSet<cpu_flag> state)
 {
 	return !!(state & (cpu_flag::stop + cpu_flag::exit + cpu_flag::again));
 }
 
 // Test paused state
-constexpr bool is_paused(bs_t<cpu_flag> state)
+constexpr bool is_paused(rx::BitSet<cpu_flag> state)
 {
 	return !!(state & (cpu_flag::suspend + cpu_flag::dbg_global_pause + cpu_flag::dbg_pause)) && !is_stopped(state);
 }
@@ -67,7 +67,7 @@ public:
 	const u32 id;
 
 	// Public thread state
-	atomic_bs_t<cpu_flag> state{cpu_flag::stop + cpu_flag::wait};
+	rx::AtomicBitSet<cpu_flag> state{cpu_flag::stop + cpu_flag::wait};
 
 	// Process thread state, return true if the checker must return
 	bool check_state() noexcept;
@@ -87,12 +87,12 @@ public:
 	}
 
 	// Wrappers
-	static constexpr bool is_stopped(bs_t<cpu_flag> s)
+	static constexpr bool is_stopped(rx::BitSet<cpu_flag> s)
 	{
 		return ::is_stopped(s);
 	}
 
-	static constexpr bool is_paused(bs_t<cpu_flag> s)
+	static constexpr bool is_paused(rx::BitSet<cpu_flag> s)
 	{
 		return ::is_paused(s);
 	}
@@ -155,7 +155,7 @@ public:
 	cpu_thread& operator=(thread_state);
 
 	// Add/remove CPU state flags in an atomic operations, notifying if required
-	void add_remove_flags(bs_t<cpu_flag> to_add, bs_t<cpu_flag> to_remove);
+	void add_remove_flags(rx::BitSet<cpu_flag> to_add, rx::BitSet<cpu_flag> to_remove);
 
 	// Thread stats for external observation
 	static atomic_t<u64> g_threads_created, g_threads_deleted, g_suspend_counter;
@@ -194,7 +194,7 @@ public:
 	virtual void cpu_return() {}
 
 	// Callback for thread_ctrl::wait or RSX wait
-	virtual void cpu_wait(bs_t<cpu_flag> old);
+	virtual void cpu_wait(rx::BitSet<cpu_flag> old);
 
 	// Callback for function abortion stats on Emu.Kill()
 	virtual void cpu_on_stop() {}

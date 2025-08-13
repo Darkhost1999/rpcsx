@@ -80,7 +80,7 @@ debugger_add_bp_window::debugger_add_bp_window(breakpoint_list* bp_list, QWidget
 			}
 
 			const u32 address = static_cast<u32>(parsed_address);
-			bs_t<breakpoint_types> bp_t{};
+			rx::BitSet<breakpoint_types> bp_t{};
 
 #ifdef RPCS3_HAS_MEMORY_BREAKPOINTS
 			switch (co_bptype->currentIndex())

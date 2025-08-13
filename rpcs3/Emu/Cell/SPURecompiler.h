@@ -203,7 +203,7 @@ public:
 
 	struct reg_state_t
 	{
-		bs_t<vf> flag{+vf::is_null};
+		rx::BitSet<vf> flag{+vf::is_null};
 		u32 value{};
 		u32 tag = umax;
 		u32 known_ones{};
