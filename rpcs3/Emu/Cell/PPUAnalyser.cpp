@@ -25,7 +25,7 @@ void fmt_class_string<ppu_attr>::format(std::string& out, u64 arg)
 			case ppu_attr::no_return: return "no_return";
 			case ppu_attr::no_size: return "no_size";
 			case ppu_attr::has_mfvscr: return "has_mfvscr";
-			case ppu_attr::__bitset_enum_max: break;
+			case ppu_attr::bitset_last: break;
 			}
 
 			return unknown;
@@ -33,7 +33,7 @@ void fmt_class_string<ppu_attr>::format(std::string& out, u64 arg)
 }
 
 template <>
-void fmt_class_string<bs_t<ppu_attr>>::format(std::string& out, u64 arg)
+void fmt_class_string<rx::EnumBitSet<ppu_attr>>::format(std::string& out, u64 arg)
 {
 	format_bitset(out, arg, "[", ",", "]", &fmt_class_string<ppu_attr>::format);
 }
@@ -857,7 +857,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 		// u32 stack_frame = 0;
 		u32 single_target = 0;
 		u32 trampoline = 0;
-		bs_t<ppu_attr> attr{};
+		rx::EnumBitSet<ppu_attr> attr{};
 
 		std::set<u32> callers{};
 	};

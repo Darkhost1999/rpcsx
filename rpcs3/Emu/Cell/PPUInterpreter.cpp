@@ -70,7 +70,7 @@ enum class ppu_exec_bit : u64
 	set_call_history,
 	use_feed_data,
 
-	__bitset_enum_max
+	bitset_last
 };
 
 using enum ppu_exec_bit;
@@ -80,7 +80,7 @@ template <ppu_exec_bit... Flags0>
 struct ppu_exec_select
 {
 	template <ppu_exec_bit Flag, ppu_exec_bit... Flags, typename F>
-	static ppu_intrp_func_t select(bs_t<ppu_exec_bit> selected, F func)
+	static ppu_intrp_func_t select(rx::EnumBitSet<ppu_exec_bit> selected, F func)
 	{
 		// Make sure there is no flag duplication, otherwise skip flag
 		if constexpr (((Flags0 != Flag) && ...))
@@ -97,7 +97,7 @@ struct ppu_exec_select
 	}
 
 	template <typename F>
-	static ppu_intrp_func_t select(bs_t<ppu_exec_bit>, F func)
+	static ppu_intrp_func_t select(rx::EnumBitSet<ppu_exec_bit>, F func)
 	{
 		// Instantiate interpreter function with required set of flags
 		return func.template operator()<Flags0...>();
@@ -107,7 +107,7 @@ struct ppu_exec_select
 	static auto select()
 	{
 #ifndef __INTELLISENSE__
-		return [](bs_t<ppu_exec_bit> selected, auto func)
+		return [](rx::EnumBitSet<ppu_exec_bit> selected, auto func)
 		{
 			return ppu_exec_select::select<Flags1...>(selected, func);
 		};
@@ -2350,7 +2350,7 @@ template <u32 Count>
 struct VSLDOI
 {
 	template <ppu_exec_bit... Flags>
-	static auto select(bs_t<ppu_exec_bit> selected, auto func)
+	static auto select(rx::EnumBitSet<ppu_exec_bit> selected, auto func)
 	{
 		return ppu_exec_select<>::select<Flags...>(selected, func);
 	}
@@ -3891,7 +3891,7 @@ template <u32 N>
 struct MFOCRF
 {
 	template <ppu_exec_bit... Flags>
-	static auto select(bs_t<ppu_exec_bit> selected, auto func)
+	static auto select(rx::EnumBitSet<ppu_exec_bit> selected, auto func)
 	{
 		return ppu_exec_select<>::select<Flags...>(selected, func);
 	}
@@ -7547,7 +7547,7 @@ struct ppu_interpreter_t
 ppu_interpreter_rt_base::ppu_interpreter_rt_base() noexcept
 {
 	// Obtain required set of flags from settings
-	bs_t<ppu_exec_bit> selected{};
+	rx::EnumBitSet<ppu_exec_bit> selected{};
 	if (g_cfg.core.ppu_set_sat_bit)
 		selected += set_sat;
 	if (g_cfg.core.ppu_use_nj_bit)

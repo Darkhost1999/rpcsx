@@ -53,6 +53,7 @@
 #include "sys_usbd.h"
 #include "sys_vm.h"
 
+#include "util/atomic_bit_set.h"
 #include "util/init_mutex.hpp"
 #include "util/sysinfo.hpp"
 #include "util/tsc.hpp"
@@ -1762,17 +1763,18 @@ bool lv2_obj::sleep_unlocked(cpu_thread &thread, u64 timeout,
       return_val = false;
     }
 
-    const auto [_, ok] = ppu->state.fetch_op([&](bs_t<cpu_flag> &val) {
-      if (!(val & cpu_flag::signal)) {
-        val += cpu_flag::suspend;
+    const auto [_, ok] =
+        ppu->state.fetch_op([&](rx::EnumBitSet<cpu_flag> &val) {
+          if (!(val & cpu_flag::signal)) {
+            val += cpu_flag::suspend;
 
-        // Flag used for forced timeout notification
-        ensure(!timeout || !(val & cpu_flag::notify));
-        return true;
-      }
+            // Flag used for forced timeout notification
+            ensure(!timeout || !(val & cpu_flag::notify));
+            return true;
+          }
 
-      return false;
-    });
+          return false;
+        });
 
     if (!ok) {
       ppu_log.fatal("sleep() failed (signaled) (%s)", ppu->current_function);
@@ -2075,7 +2077,7 @@ void lv2_obj::schedule_all(u64 current_time) {
         ppu_log.trace("schedule(): %s", target->id);
 
         // Remove yield if it was sleeping until now
-        const bs_t<cpu_flag> remove_yield =
+        const rx::EnumBitSet<cpu_flag> remove_yield =
             target->start_time == 0 ? +cpu_flag::suspend
                                     : (cpu_flag::yield + cpu_flag::preempt);
 

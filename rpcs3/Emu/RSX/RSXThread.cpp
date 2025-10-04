@@ -850,7 +850,7 @@ namespace rsx
 		on_exit();
 	}
 
-	void thread::cpu_wait(bs_t<cpu_flag> old)
+	void thread::cpu_wait(rx::EnumBitSet<cpu_flag> old)
 	{
 		if (external_interrupt_lock)
 		{

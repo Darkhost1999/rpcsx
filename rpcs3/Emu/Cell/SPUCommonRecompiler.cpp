@@ -2920,7 +2920,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 	}
 
 	// Weak constant propagation context (for guessing branch targets)
-	std::array<bs_t<vf>, 128> vflags{};
+	std::array<rx::EnumBitSet<vf>, 128> vflags{};
 
 	// Associated constant values for 32-bit preferred slot
 	std::array<u32, 128> values;
@@ -5596,7 +5596,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 				pos = ra.origin;
 			}
 
-			const bs_t<vf> flag = (ra.flag & rb.flag) - vf::is_null;
+			const rx::EnumBitSet<vf> flag = (ra.flag & rb.flag) - vf::is_null;
 
 			vregs[reg] = reg_state_t{flag, value, flag & vf::is_const ? u32{umax} : reg_state_t::alloc_tag(), 0, 0, pos};
 		};

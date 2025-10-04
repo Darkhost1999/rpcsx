@@ -34,7 +34,7 @@ enum class spu_exec_bit : u64
 {
 	use_dfma,
 
-	__bitset_enum_max
+	bitset_last
 };
 
 using enum spu_exec_bit;
@@ -43,7 +43,7 @@ template <spu_exec_bit... Flags0>
 struct spu_exec_select
 {
 	template <spu_exec_bit Flag, spu_exec_bit... Flags, typename F>
-	static spu_intrp_func_t select(bs_t<spu_exec_bit> selected, F func)
+	static spu_intrp_func_t select(rx::EnumBitSet<spu_exec_bit> selected, F func)
 	{
 		// Make sure there is no flag duplication, otherwise skip flag
 		if constexpr (((Flags0 != Flag) && ...))
@@ -60,7 +60,7 @@ struct spu_exec_select
 	}
 
 	template <typename F>
-	static spu_intrp_func_t select(bs_t<spu_exec_bit>, F func)
+	static spu_intrp_func_t select(rx::EnumBitSet<spu_exec_bit>, F func)
 	{
 		// Instantiate interpreter function with required set of flags
 		return func.template operator()<Flags0...>();
@@ -3131,7 +3131,7 @@ struct spu_interpreter_t
 spu_interpreter_rt_base::spu_interpreter_rt_base() noexcept
 {
 	// Obtain required set of flags from settings
-	bs_t<spu_exec_bit> selected{};
+	rx::EnumBitSet<spu_exec_bit> selected{};
 	if (g_cfg.core.use_accurate_dfma)
 		selected += use_dfma;
 

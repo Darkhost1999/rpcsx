@@ -1,15 +1,7 @@
 #pragma once
 
-#include "util/bit_set.h"
-#include "util/mutex.h"
-
 #include "Emu/Cell/ErrorCodes.h"
 #include "Emu/Memory/vm_ptr.h"
-
-#include <functional>
-#include <queue>
-#include <utility>
-#include <vector>
 
 // Error codes
 enum sys_net_error : s32 {
@@ -54,7 +46,7 @@ enum sys_net_error : s32 {
 };
 
 static constexpr sys_net_error operator-(sys_net_error v) {
-  return sys_net_error{-+v};
+  return sys_net_error{-static_cast<s32>(v)};
 }
 
 // Socket types (prefixed with SYS_NET_)

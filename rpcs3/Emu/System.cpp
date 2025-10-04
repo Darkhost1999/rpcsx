@@ -2654,7 +2654,7 @@ void Emulator::FinalizeRunRequest()
 {
 	const bool autostart = !m_ar || !!g_cfg.misc.autostart;
 
-	bs_t<cpu_flag> add_flags = cpu_flag::dbg_global_pause;
+	rx::EnumBitSet<cpu_flag> add_flags = cpu_flag::dbg_global_pause;
 
 	if (autostart)
 	{
@@ -2663,7 +2663,7 @@ void Emulator::FinalizeRunRequest()
 
 	auto spu_select = [&](u32, spu_thread& spu)
 	{
-		bs_t<cpu_flag> sub_flags = cpu_flag::stop;
+		rx::EnumBitSet<cpu_flag> sub_flags = cpu_flag::stop;
 
 		if (spu.group && spu.index == spu.group->waiter_spu_index)
 		{
@@ -3605,7 +3605,7 @@ void Emulator::Kill(bool allow_autoexit, bool savestate, savestate_stage* save_s
 
 						set_progress_message("Finalizing File");
 
-						bs_t<SaveStateExtentionFlags1> extension_flags{SaveStateExtentionFlags1::SupportsMenuOpenResume};
+						rx::EnumBitSet<SaveStateExtentionFlags1> extension_flags{SaveStateExtentionFlags1::SupportsMenuOpenResume};
 
 						if (g_fxo->get<SysutilMenuOpenStatus>().active)
 						{

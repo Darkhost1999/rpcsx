@@ -1612,7 +1612,7 @@ enum class strkey_flag : u32
 	// set_other,     // writing is allowed for other types of PARAM.SFO (not
 	// possible)
 
-	__bitset_enum_max
+	bitset_last
 };
 
 struct string_key_info
@@ -1620,7 +1620,7 @@ struct string_key_info
 public:
 	string_key_info() = default;
 	string_key_info(std::string_view _name, u32 _max_size,
-		bs_t<strkey_flag> _flags)
+		rx::EnumBitSet<strkey_flag> _flags)
 		: name(_name), max_size(_max_size), flags(_flags) {}
 
 	std::string_view name;
@@ -1653,7 +1653,7 @@ public:
 	}
 
 private:
-	bs_t<strkey_flag> flags{}; // allowed operations
+	rx::EnumBitSet<strkey_flag> flags{}; // allowed operations
 };
 
 static string_key_info get_param_string_key(s32 id)

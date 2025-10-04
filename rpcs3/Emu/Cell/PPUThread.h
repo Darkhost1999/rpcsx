@@ -151,7 +151,7 @@ public:
 	virtual void cpu_task() override final;
 	virtual void cpu_sleep() override;
 	virtual void cpu_on_stop() override;
-	virtual void cpu_wait(bs_t<cpu_flag> old) override;
+	virtual void cpu_wait(rx::EnumBitSet<cpu_flag> old) override;
 	virtual ~ppu_thread() override;
 
 	SAVESTATE_INIT_POS(3);

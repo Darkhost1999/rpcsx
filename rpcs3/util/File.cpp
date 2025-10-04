@@ -1635,7 +1635,7 @@ void fs::sync()
 	fmt::throw_exception("Stream overflow.");
 }
 
-fs::file::file(const std::string& path, bs_t<open_mode> mode)
+fs::file::file(const std::string& path, rx::EnumBitSet<open_mode> mode)
 {
 	if (path.empty())
 	{

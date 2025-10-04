@@ -64,7 +64,7 @@ void fmt_class_string<cpu_flag>::format(std::string& out, u64 arg)
 			case cpu_flag::dbg_global_pause: return "G-PAUSE";
 			case cpu_flag::dbg_pause: return "PAUSE";
 			case cpu_flag::dbg_step: return "STEP";
-			case cpu_flag::__bitset_enum_max: break;
+			case cpu_flag::bitset_last: break;
 			}
 
 			return unknown;
@@ -72,7 +72,7 @@ void fmt_class_string<cpu_flag>::format(std::string& out, u64 arg)
 }
 
 template <>
-void fmt_class_string<bs_t<cpu_flag>>::format(std::string& out, u64 arg)
+void fmt_class_string<rx::EnumBitSet<cpu_flag>>::format(std::string& out, u64 arg)
 {
 	format_bitset(out, arg, "[", "|", "]", &fmt_class_string<cpu_flag>::format);
 }
@@ -799,7 +799,7 @@ cpu_thread::cpu_thread(u32 id)
 	}
 }
 
-void cpu_thread::cpu_wait(bs_t<cpu_flag> old)
+void cpu_thread::cpu_wait(rx::EnumBitSet<cpu_flag> old)
 {
 	state.wait(old);
 }
@@ -816,8 +816,8 @@ bool cpu_thread::check_state() noexcept
 	while (true)
 	{
 		// Process all flags in a single atomic op
-		bs_t<cpu_flag> state1;
-		auto state0 = state.fetch_op([&](bs_t<cpu_flag>& flags)
+		rx::EnumBitSet<cpu_flag> state1;
+		auto state0 = state.fetch_op([&](rx::EnumBitSet<cpu_flag>& flags)
 							   {
 								   bool store = false;
 
@@ -1168,9 +1168,9 @@ cpu_thread& cpu_thread::operator=(thread_state)
 	return *this;
 }
 
-void cpu_thread::add_remove_flags(bs_t<cpu_flag> to_add, bs_t<cpu_flag> to_remove)
+void cpu_thread::add_remove_flags(rx::EnumBitSet<cpu_flag> to_add, rx::EnumBitSet<cpu_flag> to_remove)
 {
-	bs_t<cpu_flag> result{};
+	rx::EnumBitSet<cpu_flag> result{};
 
 	if (!to_remove)
 	{
@@ -1183,7 +1183,7 @@ void cpu_thread::add_remove_flags(bs_t<cpu_flag> to_add, bs_t<cpu_flag> to_remov
 	}
 	else
 	{
-		result = state.atomic_op([&](bs_t<cpu_flag>& v)
+		result = state.atomic_op([&](rx::EnumBitSet<cpu_flag>& v)
 			{
 				v += to_add;
 				v -= to_remove;

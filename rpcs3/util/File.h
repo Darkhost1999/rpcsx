@@ -3,7 +3,7 @@
 #include "util/serialization.hpp"
 #include "util/types.hpp"
 #include "util/shared_ptr.hpp"
-#include "bit_set.h"
+#include "rx/EnumBitSet.hpp"
 
 #include <memory>
 #include <string>
@@ -35,7 +35,7 @@ namespace fs
 		unread,
 		isfile,
 
-		__bitset_enum_max
+		bitset_last
 	};
 
 	constexpr auto read = +open_mode::read;     // Enable reading
@@ -174,7 +174,7 @@ namespace fs
 		virtual bool trunc(const std::string& path, u64 length);
 		virtual bool utime(const std::string& path, s64 atime, s64 mtime);
 
-		virtual std::unique_ptr<file_base> open(const std::string& path, bs_t<open_mode> mode) = 0;
+		virtual std::unique_ptr<file_base> open(const std::string& path, rx::EnumBitSet<open_mode> mode) = 0;
 		virtual std::unique_ptr<dir_base> open_dir(const std::string& path) = 0;
 	};
 
@@ -258,7 +258,7 @@ namespace fs
 		file() = default;
 
 		// Open file with specified mode
-		explicit file(const std::string& path, bs_t<open_mode> mode = ::fs::read);
+		explicit file(const std::string& path, rx::EnumBitSet<open_mode> mode = ::fs::read);
 
 		static file from_native_handle(native_handle handle);
 
@@ -903,7 +903,7 @@ namespace fs
 	}
 
 	template <bool Flush = false, typename... Args>
-	bool write_file(const std::string& path, bs_t<fs::open_mode> mode, const Args&... args)
+	bool write_file(const std::string& path, rx::EnumBitSet<fs::open_mode> mode, const Args&... args)
 	{
 		// Always use write flag, remove read flag
 		if (fs::file f{path, mode + fs::write - fs::read})

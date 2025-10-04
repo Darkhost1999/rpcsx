@@ -40,6 +40,6 @@ public:
   s32 shutdown(s32 how) override;
 
   s32 poll(sys_net_pollfd &sn_pfd, pollfd &native_pfd) override;
-  std::tuple<bool, bool, bool> select(bs_t<poll_t> selected,
+  std::tuple<bool, bool, bool> select(rx::EnumBitSet<poll_t> selected,
                                       pollfd &native_pfd) override;
 };

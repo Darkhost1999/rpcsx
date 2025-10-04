@@ -198,12 +198,12 @@ public:
 		is_rel,
 		is_null,
 
-		__bitset_enum_max
+		bitset_last
 	};
 
 	struct reg_state_t
 	{
-		bs_t<vf> flag{+vf::is_null};
+		rx::EnumBitSet<vf> flag{+vf::is_null};
 		u32 value{};
 		u32 tag = umax;
 		u32 known_ones{};

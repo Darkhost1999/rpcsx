@@ -8,7 +8,7 @@
 #include "util/asm.hpp"
 #include "util/to_endian.hpp"
 
-#include "util/bit_set.h"
+#include "rx/EnumBitSet.hpp"
 #include "PPUOpcodes.h"
 
 // PPU Function Attributes
@@ -19,7 +19,7 @@ enum class ppu_attr : u8
 	no_size,
 	has_mfvscr,
 
-	__bitset_enum_max
+	bitset_last
 };
 
 // PPU Function Information
@@ -131,7 +131,7 @@ struct ppu_module : public Type
 	std::string name{};                                                                                   // Filename
 	std::string path{};                                                                                   // Filepath
 	s64 offset = 0;                                                                                       // Offset of file
-	mutable bs_t<ppu_attr> attr{};                                                                        // Shared module attributes
+	mutable rx::EnumBitSet<ppu_attr> attr{};                                                                        // Shared module attributes
 	std::string cache{};                                                                                  // Cache file path
 	std::vector<ppu_reloc> relocs{};                                                                      // Relocations
 	std::vector<ppu_segment> segs{};                                                                      // Segments

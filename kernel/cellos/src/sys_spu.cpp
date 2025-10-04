@@ -1295,7 +1295,7 @@ error_code sys_spu_thread_group_terminate(ppu_thread &ppu, u32 id, s32 value) {
 
   for (auto &thread : group->threads) {
     if (thread) {
-      thread->state.fetch_op([](bs_t<cpu_flag> &flags) {
+      thread->state.fetch_op([](rx::EnumBitSet<cpu_flag> &flags) {
         if (flags & cpu_flag::stop) {
           // In case the thread raised the ret flag itself at some point do not
           // raise it again

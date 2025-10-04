@@ -124,7 +124,7 @@ enum class lv2_mp_flag {
   strict_get_block_size,
   cache,
 
-  __bitset_enum_max
+  bitset_last = cache,
 };
 
 enum class lv2_file_type {
@@ -140,7 +140,7 @@ struct lv2_fs_mount_point {
   const u32 sector_size = 512;
   const u64 sector_count = 256;
   const u32 block_size = 4096;
-  const bs_t<lv2_mp_flag> flags{};
+  const rx::EnumBitSet<lv2_mp_flag> flags{};
   lv2_fs_mount_point *const next = nullptr;
 
   mutable shared_mutex mutex;

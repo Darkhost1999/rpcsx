@@ -1261,7 +1261,7 @@ static void ppu_break(ppu_thread& ppu, ppu_opcode_t, be_t<u32>* this_op, ppu_int
 	ppu.cia = old_cia;
 
 	// Pause
-	ppu.state.atomic_op([&](bs_t<cpu_flag>& state)
+	ppu.state.atomic_op([&](rx::EnumBitSet<cpu_flag>& state)
 		{
 			if (pause_all)
 				state += cpu_flag::dbg_global_pause;
@@ -2423,7 +2423,7 @@ void ppu_thread::cpu_on_stop()
 	}
 }
 
-void ppu_thread::cpu_wait(bs_t<cpu_flag> old)
+void ppu_thread::cpu_wait(rx::EnumBitSet<cpu_flag> old)
 {
 	// Meanwhile while waiting, notify SPU waiters
 	if (u32 addr = res_notify)
@@ -2781,7 +2781,7 @@ ppu_thread::ppu_thread(utils::serial& ar)
 void ppu_thread::save(utils::serial& ar)
 {
 	// For debugging purposes, load this as soon as this function enters
-	const bs_t<cpu_flag> state_flags = state;
+	const rx::EnumBitSet<cpu_flag> state_flags = state;
 
 	USING_SERIALIZATION_VERSION(ppu);
 
@@ -5421,10 +5421,10 @@ bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_s
 				accurate_nj_mode,
 				contains_symbol_resolver,
 
-				__bitset_enum_max
+				bitset_last
 			};
 
-			be_t<bs_t<ppu_settings>> settings{};
+			be_t<rx::EnumBitSet<ppu_settings>> settings{};
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 			settings += ppu_settings::platform_bit;

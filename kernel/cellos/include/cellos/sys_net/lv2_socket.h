@@ -6,6 +6,8 @@
 #include "Emu/IdManager.h"
 #include "Emu/NP/ip_address.h"
 #include "cellos/sys_net.h"
+#include "rx/EnumBitSet.hpp"
+#include "util/atomic_bit_set.h"
 #include "util/mutex.h"
 
 #ifdef _WIN32
@@ -32,7 +34,7 @@ public:
     write,
     error,
 
-    __bitset_enum_max
+    bitset_last
   };
 
   union sockopt_data {
@@ -62,10 +64,10 @@ public:
   std::unique_lock<shared_mutex> lock();
 
   void set_lv2_id(u32 id);
-  bs_t<poll_t> get_events() const;
-  void set_poll_event(bs_t<poll_t> event);
-  void poll_queue(shared_ptr<ppu_thread> ppu, bs_t<poll_t> event,
-                  std::function<bool(bs_t<poll_t>)> poll_cb);
+  rx::EnumBitSet<poll_t> get_events() const;
+  void set_poll_event(rx::EnumBitSet<poll_t> event);
+  void poll_queue(shared_ptr<ppu_thread> ppu, rx::EnumBitSet<poll_t> event,
+                  std::function<bool(rx::EnumBitSet<poll_t>)> poll_cb);
   u32 clear_queue(ppu_thread *);
   void handle_events(const pollfd &native_fd, bool unset_connecting = false);
   void queue_wake(ppu_thread *ppu);
@@ -110,7 +112,7 @@ public:
   virtual s32 shutdown(s32 how) = 0;
 
   virtual s32 poll(sys_net_pollfd &sn_pfd, pollfd &native_pfd) = 0;
-  virtual std::tuple<bool, bool, bool> select(bs_t<poll_t> selected,
+  virtual std::tuple<bool, bool, bool> select(rx::EnumBitSet<poll_t> selected,
                                               pollfd &native_pfd) = 0;
 
   error_code abort_socket(s32 flags);
@@ -137,8 +139,8 @@ protected:
   atomic_bs_t<poll_t> events{};
 
   // Event processing workload (pair of thread id and the processing function)
-  std::vector<
-      std::pair<shared_ptr<ppu_thread>, std::function<bool(bs_t<poll_t>)>>>
+  std::vector<std::pair<shared_ptr<ppu_thread>,
+                        std::function<bool(rx::EnumBitSet<poll_t>)>>>
       queue;
 
   // Socket options value keepers

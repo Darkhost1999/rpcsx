@@ -2027,7 +2027,7 @@ void spu_thread::cpu_work()
 	if (!work_left)
 	{
 		// No more pending work
-		state.atomic_op([](bs_t<cpu_flag>& flags)
+		state.atomic_op([](rx::EnumBitSet<cpu_flag>& flags)
 			{
 				if (flags & cpu_flag::pending_recheck)
 				{
@@ -7010,7 +7010,7 @@ bool spu_thread::stop_and_signal(u32 code)
 			{
 				if (thread)
 				{
-					thread->state.fetch_op([](bs_t<cpu_flag>& flags)
+					thread->state.fetch_op([](rx::EnumBitSet<cpu_flag>& flags)
 						{
 							if (flags & cpu_flag::stop)
 							{

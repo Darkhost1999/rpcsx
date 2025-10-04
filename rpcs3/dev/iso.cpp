@@ -146,7 +146,7 @@ bool iso_dev::statfs(const std::string& path, fs::device_stat& info)
 	return true;
 }
 
-std::unique_ptr<fs::file_base> iso_dev::open(const std::string& path, bs_t<fs::open_mode> mode)
+std::unique_ptr<fs::file_base> iso_dev::open(const std::string& path, rx::EnumBitSet<fs::open_mode> mode)
 {
 	if (mode & fs::write)
 	{

@@ -435,7 +435,7 @@ namespace vm
 
 	bool temporary_unlock(cpu_thread& cpu) noexcept
 	{
-		bs_t<cpu_flag> add_state = cpu_flag::wait;
+		rx::EnumBitSet<cpu_flag> add_state = cpu_flag::wait;
 
 		if (g_tls_locked && g_tls_locked->compare_and_swap_test(&cpu, nullptr))
 		{

@@ -3254,7 +3254,7 @@ bool ppu_load_rel_exec(const ppu_rel_object& elf)
 
 	std::stable_sort(shdrs.begin(), shdrs.end(), [](auto& a, auto& b) -> bool
 		{
-			const bs_t<sh_flag> flags_a_has = a->sh_flags() - b->sh_flags();
+			const rx::EnumBitSet<sh_flag> flags_a_has = a->sh_flags() - b->sh_flags();
 			return flags_a_has.all_of(sh_flag::shf_execinstr);
 		});
 

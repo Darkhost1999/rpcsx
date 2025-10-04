@@ -8,8 +8,9 @@
 #include "sha256.h"
 #include "key_vault.h"
 #include <cstring>
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
+#include "util/StrFmt.h"
 #include "util/StrUtil.h"
 #include "util/File.h"
 

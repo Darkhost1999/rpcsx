@@ -4,7 +4,7 @@
 #include "util/types.hpp"
 #include "util/atomic.hpp"
 #include "util/shared_ptr.hpp"
-#include "util/bit_set.h"
+#include "rx/EnumBitSet.hpp"
 #include "config_mode.h"
 #include "games_config.h"
 #include <functional>
@@ -188,10 +188,10 @@ class Emulator final
 		SupportsMenuOpenResume,
 		ShouldCloseMenu,
 
-		__bitset_enum_max,
+		bitset_last,
 	};
 
-	bs_t<SaveStateExtentionFlags1> m_savestate_extension_flags1{};
+	rx::EnumBitSet<SaveStateExtentionFlags1> m_savestate_extension_flags1{};
 
 public:
 	static constexpr std::string_view game_id_boot_prefix = "%RPCS3_GAMEID%:";
