@@ -51,7 +51,7 @@ namespace vk
 
 	class symbol_cache
 	{
-		std::vector<std::pair<typename T1, typename T2><std::string, void**>> registered_symbols;
+		std::vector<std::pair<std::string, void**>> registered_symbols;
 
 	public:
 		void initialize();

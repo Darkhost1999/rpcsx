@@ -13,7 +13,6 @@
 #include "rx/mem.hpp"
 #include "rx/watchdog.hpp"
 #include "vm.hpp"
-#include <GLFW/glfw3.h>
 #include <cstdio>
 #include <cstring>
 #include <mutex>
