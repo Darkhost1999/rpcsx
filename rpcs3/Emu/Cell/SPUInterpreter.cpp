@@ -34,7 +34,7 @@ enum class spu_exec_bit : u64
 {
 	use_dfma,
 
-	bitset_last
+	bitset_last = use_dfma,
 };
 
 using enum spu_exec_bit;

@@ -34,7 +34,7 @@ public:
     write,
     error,
 
-    bitset_last
+    bitset_last = error,
   };
 
   union sockopt_data {

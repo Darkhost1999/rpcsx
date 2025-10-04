@@ -19,7 +19,7 @@ enum class ppu_attr : u8
 	no_size,
 	has_mfvscr,
 
-	bitset_last
+	bitset_last = has_mfvscr,
 };
 
 // PPU Function Information

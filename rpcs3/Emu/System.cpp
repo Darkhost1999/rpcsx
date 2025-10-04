@@ -303,7 +303,7 @@ void init_fxo_for_exec(utils::serial* ar, bool full = false)
 	{
 		ensure(pos == ar->pos);
 
-		(*ar)(Emu.m_savestate_extension_flags1);
+		(*ar)(Emu.m_savestate_extension_flags1.raw());
 
 		const usz advance = (Emu.m_savestate_extension_flags1 & Emulator::SaveStateExtentionFlags1::SupportsMenuOpenResume ? 32 : 31);
 
@@ -3612,7 +3612,7 @@ void Emulator::Kill(bool allow_autoexit, bool savestate, savestate_stage* save_s
 							extension_flags += SaveStateExtentionFlags1::ShouldCloseMenu;
 						}
 
-						ar(extension_flags);
+						ar(extension_flags.raw());
 
 						ar(std::array<u8, 32>{}); // Reserved for future use
 						ar(timestamp);

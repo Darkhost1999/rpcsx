@@ -198,7 +198,7 @@ public:
 		is_rel,
 		is_null,
 
-		bitset_last
+		bitset_last = is_null,
 	};
 
 	struct reg_state_t

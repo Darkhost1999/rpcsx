@@ -56,7 +56,7 @@ enum class sh_flag : u32
 	shf_alloc,
 	shf_execinstr,
 
-	bitset_last
+	bitset_last = shf_execinstr,
 };
 
 constexpr bool is_memorizable_section(sec_type type, rx::EnumBitSet<sh_flag> flags)
@@ -218,7 +218,7 @@ enum class elf_opt : u32
 	no_sections, // Don't load shdrs
 	no_data,     // Load phdrs without data
 
-	bitset_last
+	bitset_last = no_data,
 };
 
 // ELF loading error

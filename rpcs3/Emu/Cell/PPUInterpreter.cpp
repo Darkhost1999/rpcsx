@@ -70,7 +70,7 @@ enum class ppu_exec_bit : u64
 	set_call_history,
 	use_feed_data,
 
-	bitset_last
+	bitset_last = use_feed_data,
 };
 
 using enum ppu_exec_bit;

@@ -1612,7 +1612,7 @@ enum class strkey_flag : u32
 	// set_other,     // writing is allowed for other types of PARAM.SFO (not
 	// possible)
 
-	bitset_last
+	bitset_last = get_other,
 };
 
 struct string_key_info

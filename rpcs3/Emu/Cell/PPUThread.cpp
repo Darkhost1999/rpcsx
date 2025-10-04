@@ -5421,7 +5421,7 @@ bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_s
 				accurate_nj_mode,
 				contains_symbol_resolver,
 
-				bitset_last
+				bitset_last = contains_symbol_resolver,
 			};
 
 			be_t<rx::EnumBitSet<ppu_settings>> settings{};

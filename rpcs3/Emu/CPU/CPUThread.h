@@ -34,7 +34,7 @@ enum class cpu_flag : u32
 	dbg_pause,        // Thread paused
 	dbg_step,         // Thread forced to pause after one step (one instruction, etc)
 
-	bitset_last
+	bitset_last = dbg_step,
 };
 
 // Test stopped state

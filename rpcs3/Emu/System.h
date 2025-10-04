@@ -188,7 +188,7 @@ class Emulator final
 		SupportsMenuOpenResume,
 		ShouldCloseMenu,
 
-		bitset_last,
+		bitset_last = ShouldCloseMenu,
 	};
 
 	rx::EnumBitSet<SaveStateExtentionFlags1> m_savestate_extension_flags1{};
