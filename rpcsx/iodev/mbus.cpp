@@ -52,7 +52,7 @@ void MBusDevice::emitEvent(const MBusEvent &event) {
   eventEmitter->emit(orbis::kEvFiltRead);
 }
 
-orbis::ErrorCode MBusDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode MBusDevice::open(rx::Ref<orbis::File> *file,
                                   const char *path, std::uint32_t flags,
                                   std::uint32_t mode, orbis::Thread *thread) {
   ORBIS_LOG_FATAL("mbus device open");

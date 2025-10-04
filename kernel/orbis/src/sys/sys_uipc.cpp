@@ -11,7 +11,7 @@ orbis::SysResult orbis::sys_socket(Thread *thread, sint domain, sint type,
                                    sint protocol) {
   ORBIS_LOG_TODO(__FUNCTION__, domain, type, protocol);
   if (auto socket = thread->tproc->ops->socket) {
-    Ref<File> file;
+    rx::Ref<File> file;
     auto result = socket(thread, nullptr, domain, type, protocol, &file);
 
     if (result.isError()) {
@@ -89,8 +89,8 @@ orbis::SysResult orbis::sys_socketpair(Thread *thread, sint domain, sint type,
                                        sint protocol, ptr<sint> rsv) {
   ORBIS_LOG_TODO(__FUNCTION__, domain, type, protocol, rsv);
   if (auto socketpair = thread->tproc->ops->socketpair) {
-    Ref<File> a;
-    Ref<File> b;
+    rx::Ref<File> a;
+    rx::Ref<File> b;
     auto result = socketpair(thread, domain, type, protocol, &a, &b);
 
     if (result.isError()) {

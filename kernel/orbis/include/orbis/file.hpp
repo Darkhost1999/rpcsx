@@ -5,7 +5,7 @@
 #include "note.hpp"
 #include "rx/SharedMutex.hpp"
 #include "stat.hpp"
-#include "utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <cstdint>
 
 namespace orbis {
@@ -73,11 +73,11 @@ struct FileOps {
                         Thread *thread) = nullptr;
 };
 
-struct File : RcBase {
+struct File : rx::RcBase {
   rx::shared_mutex mtx;
-  Ref<EventEmitter> event;
+  rx::Ref<EventEmitter> event;
   const FileOps *ops = nullptr;
-  Ref<RcBase> device;
+  rx::Ref<RcBase> device;
   std::uint64_t nextOff = 0;
   int flags = 0;
   int mode = 0;

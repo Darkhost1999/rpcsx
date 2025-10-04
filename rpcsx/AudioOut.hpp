@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <mutex>
 #include <orbis/evf.hpp>
-#include <orbis/utils/Rc.hpp>
+#include <rx/Rc.hpp>
 #include <thread>
 #include <vector>
 
@@ -12,7 +12,7 @@ struct AudioOutChannelInfo {
   std::int32_t port{};
   std::int32_t idControl{};
   std::int32_t channel{};
-  orbis::Ref<orbis::EventFlag> evf;
+  rx::Ref<orbis::EventFlag> evf;
 };
 
 struct AudioOutParams {
@@ -38,7 +38,7 @@ struct AudioOutParams {
   std::uint32_t sampleLength{};
 };
 
-struct AudioOut : orbis::RcBase {
+struct AudioOut : rx::RcBase {
   std::mutex thrMtx;
   std::mutex soxMtx;
   std::vector<std::thread> threads;

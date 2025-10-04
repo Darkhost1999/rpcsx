@@ -44,7 +44,7 @@ orbis::SysResult orbis::sys_closefrom(Thread *thread, sint lowfd) {
   return ErrorCode::NOSYS;
 }
 orbis::SysResult orbis::sys_fstat(Thread *thread, sint fd, ptr<Stat> ub) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }

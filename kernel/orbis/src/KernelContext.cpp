@@ -51,7 +51,7 @@ KernelContext::KernelContext() {
 KernelContext::~KernelContext() {}
 
 Process *KernelContext::createProcess(pid_t pid) {
-  auto newProcess = knew<utils::LinkedNode<Process>>();
+  auto newProcess = knew<rx::LinkedNode<Process>>();
   newProcess->object.context = this;
   newProcess->object.pid = pid;
   newProcess->object.state = ProcessState::NEW;
@@ -69,7 +69,7 @@ Process *KernelContext::createProcess(pid_t pid) {
 }
 
 void KernelContext::deleteProcess(Process *proc) {
-  auto procNode = reinterpret_cast<utils::LinkedNode<Process> *>(proc);
+  auto procNode = reinterpret_cast<rx::LinkedNode<Process> *>(proc);
 
   {
     std::lock_guard lock(m_proc_mtx);

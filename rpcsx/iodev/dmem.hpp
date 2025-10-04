@@ -4,7 +4,7 @@
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include "rx/SharedMutex.hpp"
 #include <cstdint>
 #include <rx/MemoryTable.hpp>
@@ -38,7 +38,7 @@ struct DmemDevice : public IoDevice {
 
   orbis::ErrorCode release(std::uint64_t start, std::uint64_t size);
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 

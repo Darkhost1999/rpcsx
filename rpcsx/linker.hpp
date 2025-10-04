@@ -1,7 +1,7 @@
 #pragma once
 
 #include "orbis/module/Module.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <optional>
@@ -75,8 +75,8 @@ enum OrbisElfType_t {
 
 void override(std::string originalModuleName,
               std::filesystem::path replacedModulePath);
-orbis::Ref<orbis::Module> loadModule(std::span<std::byte> image,
-                                     orbis::Process *process);
-orbis::Ref<orbis::Module> loadModuleFile(std::string_view path,
-                                         orbis::Thread *thread);
+rx::Ref<orbis::Module> loadModule(std::span<std::byte> image,
+                                  orbis::Process *process);
+rx::Ref<orbis::Module> loadModuleFile(std::string_view path,
+                                      orbis::Thread *thread);
 } // namespace rx::linker

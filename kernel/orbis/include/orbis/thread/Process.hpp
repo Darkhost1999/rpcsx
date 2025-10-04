@@ -14,7 +14,7 @@
 #include "orbis/Budget.hpp"
 #include "orbis/file.hpp"
 #include "orbis/module/Module.hpp"
-#include "orbis/utils/IdMap.hpp"
+#include "rx/IdMap.hpp"
 #include "rx/SharedMutex.hpp"
 #include <optional>
 
@@ -85,16 +85,16 @@ struct Process final {
   std::uint64_t nextTlsSlot = 1;
   std::uint64_t lastTlsOffset = 0;
 
-  utils::RcIdMap<EventFlag, sint, 4097, 1> evfMap;
-  utils::RcIdMap<Semaphore, sint, 4097, 1> semMap;
-  utils::RcIdMap<Module, ModuleHandle> modulesMap;
-  utils::OwningIdMap<Thread, lwpid_t> threadsMap;
-  utils::RcIdMap<orbis::File, sint> fileDescriptors;
+  rx::RcIdMap<EventFlag, sint, 4097, 1> evfMap;
+  rx::RcIdMap<Semaphore, sint, 4097, 1> semMap;
+  rx::RcIdMap<Module, ModuleHandle> modulesMap;
+  rx::OwningIdMap<Thread, lwpid_t> threadsMap;
+  rx::RcIdMap<orbis::File, sint> fileDescriptors;
 
   // Named objects for debugging
   rx::shared_mutex namedObjMutex;
   utils::kmap<void *, utils::kstring> namedObjNames;
-  utils::OwningIdMap<NamedObjInfo, uint, 65535, 1> namedObjIds;
+  rx::OwningIdMap<NamedObjInfo, uint, 65535, 1> namedObjIds;
 
   utils::kmap<std::int32_t, SigAction> sigActions;
 

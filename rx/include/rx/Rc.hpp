@@ -2,24 +2,16 @@
 
 #include <atomic>
 #include <cassert>
-#include <cstdlib>
 #include <type_traits>
 #include <utility>
 
-namespace orbis {
-// template <typename T, typename... Args> T *knew(Args &&...args);
-inline namespace utils {
-void kfree(void *ptr, std::size_t size);
-
+namespace rx {
 struct RcBase {
   std::atomic<unsigned> references{0};
-  unsigned _total_size = 0; // Set by knew/kcreate
 
   virtual ~RcBase() = default;
 
   void incRef() {
-    if (!_total_size)
-      std::abort();
     if (references.fetch_add(1, std::memory_order::relaxed) > 4096) {
       assert(!"too many references");
     }
@@ -28,9 +20,7 @@ struct RcBase {
   // returns true if object was destroyed
   bool decRef() {
     if (references.fetch_sub(1, std::memory_order::relaxed) == 1) {
-      auto size = _total_size;
-      this->~RcBase();
-      orbis::utils::kfree(this, size);
+      delete this;
       return true;
     }
 
@@ -141,11 +131,4 @@ public:
 };
 
 template <typename T> Ref(T *) -> Ref<T>;
-
-// template <WithRc T, typename... ArgsT>
-//   requires(std::is_constructible_v<T, ArgsT...>)
-// Ref<T> kcreate(ArgsT &&...args) {
-//   return Ref<T>(knew<T>(std::forward<ArgsT>(args)...));
-// }
-} // namespace utils
-} // namespace orbis
+} // namespace rx

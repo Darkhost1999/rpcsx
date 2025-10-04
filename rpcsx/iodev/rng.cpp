@@ -4,7 +4,7 @@
 #include "vm.hpp"
 
 struct RngDevice : public IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -38,7 +38,7 @@ static const orbis::FileOps ops = {
     .mmap = rng_mmap,
 };
 
-orbis::ErrorCode RngDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode RngDevice::open(rx::Ref<orbis::File> *file,
                                  const char *path, std::uint32_t flags,
                                  std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<RngFile>();

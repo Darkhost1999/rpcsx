@@ -5,9 +5,9 @@
 #include "Pipe.hpp"
 #include "amdgpu/tiler_vulkan.hpp"
 #include "orbis/KernelAllocator.hpp"
-#include "orbis/utils/Rc.hpp"
-#include "rx/SharedMutex.hpp"
+#include "rx/Rc.hpp"
 #include "rx/MemoryTable.hpp"
+#include "rx/SharedMutex.hpp"
 #include "shader/SemanticInfo.hpp"
 #include "shader/SpvConverter.hpp"
 #include "shader/gcn.hpp"
@@ -63,7 +63,7 @@ struct RemoteMemory {
   }
 };
 
-struct Device : orbis::RcBase, DeviceContext {
+struct Device : rx::RcBase, DeviceContext {
   static constexpr auto kComputePipeCount = 8;
   static constexpr auto kGfxPipeCount = 2;
 

@@ -10,7 +10,7 @@ template <typename T> std::vector<std::byte> toBytes(const T &value) {
 }
 
 struct IpmiClient {
-  orbis::Ref<orbis::IpmiClient> clientImpl;
+  rx::Ref<orbis::IpmiClient> clientImpl;
   orbis::uint kid;
   orbis::Thread *thread;
 
@@ -44,7 +44,7 @@ struct IpmiClient {
 };
 
 struct IpmiServer {
-  orbis::Ref<orbis::IpmiServer> serverImpl;
+  rx::Ref<orbis::IpmiServer> serverImpl;
 
   std::unordered_map<std::uint32_t,
                      std::function<orbis::ErrorCode(

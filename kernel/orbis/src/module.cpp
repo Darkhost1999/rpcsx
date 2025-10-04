@@ -409,6 +409,10 @@ orbis::SysResult orbis::Module::relocate(Process *process) {
   return {};
 }
 
+void orbis::Module::operator delete(void *pointer) {
+  kfree(pointer, sizeof(orbis::Module));
+}
+
 void orbis::Module::destroy() {
   std::lock_guard lock(proc->mtx);
   proc->modulesMap.close(id);

@@ -3,7 +3,7 @@
 #include "orbis/utils/Logs.hpp"
 
 struct Hmd2GazeDevice : public IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -20,7 +20,7 @@ static const orbis::FileOps ops = {
     .ioctl = hmd2_gaze_ioctl,
 };
 
-orbis::ErrorCode Hmd2GazeDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode Hmd2GazeDevice::open(rx::Ref<orbis::File> *file,
                                       const char *path, std::uint32_t flags,
                                       std::uint32_t mode,
                                       orbis::Thread *thread) {

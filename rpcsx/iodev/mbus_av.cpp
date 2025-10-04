@@ -45,7 +45,7 @@ static const orbis::FileOps fileOps = {
     .read = mbus_av_read,
 };
 
-orbis::ErrorCode MBusAVDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode MBusAVDevice::open(rx::Ref<orbis::File> *file,
                                     const char *path, std::uint32_t flags,
                                     std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<MBusAVFile>();

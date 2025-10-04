@@ -19,7 +19,7 @@
 #include "vm.hpp"
 #include "xbyak/xbyak.h"
 #include <optional>
-#include <orbis/utils/Rc.hpp>
+#include <rx/Rc.hpp>
 #include <rx/Version.hpp>
 #include <rx/align.hpp>
 #include <rx/hexdump.hpp>
@@ -519,9 +519,9 @@ static void guestInitDev() {
 }
 
 static void guestInitFd(orbis::Thread *mainThread) {
-  orbis::Ref<orbis::File> stdinFile;
-  orbis::Ref<orbis::File> stdoutFile;
-  orbis::Ref<orbis::File> stderrFile;
+  rx::Ref<orbis::File> stdinFile;
+  rx::Ref<orbis::File> stdoutFile;
+  rx::Ref<orbis::File> stderrFile;
   rx::procOpsTable.open(mainThread, "/dev/stdin", 0, 0, &stdinFile);
   rx::procOpsTable.open(mainThread, "/dev/stdout", 0, 0, &stdoutFile);
   rx::procOpsTable.open(mainThread, "/dev/stderr", 0, 0, &stderrFile);
@@ -551,7 +551,7 @@ struct ExecEnv {
 };
 
 int guestExec(orbis::Thread *mainThread, ExecEnv execEnv,
-              orbis::utils::Ref<orbis::Module> executableModule,
+              rx::Ref<orbis::Module> executableModule,
               std::span<std::string> argv, std::span<std::string> envp) {
   const auto stackEndAddress = 0x7'ffff'c000ull;
   const auto stackSize = 0x40000 * 32;
@@ -657,7 +657,7 @@ struct ProcessParam {
 };
 
 ExecEnv guestCreateExecEnv(orbis::Thread *mainThread,
-                           const orbis::Ref<orbis::Module> &executableModule,
+                           const rx::Ref<orbis::Module> &executableModule,
                            bool isSystem) {
   std::uint64_t interpBase = 0;
   std::uint64_t entryPoint = executableModule->entryPoint;
@@ -760,7 +760,7 @@ ExecEnv guestCreateExecEnv(orbis::Thread *mainThread,
 }
 
 int guestExec(orbis::Thread *mainThread,
-              orbis::utils::Ref<orbis::Module> executableModule,
+              rx::Ref<orbis::Module> executableModule,
               std::span<std::string> argv, std::span<std::string> envp) {
   auto execEnv = guestCreateExecEnv(mainThread, executableModule, true);
   return guestExec(mainThread, execEnv, std::move(executableModule), argv,
@@ -858,14 +858,14 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
 
   guestInitFd(newThread);
 
-  orbis::Ref<orbis::File> socket;
+  rx::Ref<orbis::File> socket;
   createSocket(&socket, "", 1, 1, 0);
   process->fileDescriptors.insert(socket);
 
   ORBIS_LOG_ERROR(__FUNCTION__, path);
 
   {
-    orbis::Ref<orbis::File> file;
+    rx::Ref<orbis::File> file;
     auto result = vfs::open(path, kOpenFlagReadOnly, 0, &file, thread);
     if (result.isError()) {
       return result;

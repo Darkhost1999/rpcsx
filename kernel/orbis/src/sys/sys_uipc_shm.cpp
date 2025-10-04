@@ -14,7 +14,7 @@ orbis::SysResult orbis::sys_shm_open(Thread *thread, ptr<const char> path,
   }
 
   if (auto shm_open = thread->tproc->ops->shm_open) {
-    Ref<File> file;
+    rx::Ref<File> file;
     auto result = shm_open(thread, path, flags, mode, &file);
     if (result.isError()) {
       return result;

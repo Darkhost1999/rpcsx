@@ -16,8 +16,6 @@
 #include <sys/mman.h>
 #include <unordered_map>
 
-using orbis::utils::Ref;
-
 std::uint64_t monoPimpAddress;
 
 static std::vector<std::byte> unself(const std::byte *image, std::size_t size) {
@@ -361,9 +359,9 @@ void rx::linker::override(std::string originalModuleName,
       std::move(replacedModulePath);
 }
 
-Ref<orbis::Module> rx::linker::loadModule(std::span<std::byte> image,
-                                          orbis::Process *process) {
-  Ref<orbis::Module> result{orbis::knew<orbis::Module>()};
+rx::Ref<orbis::Module> rx::linker::loadModule(std::span<std::byte> image,
+                                              orbis::Process *process) {
+  rx::Ref<orbis::Module> result{orbis::knew<orbis::Module>()};
 
   Elf64_Ehdr header;
   std::memcpy(&header, image.data(), sizeof(Elf64_Ehdr));
@@ -973,9 +971,9 @@ Ref<orbis::Module> rx::linker::loadModule(std::span<std::byte> image,
   return result;
 }
 
-static Ref<orbis::Module> loadModuleFileImpl(std::string_view path,
-                                             orbis::Thread *thread) {
-  orbis::Ref<orbis::File> instance;
+static rx::Ref<orbis::Module> loadModuleFileImpl(std::string_view path,
+                                                 orbis::Thread *thread) {
+  rx::Ref<orbis::File> instance;
   if (vfs::open(path, kOpenFlagReadOnly, 0, &instance, thread).isError()) {
     return {};
   }
@@ -1029,8 +1027,8 @@ static Ref<orbis::Module> loadModuleFileImpl(std::string_view path,
   return rx::linker::loadModule(image, thread->tproc);
 }
 
-Ref<orbis::Module> rx::linker::loadModuleFile(std::string_view path,
-                                              orbis::Thread *thread) {
+rx::Ref<orbis::Module> rx::linker::loadModuleFile(std::string_view path,
+                                                  orbis::Thread *thread) {
   if (auto result = loadModuleFileImpl(path, thread)) {
     return result;
   }

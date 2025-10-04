@@ -3,16 +3,16 @@
 #include "io-device.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
-#include "orbis/utils/Rc.hpp"
-#include "rx/SharedMutex.hpp"
+#include "rx/Rc.hpp"
 #include "rx/MemoryTable.hpp"
+#include "rx/SharedMutex.hpp"
 #include <cstdint>
 
 struct BlockPoolDevice : public IoDevice {
   rx::shared_mutex mtx;
   rx::MemoryAreaTable<> pool;
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
   orbis::ErrorCode map(void **address, std::uint64_t len, std::int32_t prot,

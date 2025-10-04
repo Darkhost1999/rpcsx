@@ -14,7 +14,7 @@
 #include "orbis/uio.hpp"
 #include "orbis/umtx.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include "orbis/vm.hpp"
 #include "rx/watchdog.hpp"
 #include "thread.hpp"
@@ -43,11 +43,11 @@ extern bool allowMonoDebug;
 extern "C" void __register_frame(const void *);
 void setupSigHandlers();
 int guestExec(orbis::Thread *mainThread,
-              orbis::utils::Ref<orbis::Module> executableModule,
+              rx::Ref<orbis::Module> executableModule,
               std::span<std::string> argv, std::span<std::string> envp);
 
 namespace {
-static std::pair<SysResult, Ref<Module>>
+static std::pair<SysResult, rx::Ref<Module>>
 loadPrx(orbis::Thread *thread, std::string_view name, bool relocate,
         std::map<std::string, Module *, std::less<>> &loadedObjects,
         std::map<std::string, Module *, std::less<>> &loadedModules,
@@ -130,7 +130,7 @@ loadPrx(orbis::Thread *thread, std::string_view name, bool relocate,
   return {{}, module};
 }
 
-static std::pair<SysResult, Ref<Module>>
+static std::pair<SysResult, rx::Ref<Module>>
 loadPrx(orbis::Thread *thread, std::string_view path, bool relocate) {
   std::map<std::string, Module *, std::less<>> loadedObjects;
   std::map<std::string, Module *, std::less<>> loadedModules;
@@ -296,13 +296,13 @@ query_memory_protection(orbis::Thread *thread, orbis::ptr<void> address,
 
 orbis::SysResult open(orbis::Thread *thread, orbis::ptr<const char> path,
                       orbis::sint flags, orbis::sint mode,
-                      orbis::Ref<orbis::File> *file) {
+                      rx::Ref<orbis::File> *file) {
   return vfs::open(getAbsolutePath(path, thread), flags, mode, file, thread);
 }
 
 orbis::SysResult shm_open(orbis::Thread *thread, const char *path,
                           orbis::sint flags, orbis::sint mode,
-                          orbis::Ref<orbis::File> *file) {
+                          rx::Ref<orbis::File> *file) {
   auto dev = static_cast<IoDevice *>(orbis::g_context.shmDevice.get());
   return dev->open(file, path, flags, mode, thread);
 }
@@ -325,7 +325,7 @@ orbis::SysResult rename(Thread *thread, ptr<const char> from,
 }
 
 orbis::SysResult blockpool_open(orbis::Thread *thread,
-                                orbis::Ref<orbis::File> *file) {
+                                rx::Ref<orbis::File> *file) {
   auto dev = static_cast<IoDevice *>(orbis::g_context.blockpoolDevice.get());
   return dev->open(file, nullptr, 0, 0, thread);
 }
@@ -353,13 +353,13 @@ orbis::SysResult blockpool_unmap(orbis::Thread *thread, orbis::caddr_t addr,
 
 orbis::SysResult socket(orbis::Thread *thread, orbis::ptr<const char> name,
                         orbis::sint domain, orbis::sint type,
-                        orbis::sint protocol, Ref<File> *file) {
+                        orbis::sint protocol, rx::Ref<File> *file) {
   return createSocket(file, name ? name : "", domain, type, protocol);
 }
 
 orbis::SysResult socketPair(orbis::Thread *thread, orbis::sint domain,
                             orbis::sint type, orbis::sint protocol,
-                            Ref<File> *a, Ref<File> *b) {
+                            rx::Ref<File> *a, rx::Ref<File> *b) {
 
   if (domain == 1 && type == 1 && protocol == 0) {
     int fds[2];
@@ -479,7 +479,7 @@ orbis::SysResult dynlib_load_prx(orbis::Thread *thread,
   auto path = getAbsolutePath(_name, thread);
 
   {
-    orbis::Ref<orbis::File> file;
+    rx::Ref<orbis::File> file;
     if (auto result = vfs::open(path, 0, 0, &file, thread); result.isError()) {
       return result;
     }
@@ -571,7 +571,7 @@ SysResult thr_new(orbis::Thread *thread, orbis::ptr<thr_param> param,
     ORBIS_LOG_NOTICE("  rtp: ", _rtp.type, _rtp.prio);
   }
   childThread->handle =
-      std::thread{[=, childThread = Ref<Thread>(childThread)] {
+      std::thread{[=, childThread = rx::Ref<Thread>(childThread)] {
         static_cast<void>(
             uwrite(_param.child_tid, slong(childThread->tid))); // TODO: verify
         auto context = new ucontext_t{};
@@ -893,7 +893,7 @@ SysResult execve(Thread *thread, ptr<char> fname, ptr<ptr<char>> argv,
   //     }
   // }
   {
-    orbis::Ref<File> file;
+    rx::Ref<File> file;
     auto result = vfs::open(path, kOpenFlagReadOnly, 0, &file, thread);
     if (result.isError()) {
       return result;

@@ -2,8 +2,8 @@
 
 #include "orbis-config.hpp"
 #include "rx/SharedMutex.hpp"
-#include "utils/BitSet.hpp"
-#include "utils/Rc.hpp"
+#include "rx/BitSet.hpp"
+#include "rx/Rc.hpp"
 #include <array>
 #include <cstring>
 #include <mutex>
@@ -44,7 +44,7 @@ static_assert(sizeof(BudgetInfo) == 0x18);
 using BudgetInfoList =
     std::array<BudgetInfo, static_cast<int>(BudgetResource::_count)>;
 
-class Budget : public RcBase {
+class Budget : public rx::RcBase {
   using BudgetList =
       std::array<BudgetItem, static_cast<int>(BudgetResource::_count)>;
 
@@ -134,7 +134,7 @@ public:
 
 private:
   mutable rx::shared_mutex mMtx;
-  orbis::BitSet<static_cast<int>(BudgetResource::_count)> mUsed;
+  rx::BitSet<static_cast<int>(BudgetResource::_count)> mUsed;
   ProcessType mProcessType{};
   BudgetList mList;
   char mName[32]{};

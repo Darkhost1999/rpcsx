@@ -47,7 +47,7 @@ struct AjmDevice : IoDevice {
   orbis::uint32_t instanceIds[AJM_CODEC_COUNT]{};
   orbis::uint32_t unimplementedInstanceId = 0;
   orbis::kmap<orbis::int32_t, Instance> instanceMap;
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -778,7 +778,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = ajm_ioctl,
 };
 
-orbis::ErrorCode AjmDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode AjmDevice::open(rx::Ref<orbis::File> *file,
                                  const char *path, std::uint32_t flags,
                                  std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<AjmFile>();

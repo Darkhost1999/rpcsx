@@ -44,7 +44,7 @@ orbis::SysResult orbis::sys_socketex(Thread *thread, ptr<const char> name,
                                      sint domain, sint type, sint protocol) {
   ORBIS_LOG_TODO(__FUNCTION__, name, domain, type, protocol);
   if (auto socket = thread->tproc->ops->socket) {
-    Ref<File> file;
+    rx::Ref<File> file;
     auto result = socket(thread, name, domain, type, protocol, &file);
 
     if (result.isError()) {
@@ -250,7 +250,7 @@ orbis::SysResult orbis::sys_evf_create(Thread *thread, ptr<const char[32]> name,
 }
 orbis::SysResult orbis::sys_evf_delete(Thread *thread, sint id) {
   ORBIS_LOG_WARNING(__FUNCTION__, id);
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
   if (evf == nullptr) {
     return ErrorCode::NOENT;
   }
@@ -298,7 +298,7 @@ orbis::SysResult orbis::sys_evf_wait(Thread *thread, sint id,
     return ErrorCode::INVAL;
   }
 
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
 
   if (evf == nullptr) {
     return ErrorCode::SRCH;
@@ -336,7 +336,7 @@ orbis::SysResult orbis::sys_evf_trywait(Thread *thread, sint id,
     return ErrorCode::INVAL;
   }
 
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
 
   if (evf == nullptr) {
     return ErrorCode::SRCH;
@@ -356,7 +356,7 @@ orbis::SysResult orbis::sys_evf_trywait(Thread *thread, sint id,
   return result;
 }
 orbis::SysResult orbis::sys_evf_set(Thread *thread, sint id, uint64_t value) {
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
 
   if (evf == nullptr) {
     return ErrorCode::SRCH;
@@ -367,7 +367,7 @@ orbis::SysResult orbis::sys_evf_set(Thread *thread, sint id, uint64_t value) {
   return {};
 }
 orbis::SysResult orbis::sys_evf_clear(Thread *thread, sint id, uint64_t value) {
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
 
   if (evf == nullptr) {
     return ErrorCode::SRCH;
@@ -379,7 +379,7 @@ orbis::SysResult orbis::sys_evf_clear(Thread *thread, sint id, uint64_t value) {
 }
 orbis::SysResult orbis::sys_evf_cancel(Thread *thread, sint id, uint64_t value,
                                        ptr<sint> pNumWaitThreads) {
-  Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
+  rx::Ref<EventFlag> evf = thread->tproc->evfMap.get(id);
 
   if (evf == nullptr) {
     return ErrorCode::SRCH;
@@ -522,7 +522,7 @@ orbis::SysResult orbis::sys_osem_create(Thread *thread,
 }
 orbis::SysResult orbis::sys_osem_delete(Thread *thread, sint id) {
   ORBIS_LOG_TRACE(__FUNCTION__, id);
-  Ref<Semaphore> sem = thread->tproc->semMap.get(id);
+  rx::Ref<Semaphore> sem = thread->tproc->semMap.get(id);
   if (sem == nullptr) {
     return ErrorCode::NOENT;
   }
@@ -558,7 +558,7 @@ orbis::SysResult orbis::sys_osem_close(Thread *thread, sint id) {
 orbis::SysResult orbis::sys_osem_wait(Thread *thread, sint id, sint need,
                                       ptr<uint> pTimeout) {
   ORBIS_LOG_TRACE(__FUNCTION__, thread, id, need, pTimeout);
-  Ref<Semaphore> sem = thread->tproc->semMap.get(id);
+  rx::Ref<Semaphore> sem = thread->tproc->semMap.get(id);
   if (sem == nullptr) {
     return ErrorCode::BADF;
   }
@@ -624,7 +624,7 @@ orbis::SysResult orbis::sys_osem_wait(Thread *thread, sint id, sint need,
 }
 orbis::SysResult orbis::sys_osem_trywait(Thread *thread, sint id, sint need) {
   ORBIS_LOG_TRACE(__FUNCTION__, thread, id, need);
-  Ref<Semaphore> sem = thread->tproc->semMap.get(id);
+  rx::Ref<Semaphore> sem = thread->tproc->semMap.get(id);
   if (sem == nullptr) {
     return ErrorCode::BADF;
   }
@@ -641,7 +641,7 @@ orbis::SysResult orbis::sys_osem_trywait(Thread *thread, sint id, sint need) {
 }
 orbis::SysResult orbis::sys_osem_post(Thread *thread, sint id, sint count) {
   ORBIS_LOG_TRACE(__FUNCTION__, thread, id, count);
-  Ref<Semaphore> sem = thread->tproc->semMap.get(id);
+  rx::Ref<Semaphore> sem = thread->tproc->semMap.get(id);
   if (sem == nullptr) {
     return ErrorCode::BADF;
   }
@@ -802,7 +802,7 @@ orbis::SysResult orbis::sys_budget_create(Thread *thread, ptr<char> name,
     return ErrorCode::PERM;
   }
 
-  orbis::Ref budget =
+  rx::Ref budget =
       orbis::knew<Budget>(_name, processType, std::span(_resources, count));
   auto id = g_context.budgets.insert(budget);
   thread->retval[0] = id;
@@ -835,7 +835,7 @@ orbis::SysResult orbis::sys_budget_get(Thread *thread, sint id,
     return ErrorCode::INVAL;
   }
 
-  Ref<Budget> budget;
+  rx::Ref<Budget> budget;
   bool isProcessTypeBudget = id < 0;
   if (isProcessTypeBudget) {
     id = -2 - id;
@@ -1134,7 +1134,7 @@ orbis::SysResult orbis::sys_mdbg_service(Thread *thread, uint32_t op,
 
   case 7: {
     if (auto open = thread->tproc->ops->open) {
-      Ref<File> console;
+      rx::Ref<File> console;
       auto result = open(thread, "/dev/console", 0, 0, &console);
       if (!result.value() && console && console->ops->write) {
         IoVec vec{.base = (char *)arg0, .len = std::strlen((char *)arg0)};
@@ -1680,7 +1680,7 @@ orbis::SysResult orbis::sys_budget_get_ptype_of_budget(Thread *thread,
     return ErrorCode::NOSYS;
   }
 
-  orbis::Ref<Budget> budget = g_context.budgets.get(budgetId);
+  rx::Ref<Budget> budget = g_context.budgets.get(budgetId);
 
   if (!budget) {
     return ErrorCode::SRCH;
@@ -1698,7 +1698,7 @@ orbis::SysResult orbis::sys_process_terminate(Thread *thread /* TODO */) {
 }
 orbis::SysResult orbis::sys_blockpool_open(Thread *thread) {
   if (auto blockpool_open = thread->tproc->ops->blockpool_open) {
-    Ref<File> file;
+    rx::Ref<File> file;
     auto result = blockpool_open(thread, &file);
     if (result.isError()) {
       return result;
@@ -1874,7 +1874,7 @@ orbis::SysResult orbis::sys_begin_app_mount(Thread *thread,
                   _info.appInfo.unk7, _info.appInfo.unk8, _info.appInfo.unk9,
                   _info.appInfo.unk10);
 
-  orbis::Ref appInfo = orbis::knew<RcAppInfo>();
+  rx::Ref appInfo = orbis::knew<RcAppInfo>();
 
   AppInfoEx *appInfoData = appInfo.get();
   auto handle = g_context.appInfos.insert(appInfo);

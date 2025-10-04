@@ -9,8 +9,8 @@
 #include "rx/SharedCV.hpp"
 #include "rx/SharedMutex.hpp"
 #include "thread/types.hpp"
-#include "utils/IdMap.hpp"
-#include "utils/LinkedNode.hpp"
+#include "rx/IdMap.hpp"
+#include "rx/LinkedNode.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -57,7 +57,7 @@ enum class FwType : std::uint8_t {
   Ps5,
 };
 
-struct RcAppInfo : RcBase, AppInfoEx {
+struct RcAppInfo : rx::RcBase, AppInfoEx {
   orbis::uint32_t appState = 0;
 };
 
@@ -71,7 +71,7 @@ public:
   Process *findProcessById(pid_t pid) const;
   Process *findProcessByHostId(std::uint64_t pid) const;
 
-  utils::LinkedNode<Process> *getProcessList() { return m_processes; }
+  rx::LinkedNode<Process> *getProcessList() { return m_processes; }
 
   long allocatePid() {
     std::lock_guard lock(m_thread_id_mtx);
@@ -98,7 +98,7 @@ public:
     return {it->second.get(), inserted};
   }
 
-  Ref<EventFlag> findEventFlag(std::string_view name) {
+  rx::Ref<EventFlag> findEventFlag(std::string_view name) {
     std::lock_guard lock(m_evf_mtx);
 
     if (auto it = m_event_flags.find(name); it != m_event_flags.end()) {
@@ -121,7 +121,7 @@ public:
     return {it->second.get(), inserted};
   }
 
-  Ref<Semaphore> findSemaphore(std::string_view name) {
+  rx::Ref<Semaphore> findSemaphore(std::string_view name) {
     std::lock_guard lock(m_sem_mtx);
     if (auto it = m_semaphores.find(name); it != m_semaphores.end()) {
       return it->second;
@@ -130,7 +130,7 @@ public:
     return {};
   }
 
-  std::pair<Ref<IpmiServer>, ErrorCode> createIpmiServer(utils::kstring name) {
+  std::pair<rx::Ref<IpmiServer>, ErrorCode> createIpmiServer(utils::kstring name) {
     std::lock_guard lock(m_sem_mtx);
     auto [it, inserted] = mIpmiServers.try_emplace(std::move(name), nullptr);
 
@@ -148,7 +148,7 @@ public:
     return {it->second, {}};
   }
 
-  Ref<IpmiServer> findIpmiServer(std::string_view name) {
+  rx::Ref<IpmiServer> findIpmiServer(std::string_view name) {
     std::lock_guard lock(m_sem_mtx);
     if (auto it = mIpmiServers.find(name); it != mIpmiServers.end()) {
       return it->second;
@@ -191,20 +191,20 @@ public:
     return getUmtxChainIndexed(1, t, flags, ptr);
   }
 
-  Ref<EventEmitter> deviceEventEmitter;
-  Ref<RcBase> shmDevice;
-  Ref<RcBase> dmemDevice;
-  Ref<RcBase> blockpoolDevice;
-  Ref<RcBase> gpuDevice;
-  Ref<RcBase> dceDevice;
+  rx::Ref<EventEmitter> deviceEventEmitter;
+  rx::Ref<rx::RcBase> shmDevice;
+  rx::Ref<rx::RcBase> dmemDevice;
+  rx::Ref<rx::RcBase> blockpoolDevice;
+  rx::Ref<rx::RcBase> gpuDevice;
+  rx::Ref<rx::RcBase> dceDevice;
   rx::shared_mutex gpuDeviceMtx;
   uint sdkVersion{};
   uint fwSdkVersion{};
   uint safeMode{};
-  utils::RcIdMap<RcBase, sint, 4097, 1> ipmiMap;
-  RcIdMap<RcAppInfo> appInfos;
-  RcIdMap<Budget, sint, 4097, 1> budgets;
-  Ref<Budget> processTypeBudgets[4];
+  rx::RcIdMap<rx::RcBase, sint, 4097, 1> ipmiMap;
+  rx::RcIdMap<RcAppInfo> appInfos;
+  rx::RcIdMap<Budget, sint, 4097, 1> budgets;
+  rx::Ref<Budget> processTypeBudgets[4];
 
   rx::shared_mutex regMgrMtx;
   kmap<std::uint32_t, std::uint32_t> regMgrInt;
@@ -213,7 +213,7 @@ public:
   FwType fwType = FwType::Unknown;
   bool isDevKit = false;
 
-  Ref<Budget> createProcessTypeBudget(Budget::ProcessType processType,
+  rx::Ref<Budget> createProcessTypeBudget(Budget::ProcessType processType,
                                       std::string_view name,
                                       std::span<const BudgetInfo> items) {
     auto budget = orbis::knew<orbis::Budget>(name, processType, items);
@@ -222,7 +222,7 @@ public:
     return budget;
   }
 
-  Ref<Budget> getProcessTypeBudget(Budget::ProcessType processType) {
+  rx::Ref<Budget> getProcessTypeBudget(Budget::ProcessType processType) {
     return processTypeBudgets[static_cast<int>(processType)];
   }
 
@@ -239,18 +239,18 @@ private:
   std::atomic<long> m_tsc_freq{0};
 
   rx::shared_mutex m_thread_id_mtx;
-  OwningIdMap<char, long, 256, 0> m_thread_id_map;
+  rx::OwningIdMap<char, long, 256, 0> m_thread_id_map;
   mutable rx::shared_mutex m_proc_mtx;
-  utils::LinkedNode<Process> *m_processes = nullptr;
+  rx::LinkedNode<Process> *m_processes = nullptr;
 
   rx::shared_mutex m_evf_mtx;
-  utils::kmap<utils::kstring, Ref<EventFlag>> m_event_flags;
+  utils::kmap<utils::kstring, rx::Ref<EventFlag>> m_event_flags;
 
   rx::shared_mutex m_sem_mtx;
-  utils::kmap<utils::kstring, Ref<Semaphore>> m_semaphores;
+  utils::kmap<utils::kstring, rx::Ref<Semaphore>> m_semaphores;
 
   rx::shared_mutex mIpmiServerMtx;
-  utils::kmap<utils::kstring, Ref<IpmiServer>> mIpmiServers;
+  utils::kmap<utils::kstring, rx::Ref<IpmiServer>> mIpmiServers;
 
   rx::shared_mutex m_kenv_mtx;
   utils::kmap<utils::kstring, char[128]> m_kenv; // max size: 127 + '\0'

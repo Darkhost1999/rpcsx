@@ -118,7 +118,7 @@ orbis::sint ipmi::IpmiClient::sendSyncMessageRaw(
 
 ipmi::IpmiClient ipmi::createIpmiClient(orbis::Thread *thread,
                                         const char *name) {
-  orbis::Ref<orbis::IpmiClient> client;
+  rx::Ref<orbis::IpmiClient> client;
   GuestAlloc config = orbis::IpmiCreateClientConfig{
       .size = sizeof(orbis::IpmiCreateClientConfig),
   };
@@ -178,7 +178,7 @@ orbis::EventFlag *ipmi::createEventFlag(std::string_view name, uint32_t attrs,
 
 void ipmi::createShm(const char *name, uint32_t flags, uint32_t mode,
                      uint64_t size) {
-  orbis::Ref<orbis::File> shm;
+  rx::Ref<orbis::File> shm;
   auto shmDevice = orbis::g_context.shmDevice.staticCast<IoDevice>();
   shmDevice->open(&shm, name, flags, mode, nullptr);
   shm->ops->truncate(shm.get(), size, nullptr);
@@ -299,7 +299,7 @@ ipmi::IpmiServer::handle(orbis::IpmiSession *session,
 ipmi::IpmiServer &ipmi::createIpmiServer(orbis::Process *process,
                                          const char *name) {
   orbis::IpmiCreateServerConfig config{};
-  orbis::Ref<orbis::IpmiServer> serverImpl;
+  rx::Ref<orbis::IpmiServer> serverImpl;
   orbis::ipmiCreateServer(process, nullptr, name, config, serverImpl);
   auto server = std::make_shared<ipmi::IpmiServer>();
   server->serverImpl = serverImpl;
@@ -428,7 +428,7 @@ struct SceSysAudioSystemPortAndThreadArgs {
 };
 
 void ipmi::createAudioSystemObjects(orbis::Process *process) {
-  auto audioOut = orbis::Ref<AudioOut>(orbis::knew<AudioOut>());
+  auto audioOut = rx::Ref<AudioOut>(orbis::knew<AudioOut>());
 
   createIpmiServer(process, "SceSysAudioSystemIpc")
       .addSyncMethod<SceSysAudioSystemThreadArgs>(

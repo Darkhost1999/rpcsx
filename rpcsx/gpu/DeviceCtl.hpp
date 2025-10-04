@@ -2,7 +2,7 @@
 
 #include "DeviceContext.hpp"
 #include "orbis-config.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <cstdint>
 #include <span>
 
@@ -10,11 +10,11 @@ namespace amdgpu {
 class Device;
 
 class DeviceCtl {
-  orbis::Ref<Device> mDevice;
+  rx::Ref<Device> mDevice;
 
 public:
   DeviceCtl() noexcept;
-  DeviceCtl(orbis::Ref<orbis::RcBase> device) noexcept;
+  DeviceCtl(rx::Ref<rx::RcBase> device) noexcept;
   DeviceCtl(DeviceCtl &&) noexcept;
   DeviceCtl(const DeviceCtl &);
   DeviceCtl &operator=(DeviceCtl &&) noexcept;
@@ -23,7 +23,7 @@ public:
 
   static DeviceCtl createDevice();
   DeviceContext &getContext();
-  orbis::Ref<orbis::RcBase> getOpaque();
+  rx::Ref<rx::RcBase> getOpaque();
 
   void submitGfxCommand(int gfxPipe, int vmId,
                         std::span<const std::uint32_t> command);

@@ -102,7 +102,7 @@ static const orbis::FileOps ops = {
     .mmap = blockpool_mmap,
 };
 
-orbis::ErrorCode BlockPoolDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode BlockPoolDevice::open(rx::Ref<orbis::File> *file,
                                        const char *path, std::uint32_t flags,
                                        std::uint32_t mode,
                                        orbis::Thread *thread) {

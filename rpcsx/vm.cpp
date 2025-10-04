@@ -7,7 +7,7 @@
 #include "orbis/thread/Process.hpp"
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include "rx/format.hpp"
 #include "rx/print.hpp"
 #include "rx/watchdog.hpp"
@@ -649,7 +649,7 @@ struct Block {
 static Block gBlocks[kBlockCount];
 
 struct MapInfo {
-  orbis::Ref<IoDevice> device;
+  rx::Ref<IoDevice> device;
   std::uint64_t offset;
   std::uint32_t flags;
   char name[32];

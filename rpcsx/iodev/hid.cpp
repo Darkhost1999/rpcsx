@@ -8,7 +8,7 @@
 #include <chrono>
 
 struct HidDevice : public IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -155,7 +155,7 @@ static const orbis::FileOps ops = {
     .ioctl = hid_ioctl,
 };
 
-orbis::ErrorCode HidDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode HidDevice::open(rx::Ref<orbis::File> *file,
                                  const char *path, std::uint32_t flags,
                                  std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<HidFile>();

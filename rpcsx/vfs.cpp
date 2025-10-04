@@ -19,9 +19,9 @@ static orbis::FileOps devfs_ops = {
 };
 
 struct DevFs : IoDevice {
-  std::map<std::string, orbis::Ref<IoDevice>, std::less<>> devices;
+  std::map<std::string, rx::Ref<IoDevice>, std::less<>> devices;
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
     if (path[0] == '\0') {
@@ -51,7 +51,7 @@ struct DevFs : IoDevice {
 };
 
 struct ProcFs : IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
     std::fprintf(stderr, "procfs access: %s\n", path);
@@ -60,8 +60,8 @@ struct ProcFs : IoDevice {
 };
 
 static rx::shared_mutex gMountMtx;
-static std::map<std::string, orbis::Ref<IoDevice>, std::greater<>> gMountsMap;
-static orbis::Ref<DevFs> gDevFs;
+static std::map<std::string, rx::Ref<IoDevice>, std::greater<>> gMountsMap;
+static rx::Ref<DevFs> gDevFs;
 
 void vfs::fork() {
   std::lock_guard lock(gMountMtx);
@@ -98,11 +98,11 @@ void vfs::addDevice(std::string name, IoDevice *device) {
   gDevFs->devices[std::move(name)] = device;
 }
 
-std::pair<orbis::Ref<IoDevice>, std::string>
+std::pair<rx::Ref<IoDevice>, std::string>
 vfs::get(const std::filesystem::path &guestPath) {
   std::string normalPath = std::filesystem::path(guestPath).lexically_normal();
   std::string_view path = normalPath;
-  orbis::Ref<IoDevice> device;
+  rx::Ref<IoDevice> device;
 
   std::lock_guard lock(gMountMtx);
 
@@ -159,7 +159,7 @@ orbis::SysResult vfs::mount(const std::filesystem::path &guestPath,
 }
 
 orbis::SysResult vfs::open(std::string_view path, int flags, int mode,
-                           orbis::Ref<orbis::File> *file,
+                           rx::Ref<orbis::File> *file,
                            orbis::Thread *thread) {
   auto [device, devPath] = get(path);
   if (device == nullptr) {
@@ -175,7 +175,7 @@ bool vfs::exists(std::string_view path, orbis::Thread *thread) {
     return false;
   }
 
-  orbis::Ref<orbis::File> file;
+  rx::Ref<orbis::File> file;
   if (device->open(&file, devPath.c_str(), 0, 0, thread) !=
       orbis::ErrorCode{}) {
     return false;

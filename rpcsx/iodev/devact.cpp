@@ -49,7 +49,7 @@ static const orbis::FileOps fileOps = {
 };
 
 struct DevActDevice : IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
     auto newFile = orbis::knew<DevActFile>();

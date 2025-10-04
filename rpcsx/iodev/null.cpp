@@ -4,7 +4,7 @@
 #include <span>
 
 struct NullDevice : public IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -22,7 +22,7 @@ static const orbis::FileOps ops = {
     .write = null_write,
 };
 
-orbis::ErrorCode NullDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode NullDevice::open(rx::Ref<orbis::File> *file,
                                   const char *path, std::uint32_t flags,
                                   std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<NullFile>();

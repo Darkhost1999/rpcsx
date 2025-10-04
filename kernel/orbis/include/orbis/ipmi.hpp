@@ -5,7 +5,7 @@
 #include "orbis-config.hpp"
 #include "rx/SharedCV.hpp"
 #include "rx/SharedMutex.hpp"
-#include "utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <list>
 #include <optional>
 
@@ -14,7 +14,7 @@ struct IpmiSession;
 struct IpmiClient;
 struct Thread;
 
-struct IpmiServer : RcBase {
+struct IpmiServer : rx::RcBase {
   struct IpmiPacketInfo {
     ulong inputSize;
     uint type;
@@ -27,12 +27,12 @@ struct IpmiServer : RcBase {
   struct Packet {
     IpmiPacketInfo info;
     lwpid_t clientTid;
-    Ref<IpmiSession> session;
+    rx::Ref<IpmiSession> session;
     kvector<std::byte> message;
   };
 
   struct ConnectionRequest {
-    Ref<IpmiClient> client;
+    rx::Ref<IpmiClient> client;
     slong clientTid{};
     slong clientPid{};
     slong serverTid{};
@@ -53,7 +53,7 @@ struct IpmiServer : RcBase {
   explicit IpmiServer(kstring name) : name(std::move(name)) {}
 };
 
-struct IpmiClient : RcBase {
+struct IpmiClient : rx::RcBase {
   struct MessageQueue {
     rx::shared_cv messageCv;
     kdeque<kvector<std::byte>> messages;
@@ -68,7 +68,7 @@ struct IpmiClient : RcBase {
   kstring name;
   ptr<void> clientImpl;
   ptr<void> userData;
-  Ref<IpmiSession> session;
+  rx::Ref<IpmiSession> session;
   rx::shared_mutex mutex;
   rx::shared_cv sessionCv;
   rx::shared_cv asyncResponseCv;
@@ -82,7 +82,7 @@ struct IpmiClient : RcBase {
   explicit IpmiClient(kstring name) : name(std::move(name)) {}
 };
 
-struct IpmiSession : RcBase {
+struct IpmiSession : rx::RcBase {
   struct SyncResponse {
     sint errorCode;
     std::uint32_t callerTid;
@@ -91,8 +91,8 @@ struct IpmiSession : RcBase {
 
   ptr<void> sessionImpl;
   ptr<void> userData;
-  Ref<IpmiClient> client;
-  Ref<IpmiServer> server;
+  rx::Ref<IpmiClient> client;
+  rx::Ref<IpmiServer> server;
   rx::shared_mutex mutex;
   rx::shared_cv responseCv;
   kdeque<SyncResponse> syncResponses;
@@ -185,12 +185,12 @@ static_assert(sizeof(IpmiClientConnectParams) == 0x20);
 
 ErrorCode ipmiCreateClient(Process *proc, void *clientImpl, const char *name,
                            const IpmiCreateClientConfig &config,
-                           Ref<IpmiClient> &result);
+                           rx::Ref<IpmiClient> &result);
 ErrorCode ipmiCreateServer(Process *proc, void *serverImpl, const char *name,
                            const IpmiCreateServerConfig &config,
-                           Ref<IpmiServer> &result);
+                           rx::Ref<IpmiServer> &result);
 ErrorCode ipmiCreateSession(Thread *thread, void *sessionImpl,
-                            ptr<void> userData, Ref<IpmiSession> &result);
+                            ptr<void> userData, rx::Ref<IpmiSession> &result);
 
 SysResult sysIpmiCreateClient(Thread *thread, ptr<uint> result,
                               ptr<void> params, uint64_t paramsSz);

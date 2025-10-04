@@ -4,7 +4,7 @@
 #include "orbis/utils/Logs.hpp"
 
 struct Hmd3daDevice : public IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -22,7 +22,7 @@ static const orbis::FileOps ops = {
     .ioctl = hmd_3da_ioctl,
 };
 
-orbis::ErrorCode Hmd3daDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode Hmd3daDevice::open(rx::Ref<orbis::File> *file,
                                     const char *path, std::uint32_t flags,
                                     std::uint32_t mode, orbis::Thread *thread) {
   auto newFile = orbis::knew<Hmd3daFile>();

@@ -704,7 +704,7 @@ IoDevice *createHostIoDevice(orbis::kstring hostPath,
   return orbis::knew<HostFsDevice>(std::move(hostPath), std::move(virtualPath));
 }
 
-orbis::Ref<orbis::File> wrapSocket(int hostFd, orbis::kstring name, int dom,
+rx::Ref<orbis::File> wrapSocket(int hostFd, orbis::kstring name, int dom,
                                    int type, int prot) {
   auto s = orbis::knew<SocketFile>();
   s->name = std::move(name);
@@ -716,7 +716,7 @@ orbis::Ref<orbis::File> wrapSocket(int hostFd, orbis::kstring name, int dom,
   return s;
 }
 
-orbis::ErrorCode createSocket(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode createSocket(rx::Ref<orbis::File> *file,
                               orbis::kstring name, int dom, int type,
                               int prot) {
   // ORBIS_LOG_ERROR(__FUNCTION__, name, dom, type, prot);
@@ -771,7 +771,7 @@ toRealPath(const std::filesystem::path &inp) {
   return result;
 }
 
-orbis::ErrorCode HostFsDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode HostFsDevice::open(rx::Ref<orbis::File> *file,
                                     const char *path, std::uint32_t flags,
                                     std::uint32_t mode, orbis::Thread *thread) {
   auto realPath = hostPath + "/" + path;
@@ -938,7 +938,7 @@ orbis::ErrorCode HostFsDevice::rename(const char *from, const char *to,
   return convertErrorCode(ec);
 }
 
-orbis::File *createHostFile(int hostFd, orbis::Ref<IoDevice> device,
+orbis::File *createHostFile(int hostFd, rx::Ref<IoDevice> device,
                             bool alignTruncate) {
   auto newFile = orbis::knew<HostFile>();
   newFile->hostFd = hostFd;
@@ -951,7 +951,7 @@ orbis::File *createHostFile(int hostFd, orbis::Ref<IoDevice> device,
 struct FdWrapDevice : public IoDevice {
   int fd;
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
     *file = createHostFile(fd, this);

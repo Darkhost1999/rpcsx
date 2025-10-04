@@ -2,7 +2,7 @@
 
 #include "BitSet.hpp"
 #include "Rc.hpp"
-#include "rx/SharedMutex.hpp"
+#include "SharedMutex.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -10,8 +10,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace orbis {
-inline namespace utils {
+namespace rx {
 template <WithRc T, typename IdT = int, std::size_t MaxId = 4096,
           std::size_t MinId = 0>
   requires(MaxId > MinId)
@@ -178,7 +177,7 @@ public:
     return result;
   }
 
-  IdT insert(const Ref<T> &ref) { return insert(ref.get()); }
+  IdT insert(const rx::Ref<T> &ref) { return insert(ref.get()); }
 
   IdT insert(Ref<T> &&ref) {
     auto object = ref.release();
@@ -200,9 +199,9 @@ public:
     return false;
   }
 
-  bool insert(IdT id, const Ref<T> &ref) { return insert(id, ref.get()); }
+  bool insert(IdT id, const rx::Ref<T> &ref) { return insert(id, ref.get()); }
 
-  bool insert(IdT id, Ref<T> &&ref) {
+  bool insert(IdT id, rx::Ref<T> &&ref) {
     auto object = ref.release();
 
     if (!insert_impl(id, object)) {
@@ -213,7 +212,7 @@ public:
     return true;
   }
 
-  Ref<T> get(IdT id) const {
+  rx::Ref<T> get(IdT id) const {
     const auto rawId = static_cast<std::size_t>(id) - MinId;
 
     if (rawId >= MaxId - MinId) {
@@ -404,5 +403,4 @@ struct OwningIdMap {
     }
   }
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

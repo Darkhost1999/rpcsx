@@ -3,8 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace orbis {
-inline namespace utils {
+namespace rx {
 template <std::size_t Count> struct BitSet {
   using chunk_type = std::uint64_t;
   static constexpr auto BitsPerChunk = sizeof(chunk_type) * 8;
@@ -128,5 +127,4 @@ template <std::size_t Count> struct BitSet {
   [[nodiscard]] constexpr iterator begin() const { return iterator(this); }
   [[nodiscard]] constexpr iterator_end end() const { return {}; }
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

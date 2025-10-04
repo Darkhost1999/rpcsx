@@ -18,7 +18,7 @@ struct NotificationDevice : IoDevice {
   orbis::kvector<std::byte> data;
 
   NotificationDevice(int index) : index(index) {}
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -90,7 +90,7 @@ static const orbis::FileOps fileOps = {
     .write = notification_write,
 };
 
-orbis::ErrorCode NotificationDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode NotificationDevice::open(rx::Ref<orbis::File> *file,
                                           const char *path, std::uint32_t flags,
                                           std::uint32_t mode,
                                           orbis::Thread *thread) {

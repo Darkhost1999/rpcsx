@@ -7,7 +7,7 @@
 #include "orbis/thread/Thread.hpp"
 #include "orbis/uio.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <bits/types/struct_iovec.h>
 // #include <rx/hexdump.hpp>
 
@@ -29,12 +29,12 @@ struct AoutFile : orbis::File {};
 
 struct AoutDevice : public IoDevice {
   std::int8_t id;
-  orbis::Ref<AudioDevice> audioDevice;
+  rx::Ref<AudioDevice> audioDevice;
 
   AoutDevice(std::int8_t id, AudioDevice *audioDevice)
       : id(id), audioDevice(audioDevice) {}
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -192,7 +192,7 @@ static const orbis::FileOps fileOps = {
     .write = aout_write,
 };
 
-orbis::ErrorCode AoutDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode AoutDevice::open(rx::Ref<orbis::File> *file,
                                   const char *path, std::uint32_t flags,
                                   std::uint32_t mode, orbis::Thread *thread) {
   ORBIS_LOG_FATAL("aout device open", path, flags, mode);

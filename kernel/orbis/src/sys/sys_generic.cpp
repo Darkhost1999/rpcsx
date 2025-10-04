@@ -8,7 +8,7 @@
 
 orbis::SysResult orbis::sys_read(Thread *thread, sint fd, ptr<void> buf,
                                  size_t nbyte) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -49,7 +49,7 @@ orbis::SysResult orbis::sys_read(Thread *thread, sint fd, ptr<void> buf,
 orbis::SysResult orbis::sys_pread(Thread *thread, sint fd, ptr<void> buf,
                                   size_t nbyte, off_t offset) {
   // ORBIS_LOG_ERROR(__FUNCTION__, fd, buf, nbyte, offset);
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -86,7 +86,7 @@ orbis::SysResult orbis::sys_freebsd6_pread(Thread *thread, sint fd,
 }
 orbis::SysResult orbis::sys_readv(Thread *thread, sint fd, ptr<IoVec> iovp,
                                   uint iovcnt) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -119,7 +119,7 @@ orbis::SysResult orbis::sys_readv(Thread *thread, sint fd, ptr<IoVec> iovp,
 }
 orbis::SysResult orbis::sys_preadv(Thread *thread, sint fd, ptr<IoVec> iovp,
                                    uint iovcnt, off_t offset) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -150,7 +150,7 @@ orbis::SysResult orbis::sys_preadv(Thread *thread, sint fd, ptr<IoVec> iovp,
 }
 orbis::SysResult orbis::sys_write(Thread *thread, sint fd, ptr<const void> buf,
                                   size_t nbyte) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -185,7 +185,7 @@ orbis::SysResult orbis::sys_write(Thread *thread, sint fd, ptr<const void> buf,
 }
 orbis::SysResult orbis::sys_pwrite(Thread *thread, sint fd, ptr<const void> buf,
                                    size_t nbyte, off_t offset) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -222,7 +222,7 @@ orbis::SysResult orbis::sys_freebsd6_pwrite(Thread *thread, sint fd,
 }
 orbis::SysResult orbis::sys_writev(Thread *thread, sint fd, ptr<IoVec> iovp,
                                    uint iovcnt) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -256,7 +256,7 @@ orbis::SysResult orbis::sys_writev(Thread *thread, sint fd, ptr<IoVec> iovp,
 }
 orbis::SysResult orbis::sys_pwritev(Thread *thread, sint fd, ptr<IoVec> iovp,
                                     uint iovcnt, off_t offset) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -285,7 +285,7 @@ orbis::SysResult orbis::sys_pwritev(Thread *thread, sint fd, ptr<IoVec> iovp,
   return {};
 }
 orbis::SysResult orbis::sys_ftruncate(Thread *thread, sint fd, off_t length) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -426,7 +426,7 @@ orbis::SysResult orbis::sys_ioctl(Thread *thread, sint fd, ulong com,
                                   caddr_t data) {
   auto str = ioctlToString(com);
   // ORBIS_LOG_WARNING(__FUNCTION__, fd, com, str);
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }

@@ -74,7 +74,7 @@ orbis::SysResult orbis::sys_chroot(Thread *thread, ptr<char> path) {
 orbis::SysResult orbis::sys_open(Thread *thread, ptr<const char> path,
                                  sint flags, sint mode) {
   if (auto open = thread->tproc->ops->open) {
-    Ref<File> file;
+    rx::Ref<File> file;
     auto result = open(thread, path, flags, mode, &file);
     if (result.isError()) {
       return result;
@@ -114,7 +114,7 @@ orbis::SysResult orbis::sys_openat(Thread *thread, sint fd, ptr<char> path,
     return sys_open(thread, (cwd + "/" + path).c_str(), flag, mode);
   }
 
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -167,7 +167,7 @@ orbis::SysResult orbis::sys_unlinkat(Thread *thread, sint fd, ptr<char> path,
 }
 orbis::SysResult orbis::sys_lseek(Thread *thread, sint fd, off_t offset,
                                   sint whence) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -215,7 +215,7 @@ orbis::SysResult orbis::sys_freebsd6_lseek(Thread *thread, sint fd, sint,
 }
 orbis::SysResult orbis::sys_access(Thread *thread, ptr<char> path, sint flags) {
   if (auto open = thread->tproc->ops->open) {
-    Ref<File> file;
+    rx::Ref<File> file;
     return open(thread, path, flags, 0, &file);
   }
 
@@ -231,7 +231,7 @@ orbis::SysResult orbis::sys_eaccess(Thread *thread, ptr<char> path,
 }
 orbis::SysResult orbis::sys_stat(Thread *thread, ptr<char> path, ptr<Stat> ub) {
   ORBIS_LOG_WARNING(__FUNCTION__, path);
-  Ref<File> file;
+  rx::Ref<File> file;
   auto result = thread->tproc->ops->open(thread, path, 0, 0, &file);
   if (result.isError()) {
     return result;
@@ -289,7 +289,7 @@ orbis::SysResult orbis::sys_readlink(Thread *thread, ptr<char> path,
     return ErrorCode::NAMETOOLONG;
   }
 
-  Ref<File> file;
+  rx::Ref<File> file;
   if (auto error = thread->tproc->ops->open(thread, path, 0, 0, &file);
       error.value()) {
     return error;
@@ -362,7 +362,7 @@ orbis::SysResult orbis::sys_futimes(Thread *thread, sint fd,
 }
 orbis::SysResult orbis::sys_truncate(Thread *thread, ptr<char> path,
                                      off_t length) {
-  Ref<File> file;
+  rx::Ref<File> file;
   auto result = thread->tproc->ops->open(thread, path, 2, 0, &file);
   if (result.isError()) {
     return result;
@@ -400,7 +400,7 @@ orbis::SysResult orbis::sys_mkdir(Thread *thread, ptr<char> path, sint mode) {
 }
 orbis::SysResult orbis::sys_mkdirat(Thread *thread, sint fd, ptr<char> path,
                                     mode_t mode) {
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }
@@ -425,7 +425,7 @@ orbis::SysResult orbis::sys_getdirentries(Thread *thread, sint fd,
                                           ptr<char> buf, uint count,
                                           ptr<slong> basep) {
   ORBIS_LOG_WARNING(__FUNCTION__, fd, (void *)buf, count, basep);
-  Ref<File> file = thread->tproc->fileDescriptors.get(fd);
+  rx::Ref<File> file = thread->tproc->fileDescriptors.get(fd);
   if (file == nullptr) {
     return ErrorCode::BADF;
   }

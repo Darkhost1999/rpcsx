@@ -10,14 +10,14 @@
 #include <sys/mman.h>
 
 struct ShmDevice : IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
   orbis::ErrorCode unlink(const char *path, bool recursive,
                           orbis::Thread *thread) override;
 };
 
-orbis::ErrorCode ShmDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode ShmDevice::open(rx::Ref<orbis::File> *file,
                                  const char *path, std::uint32_t flags,
                                  std::uint32_t mode, orbis::Thread *thread) {
   ORBIS_LOG_WARNING("shm_open", path, flags, mode);

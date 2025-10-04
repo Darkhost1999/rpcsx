@@ -2,7 +2,7 @@
 
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <cstdint>
 #include <system_error>
 
@@ -24,8 +24,8 @@ enum OpenFlags {
   kOpenFlagDirectory = 0x20000,
 };
 
-struct IoDevice : orbis::RcBase {
-  virtual orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+struct IoDevice : rx::RcBase {
+  virtual orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                                 std::uint32_t flags, std::uint32_t mode,
                                 orbis::Thread *thread) = 0;
   virtual orbis::ErrorCode unlink(const char *path, bool recursive,
@@ -56,7 +56,7 @@ struct HostFsDevice : IoDevice {
 
   HostFsDevice(orbis::kstring path, orbis::kstring virtualPath)
       : hostPath(std::move(path)), virtualPath(std::move(virtualPath)) {}
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
   orbis::ErrorCode unlink(const char *path, bool recursive,
@@ -74,10 +74,10 @@ orbis::ErrorCode convertErrorCode(const std::error_code &code);
 orbis::ErrorCode convertErrno();
 IoDevice *createHostIoDevice(orbis::kstring hostPath,
                              orbis::kstring virtualPath);
-orbis::Ref<orbis::File> wrapSocket(int hostFd, orbis::kstring name, int dom,
+rx::Ref<orbis::File> wrapSocket(int hostFd, orbis::kstring name, int dom,
                                    int type, int prot);
-orbis::ErrorCode createSocket(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode createSocket(rx::Ref<orbis::File> *file,
                               orbis::kstring name, int dom, int type, int prot);
-orbis::File *createHostFile(int hostFd, orbis::Ref<IoDevice> device,
+orbis::File *createHostFile(int hostFd, rx::Ref<IoDevice> device,
                             bool alignTruncate = false);
 IoDevice *createFdWrapDevice(int fd);

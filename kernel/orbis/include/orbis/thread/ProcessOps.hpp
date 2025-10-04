@@ -3,7 +3,7 @@
 #include "../module/ModuleHandle.hpp"
 #include "../thread/types.hpp"
 #include "orbis-config.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 
 namespace orbis {
 struct Thread;
@@ -39,21 +39,21 @@ struct ProcessOps {
                                        ptr<MemoryProtection> protection);
 
   SysResult (*open)(Thread *thread, ptr<const char> path, sint flags, sint mode,
-                    Ref<File> *file);
+                    rx::Ref<File> *file);
   SysResult (*shm_open)(Thread *thread, const char *path, sint flags, sint mode,
-                        Ref<File> *file);
+                        rx::Ref<File> *file);
   SysResult (*unlink)(Thread *thread, ptr<const char> path);
   SysResult (*mkdir)(Thread *thread, ptr<const char> path, sint mode);
   SysResult (*rmdir)(Thread *thread, ptr<const char> path);
   SysResult (*rename)(Thread *thread, ptr<const char> from, ptr<const char> to);
-  SysResult (*blockpool_open)(Thread *thread, Ref<File> *file);
+  SysResult (*blockpool_open)(Thread *thread, rx::Ref<File> *file);
   SysResult (*blockpool_map)(Thread *thread, caddr_t addr, size_t len,
                              sint prot, sint flags);
   SysResult (*blockpool_unmap)(Thread *thread, caddr_t addr, size_t len);
   SysResult (*socket)(Thread *thread, ptr<const char> name, sint domain,
-                      sint type, sint protocol, Ref<File> *file);
+                      sint type, sint protocol, rx::Ref<File> *file);
   SysResult (*socketpair)(Thread *thread, sint domain, sint type, sint protocol,
-                          Ref<File> *a, Ref<File> *b);
+                          rx::Ref<File> *a, rx::Ref<File> *b);
   SysResult (*shm_unlink)(Thread *thread, const char *path);
   SysResult (*dynlib_get_obj_member)(Thread *thread, ModuleHandle handle,
                                      uint64_t index, ptr<ptr<void>> addrp);

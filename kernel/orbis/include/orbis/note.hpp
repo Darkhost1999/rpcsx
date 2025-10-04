@@ -2,7 +2,7 @@
 
 #include "KernelAllocator.hpp"
 #include "orbis-config.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include "rx/SharedMutex.hpp"
 #include <limits>
 #include <set>
@@ -77,17 +77,17 @@ struct KQueue;
 struct KNote {
   rx::shared_mutex mutex;
   KQueue *queue;
-  Ref<File> file;
+  rx::Ref<File> file;
   KEvent event{};
   bool enabled = true;
   bool triggered = false;
-  void *linked = nullptr; // TODO: use Ref<>
-  kvector<Ref<EventEmitter>> emitters;
+  void *linked = nullptr; // TODO: use rx::Ref<>
+  kvector<rx::Ref<EventEmitter>> emitters;
 
   ~KNote();
 };
 
-struct EventEmitter : orbis::RcBase {
+struct EventEmitter : rx::RcBase {
   rx::shared_mutex mutex;
   std::set<KNote *, std::less<>, kallocator<KNote *>> notes;
 

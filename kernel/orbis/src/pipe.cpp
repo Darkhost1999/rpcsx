@@ -81,7 +81,7 @@ static orbis::FileOps pipe_ops = {
     .write = pipe_write,
 };
 
-std::pair<orbis::Ref<orbis::Pipe>, orbis::Ref<orbis::Pipe>>
+std::pair<rx::Ref<orbis::Pipe>, rx::Ref<orbis::Pipe>>
 orbis::createPipe() {
   auto a = knew<Pipe>();
   auto b = knew<Pipe>();

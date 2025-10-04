@@ -1,7 +1,7 @@
 #pragma once
 
 #include "orbis-config.hpp"
-#include "orbis/utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <cstdlib>
 #include <orbis/sys/sysproto.hpp>
 
@@ -18,7 +18,7 @@ enum class AudioFormat : std::uint32_t {
   S32_LE = 0x1000,
 };
 
-class AudioDevice : public orbis::RcBase {
+class AudioDevice : public rx::RcBase {
 protected:
   bool mWorking = false;
   AudioFormat mFormat{};

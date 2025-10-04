@@ -5,7 +5,7 @@
 #include "orbis/utils/Logs.hpp"
 
 struct CaymanRegDevice : IoDevice {
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -22,7 +22,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = cayman_reg_ioctl,
 };
 
-orbis::ErrorCode CaymanRegDevice::open(orbis::Ref<orbis::File> *file,
+orbis::ErrorCode CaymanRegDevice::open(rx::Ref<orbis::File> *file,
                                        const char *path, std::uint32_t flags,
                                        std::uint32_t mode,
                                        orbis::Thread *thread) {

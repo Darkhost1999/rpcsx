@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <deque>
 #include <map>
 #include <string>
@@ -56,22 +56,30 @@ using kunmap =
 template <typename T, typename... Args>
   requires(std::is_constructible_v<T, Args...>)
 T *knew(Args &&...args) {
-  auto loc = static_cast<T *>(utils::kalloc(sizeof(T), alignof(T)));
-  auto res = std::construct_at(loc, std::forward<Args>(args)...);
-  if constexpr (requires(T *t) { t->_total_size = sizeof(T); })
-    res->_total_size = sizeof(T);
-  return res;
+  if constexpr (std::is_base_of_v<rx::RcBase, T>) {
+    static_assert(!std::is_final_v<T>);
+    struct DynamicObject final : T {
+      using T::T;
+
+      void operator delete(void *pointer) { utils::kfree(pointer, sizeof(T)); }
+    };
+
+    auto loc = static_cast<DynamicObject *>(
+        utils::kalloc(sizeof(DynamicObject), alignof(DynamicObject)));
+    return std::construct_at(loc, std::forward<Args>(args)...);
+  } else {
+    static_assert(!std::is_polymorphic_v<T>, "Polymorphic type should be derived from rx::RcBase");
+
+    auto loc = static_cast<T *>(utils::kalloc(sizeof(T), alignof(T)));
+    return std::construct_at(loc, std::forward<Args>(args)...);
+  }
 }
 
 // clang-format off
 template <typename T> void kdelete(T *ptr) {
-  auto total_size = sizeof(T);
-  if constexpr (requires(T *t) { t->_total_size = sizeof(T); })
-    total_size = ptr->_total_size;
-  else
-    static_assert(std::is_final_v<T>, "Uncertain type size");
+  static_assert(std::is_final_v<T>, "Uncertain type size");
   ptr->~T();
-  utils::kfree(ptr, total_size);
+  utils::kfree(ptr, sizeof(T));
 }
 // clang-format on
 

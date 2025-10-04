@@ -4,15 +4,15 @@
 #include "file.hpp"
 #include "rx/SharedCV.hpp"
 #include "rx/SharedMutex.hpp"
-#include "utils/Rc.hpp"
+#include "rx/Rc.hpp"
 #include <utility>
 
 namespace orbis {
-struct Pipe final : File {
+struct Pipe : File {
   rx::shared_cv cv;
   kvector<std::byte> data;
-  Ref<Pipe> other;
+  rx::Ref<Pipe> other;
 };
 
-std::pair<Ref<Pipe>, Ref<Pipe>> createPipe();
+std::pair<rx::Ref<Pipe>, rx::Ref<Pipe>> createPipe();
 } // namespace orbis

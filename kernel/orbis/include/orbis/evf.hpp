@@ -1,7 +1,7 @@
 #pragma once
 #include "KernelAllocator.hpp"
-#include "thread/Thread.hpp"
 #include "rx/SharedMutex.hpp"
+#include "thread/Thread.hpp"
 #include <atomic>
 
 namespace orbis {

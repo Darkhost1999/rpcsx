@@ -12,7 +12,7 @@
 using namespace amdgpu;
 
 DeviceCtl::DeviceCtl() noexcept = default;
-DeviceCtl::DeviceCtl(orbis::Ref<orbis::RcBase> device) noexcept
+DeviceCtl::DeviceCtl(rx::Ref<rx::RcBase> device) noexcept
     : mDevice(device.rawStaticCast<Device>()) {}
 DeviceCtl::DeviceCtl(DeviceCtl &&) noexcept = default;
 DeviceCtl::DeviceCtl(const DeviceCtl &) = default;
@@ -28,7 +28,7 @@ DeviceCtl DeviceCtl::createDevice() {
 }
 
 DeviceContext &DeviceCtl::getContext() { return *mDevice.get(); }
-orbis::Ref<orbis::RcBase> DeviceCtl::getOpaque() { return mDevice; }
+rx::Ref<rx::RcBase> DeviceCtl::getOpaque() { return mDevice; }
 
 void DeviceCtl::submitGfxCommand(int gfxPipe, int vmId,
                                  std::span<const std::uint32_t> command) {

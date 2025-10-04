@@ -1,7 +1,6 @@
 #pragma once
 
-namespace orbis {
-inline namespace utils {
+namespace rx {
 template <typename T> struct LinkedNode final {
   T object;
   LinkedNode *next = nullptr;
@@ -44,5 +43,4 @@ template <typename T> struct LinkedNode final {
     return result;
   }
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

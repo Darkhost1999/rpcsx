@@ -9,10 +9,10 @@ struct MBusDevice : IoDevice {
   rx::shared_mutex mtx;
   rx::shared_cv cv;
   orbis::kdeque<MBusEvent> events;
-  orbis::Ref<orbis::EventEmitter> eventEmitter =
+  rx::Ref<orbis::EventEmitter> eventEmitter =
       orbis::knew<orbis::EventEmitter>();
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 

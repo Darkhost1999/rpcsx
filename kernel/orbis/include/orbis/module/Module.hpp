@@ -4,12 +4,10 @@
 #include "ModuleSegment.hpp"
 
 #include "../KernelAllocator.hpp"
-#include "../utils/Rc.hpp"
+#include "rx/Rc.hpp"
 
 #include "orbis-config.hpp"
-#include <cstddef>
 #include <string>
-#include <vector>
 
 namespace orbis {
 struct Thread;
@@ -118,16 +116,13 @@ struct Module final {
   utils::kvector<Relocation> nonPltRelocations;
   utils::kvector<ModuleNeeded> neededModules;
   utils::kvector<ModuleNeeded> neededLibraries;
-  utils::kvector<utils::Ref<Module>> importedModules;
-  utils::kvector<utils::Ref<Module>> namespaceModules;
+  utils::kvector<rx::Ref<Module>> importedModules;
+  utils::kvector<rx::Ref<Module>> namespaceModules;
   utils::kvector<utils::kstring> needed;
 
   std::atomic<unsigned> references{0};
-  unsigned _total_size = 0;
 
   void incRef() {
-    if (_total_size != sizeof(Module))
-      std::abort();
     if (references.fetch_add(1, std::memory_order::relaxed) > 512) {
       assert(!"too many references");
     }
@@ -142,10 +137,11 @@ struct Module final {
 
   orbis::SysResult relocate(Process *process);
 
+  void operator delete(void *pointer);
+
 private:
   void destroy();
 };
 
-utils::Ref<Module> createModule(Thread *p, std::string vfsPath,
-                                const char *name);
+rx::Ref<Module> createModule(Thread *p, std::string vfsPath, const char *name);
 } // namespace orbis

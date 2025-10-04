@@ -13,7 +13,7 @@ struct HddDevice : IoDevice {
   std::uint64_t size;
   HddDevice(std::uint64_t size) : size(size) {}
 
-  orbis::ErrorCode open(orbis::Ref<orbis::File> *fs, const char *path,
+  orbis::ErrorCode open(rx::Ref<orbis::File> *fs, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
 };
@@ -135,7 +135,7 @@ static const orbis::FileOps fsOps = {
     .stat = hdd_stat,
 };
 
-orbis::ErrorCode HddDevice::open(orbis::Ref<orbis::File> *fs, const char *path,
+orbis::ErrorCode HddDevice::open(rx::Ref<orbis::File> *fs, const char *path,
                                  std::uint32_t flags, std::uint32_t mode,
                                  orbis::Thread *thread) {
   auto newFile = orbis::knew<HddFile>();
