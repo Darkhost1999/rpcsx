@@ -131,7 +131,7 @@ struct ppu_module : public Type
 	std::string name{};                                                                                   // Filename
 	std::string path{};                                                                                   // Filepath
 	s64 offset = 0;                                                                                       // Offset of file
-	mutable rx::EnumBitSet<ppu_attr> attr{};                                                                        // Shared module attributes
+	mutable rx::EnumBitSet<ppu_attr> attr{};                                                              // Shared module attributes
 	std::string cache{};                                                                                  // Cache file path
 	std::vector<ppu_reloc> relocs{};                                                                      // Relocations
 	std::vector<ppu_segment> segs{};                                                                      // Segments

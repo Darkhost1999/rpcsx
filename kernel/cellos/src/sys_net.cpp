@@ -1336,7 +1336,7 @@ error_code sys_net_bnet_poll(ppu_thread &ppu, vm::ptr<sys_net_pollfd> fds,
         sock->set_connecting(connecting[i]);
 #endif
 
-        rx::EnumBitSet<lv2_socket::poll_t> selected = +lv2_socket::poll_t::error;
+        rx::EnumBitSet<lv2_socket::poll_t> selected = lv2_socket::poll_t::error;
 
         if (fds_buf[i].events & SYS_NET_POLLIN)
           selected += lv2_socket::poll_t::read;

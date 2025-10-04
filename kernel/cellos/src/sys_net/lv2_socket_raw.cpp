@@ -129,9 +129,9 @@ s32 lv2_socket_raw::poll([[maybe_unused]] sys_net_pollfd &sn_pfd,
   return {};
 }
 
-std::tuple<bool, bool, bool>
-lv2_socket_raw::select([[maybe_unused]] rx::EnumBitSet<lv2_socket::poll_t> selected,
-                       [[maybe_unused]] pollfd &native_pfd) {
+std::tuple<bool, bool, bool> lv2_socket_raw::select(
+    [[maybe_unused]] rx::EnumBitSet<lv2_socket::poll_t> selected,
+    [[maybe_unused]] pollfd &native_pfd) {
   LOG_ONCE(raw_select, "lv2_socket_raw::select");
   return {};
 }

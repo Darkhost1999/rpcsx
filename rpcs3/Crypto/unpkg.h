@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Loader/PSF.h"
+#include "util/StrFmt.h"
 #include "util/endian.hpp"
 #include "util/types.hpp"
 #include "util/File.h"
