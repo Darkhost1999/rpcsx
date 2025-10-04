@@ -1,7 +1,7 @@
 #pragma once
 #include "KernelAllocator.hpp"
 #include "thread/Thread.hpp"
-#include "utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include <atomic>
 
 namespace orbis {
@@ -56,7 +56,7 @@ struct EventFlag final {
     }
   };
 
-  utils::shared_mutex queueMtx;
+  rx::shared_mutex queueMtx;
   utils::kvector<WaitingThread> waitingThreads;
 
   enum class NotifyType { Set, Cancel, Destroy };
@@ -80,7 +80,7 @@ struct EventFlag final {
   std::size_t set(std::uint64_t bits) { return notify(NotifyType::Set, bits); }
 
   void clear(std::uint64_t bits) {
-    writer_lock lock(queueMtx);
+    rx::writer_lock lock(queueMtx);
     value.fetch_and(bits, std::memory_order::relaxed);
   }
 

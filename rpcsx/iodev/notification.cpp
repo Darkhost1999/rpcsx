@@ -4,7 +4,7 @@
 #include "orbis/thread/Thread.hpp"
 #include "orbis/uio.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include <chrono>
 #include <cstddef>
 #include <mutex>
@@ -14,7 +14,7 @@
 struct NotificationFile : orbis::File {};
 struct NotificationDevice : IoDevice {
   int index;
-  orbis::shared_mutex mutex;
+  rx::shared_mutex mutex;
   orbis::kvector<std::byte> data;
 
   NotificationDevice(int index) : index(index) {}

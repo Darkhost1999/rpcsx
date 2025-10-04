@@ -5,10 +5,13 @@ find_package(Git)
 add_library(${PROJECT_NAME} OBJECT
     src/debug.cpp
     src/die.cpp
+    src/FileLock.cpp
     src/hexdump.cpp
     src/mem.cpp
+    src/SharedAtomic.cpp
+    src/SharedCV.cpp
+    src/SharedMutex.cpp
     src/Version.cpp
-    src/FileLock.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

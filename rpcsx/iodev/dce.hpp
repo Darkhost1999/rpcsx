@@ -6,12 +6,12 @@
 #include "orbis/file.hpp"
 #include "orbis/thread/Process.hpp"
 #include "orbis/utils/Rc.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 
 static constexpr auto kVmIdCount = 6;
 
 struct DceDevice : IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   std::uint32_t eopCount = 0;
   std::uint32_t freeVmIds = (1 << (kVmIdCount + 1)) - 1;
   orbis::uint64_t dmemOffset = ~static_cast<std::uint64_t>(0);

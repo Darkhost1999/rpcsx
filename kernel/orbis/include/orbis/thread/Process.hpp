@@ -15,7 +15,7 @@
 #include "orbis/file.hpp"
 #include "orbis/module/Module.hpp"
 #include "orbis/utils/IdMap.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include <optional>
 
 namespace orbis {
@@ -59,7 +59,7 @@ struct Process final {
   sysentvec *sysent = nullptr;
   ProcessState state = ProcessState::NEW;
   Process *parentProcess = nullptr;
-  shared_mutex mtx;
+  rx::shared_mutex mtx;
   int vmId = -1;
   ProcessType type = ProcessType::FreeBsd;
   void (*onSysEnter)(Thread *thread, int id, uint64_t *args,
@@ -92,14 +92,14 @@ struct Process final {
   utils::RcIdMap<orbis::File, sint> fileDescriptors;
 
   // Named objects for debugging
-  utils::shared_mutex namedObjMutex;
+  rx::shared_mutex namedObjMutex;
   utils::kmap<void *, utils::kstring> namedObjNames;
   utils::OwningIdMap<NamedObjInfo, uint, 65535, 1> namedObjIds;
 
   utils::kmap<std::int32_t, SigAction> sigActions;
 
   // Named memory ranges for debugging
-  utils::shared_mutex namedMemMutex;
+  rx::shared_mutex namedMemMutex;
   utils::kmap<NamedMemoryRange, utils::kstring> namedMem;
 };
 } // namespace orbis

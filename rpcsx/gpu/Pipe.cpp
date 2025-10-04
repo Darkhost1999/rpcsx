@@ -200,7 +200,7 @@ void ComputePipe::setIndirectRing(int queueId, int indirectLevel, Ring ring) {
 }
 
 void ComputePipe::mapQueue(int queueId, Ring ring,
-                           std::unique_lock<orbis::shared_mutex> &lock) {
+                           std::unique_lock<rx::shared_mutex> &lock) {
   if (ring.indirectLevel < 0 || ring.indirectLevel > 1) {
     rx::die("unexpected compute ring indirect level {}", ring.indirectLevel);
   }
@@ -216,7 +216,7 @@ void ComputePipe::mapQueue(int queueId, Ring ring,
 }
 
 void ComputePipe::waitForIdle(int queueId,
-                              std::unique_lock<orbis::shared_mutex> &lock) {
+                              std::unique_lock<rx::shared_mutex> &lock) {
   auto &ring = queues[1][queueId];
 
   while (true) {

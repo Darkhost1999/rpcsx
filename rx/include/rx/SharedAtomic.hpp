@@ -9,7 +9,7 @@
 #include <thread>
 #include <type_traits>
 
-namespace orbis {
+namespace rx {
 inline void yield() { std::this_thread::yield(); }
 inline void relax() {
 #if defined(__GNUC__) && (defined __i386__ || defined __x86_64__)
@@ -22,7 +22,6 @@ inline void relax() {
 static constexpr auto kRelaxSpinCount = 12;
 static constexpr auto kSpinCount = 16;
 
-inline namespace utils {
 inline thread_local bool (*g_scopedUnblock)(bool) = nullptr;
 
 bool try_spin_wait(auto &&pred) {
@@ -163,5 +162,4 @@ private:
                                     std::chrono::microseconds usec_timeout =
                                         std::chrono::microseconds::max());
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

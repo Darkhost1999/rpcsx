@@ -5,8 +5,6 @@
 #include "orbis/note.hpp"
 #include "orbis/uio.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/SharedCV.hpp"
-#include "orbis/utils/SharedMutex.hpp"
 #include <mutex>
 
 struct MBusAVFile : orbis::File {};

@@ -1,7 +1,7 @@
-#include "utils/SharedAtomic.hpp"
-using namespace orbis;
+#include "SharedAtomic.hpp"
+using namespace rx;
 
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux__
 #include <linux/futex.h>
 
 std::errc shared_atomic32::wait_impl(std::uint32_t oldValue,
@@ -40,6 +40,10 @@ std::errc shared_atomic32::wait_impl(std::uint32_t oldValue,
   }
 
   if (result < 0) {
+    if (errorCode == std::errc::interrupted) {
+      return std::errc::resource_unavailable_try_again;
+    }
+
     return errorCode;
   }
 
@@ -49,7 +53,7 @@ std::errc shared_atomic32::wait_impl(std::uint32_t oldValue,
 int shared_atomic32::notify_n(int count) const {
   return syscall(SYS_futex, this, FUTEX_WAKE, count);
 }
-#elif defined(ORBIS_HAS_ULOCK)
+#elif defined(__APPLE__)
 #include <limits>
 
 #define UL_COMPARE_AND_WAIT 1
@@ -79,8 +83,28 @@ extern int __ulock_wake(uint32_t operation, void *addr, uint64_t wake_value);
 
 std::errc shared_atomic32::wait_impl(std::uint32_t oldValue,
                                      std::chrono::microseconds usec_timeout) {
+  bool useTimeout = usec_timeout != std::chrono::microseconds::max();
+  bool unblock = (!useTimeout || usec_timeout.count() > 1000) &&
+                 g_scopedUnblock != nullptr;
+
+  if (unblock) {
+    if (!g_scopedUnblock(true)) {
+      return std::errc::interrupted;
+    }
+  }
+
   int result = __ulock_wait(UL_COMPARE_AND_WAIT_SHARED, (void *)this, oldValue,
                             usec_timeout.count());
+
+  if (unblock) {
+    if (!g_scopedUnblock(false)) {
+      if (result < 0) {
+        return std::errc::interrupted;
+      }
+
+      return {};
+    }
+  }
 
   if (result < 0) {
     return static_cast<std::errc>(errno);
@@ -112,6 +136,68 @@ int shared_atomic32::notify_n(int count) const {
   }
 
   return result;
+}
+#elif defined(_WIN32)
+#include <cmath>
+#include <windows.h>
+
+std::errc shared_atomic32::wait_impl(std::uint32_t oldValue,
+                                     std::chrono::microseconds usec_timeout) {
+
+  bool useTimeout = usec_timeout != std::chrono::microseconds::max();
+
+  bool unblock = (!useTimeout || usec_timeout.count() > 1000) &&
+                 g_scopedUnblock != nullptr;
+
+  if (unblock) {
+    if (!g_scopedUnblock(true)) {
+      return std::errc::interrupted;
+    }
+  }
+
+  BOOL result = WaitOnAddress(
+      this, &oldValue, sizeof(std::uint32_t),
+      useTimeout
+          ? std::chrono::duration_cast<std::chrono::milliseconds>(usec_timeout)
+                .count()
+          : INFINITY);
+
+  DWORD error = 0;
+  if (!result) {
+    error = GetLastError();
+  } else {
+    if (load(std::memory_order::relaxed) == oldValue) {
+      error = ERROR_ALERTED; // dummy error
+    }
+  }
+
+  if (unblock) {
+    if (!g_scopedUnblock(false)) {
+      if (result != TRUE) {
+        return std::errc::interrupted;
+      }
+
+      return {};
+    }
+  }
+
+  if (error == ERROR_TIMEOUT) {
+    return std::errc::timed_out;
+  }
+
+  return std::errc::resource_unavailable_try_again;
+}
+
+int shared_atomic32::notify_n(int count) const {
+  if (count == 1) {
+    WakeByAddressSingle(const_cast<shared_atomic32 *>(this));
+  } else if (count == std::numeric_limits<int>::max()) {
+    WakeByAddressAll(const_cast<shared_atomic32 *>(this));
+  } else {
+    for (int i = 0; i < count; ++i) {
+      WakeByAddressSingle(const_cast<shared_atomic32 *>(this));
+    }
+  }
 }
 #else
 #error Unimplemented atomic for this platform

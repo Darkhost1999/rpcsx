@@ -2,12 +2,12 @@
 
 #include "io-device.hpp"
 #include "iodev/MBusEvent.hpp"
-#include "orbis/utils/SharedCV.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedCV.hpp"
+#include "rx/SharedMutex.hpp"
 
 struct MBusDevice : IoDevice {
-  orbis::shared_mutex mtx;
-  orbis::shared_cv cv;
+  rx::shared_mutex mtx;
+  rx::shared_cv cv;
   orbis::kdeque<MBusEvent> events;
   orbis::Ref<orbis::EventEmitter> eventEmitter =
       orbis::knew<orbis::EventEmitter>();

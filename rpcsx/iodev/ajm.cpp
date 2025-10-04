@@ -41,7 +41,7 @@ enum {
 };
 
 struct AjmDevice : IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   orbis::uint32_t batchId = 1; // temp
 
   orbis::uint32_t instanceIds[AJM_CODEC_COUNT]{};

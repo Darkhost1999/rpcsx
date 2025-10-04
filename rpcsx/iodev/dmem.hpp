@@ -5,13 +5,13 @@
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Rc.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include <cstdint>
 #include <rx/MemoryTable.hpp>
 #include <unistd.h>
 
 struct DmemDevice : public IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   int index;
   int shmFd = -1;
   std::size_t dmemTotalSize;

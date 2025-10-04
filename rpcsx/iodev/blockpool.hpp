@@ -4,12 +4,12 @@
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Rc.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include "rx/MemoryTable.hpp"
 #include <cstdint>
 
 struct BlockPoolDevice : public IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   rx::MemoryAreaTable<> pool;
 
   orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,

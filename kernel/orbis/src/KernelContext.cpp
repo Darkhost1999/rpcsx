@@ -2,7 +2,7 @@
 #include "orbis/thread/Process.hpp"
 #include "orbis/thread/ProcessOps.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "utils/SharedAtomic.hpp"
+#include "rx/SharedAtomic.hpp"
 #include <bit>
 #include <chrono>
 #include <csignal>
@@ -283,7 +283,7 @@ void KernelContext::kfree(void *ptr, std::size_t size) {
   }
 }
 
-std::tuple<UmtxChain &, UmtxKey, std::unique_lock<shared_mutex>>
+std::tuple<UmtxChain &, UmtxKey, std::unique_lock<rx::shared_mutex>>
 KernelContext::getUmtxChainIndexed(int i, Thread *t, uint32_t flags,
                                    void *ptr) {
   auto pid = t->tproc->pid;
@@ -406,7 +406,7 @@ bool Thread::block() {
 
 scoped_unblock::scoped_unblock() {
   if (g_currentThread && g_currentThread->context) {
-    g_scopedUnblock = [](bool unblock) {
+    rx::g_scopedUnblock = [](bool unblock) {
       if (unblock) {
         return g_currentThread->unblock();
       }
@@ -416,5 +416,5 @@ scoped_unblock::scoped_unblock() {
   }
 }
 
-scoped_unblock::~scoped_unblock() { g_scopedUnblock = nullptr; }
+scoped_unblock::~scoped_unblock() { rx::g_scopedUnblock = nullptr; }
 } // namespace orbis

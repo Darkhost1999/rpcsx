@@ -1,7 +1,6 @@
 #include "evf.hpp"
 #include "error/ErrorCode.hpp"
-#include "utils/Logs.hpp"
-#include "utils/SharedCV.hpp"
+#include "rx/SharedCV.hpp"
 #include <atomic>
 
 orbis::ErrorCode orbis::EventFlag::wait(Thread *thread, std::uint8_t waitMode,
@@ -99,7 +98,7 @@ orbis::ErrorCode orbis::EventFlag::wait(Thread *thread, std::uint8_t waitMode,
 orbis::ErrorCode orbis::EventFlag::tryWait(Thread *thread,
                                            std::uint8_t waitMode,
                                            std::uint64_t bitPattern) {
-  writer_lock lock(queueMtx);
+  rx::writer_lock lock(queueMtx);
 
   if (isDeleted) {
     return ErrorCode::ACCES;
@@ -120,7 +119,7 @@ orbis::ErrorCode orbis::EventFlag::tryWait(Thread *thread,
 }
 
 std::size_t orbis::EventFlag::notify(NotifyType type, std::uint64_t bits) {
-  writer_lock lock(queueMtx);
+  rx::writer_lock lock(queueMtx);
   auto patValue = value.load(std::memory_order::relaxed);
 
   if (type == NotifyType::Destroy) {

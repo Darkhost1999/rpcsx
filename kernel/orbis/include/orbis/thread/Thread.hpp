@@ -7,9 +7,9 @@
 
 #include "../KernelAllocator.hpp"
 #include "../ucontext.hpp"
-#include "../utils/SharedAtomic.hpp"
-#include "../utils/SharedCV.hpp"
-#include "../utils/SharedMutex.hpp"
+#include "rx/SharedAtomic.hpp"
+#include "rx/SharedCV.hpp"
+#include "rx/SharedMutex.hpp"
 #include <thread>
 
 namespace orbis {
@@ -17,7 +17,7 @@ struct Process;
 
 static constexpr std::uint32_t kThreadSuspendFlag = 1 << 31;
 struct Thread {
-  utils::shared_mutex mtx;
+  rx::shared_mutex mtx;
   Process *tproc = nullptr;
   uint64_t retval[2]{};
   void *context{};
@@ -34,14 +34,14 @@ struct Thread {
       .type = 2,
       .prio = 10,
   };
-  utils::shared_mutex suspend_mtx;
-  utils::shared_cv suspend_cv;
+  rx::shared_mutex suspend_mtx;
+  rx::shared_cv suspend_cv;
   kvector<UContext> sigReturns;
   kvector<SigInfo> blockedSignals;
   kvector<SigInfo> queuedSignals;
-  shared_atomic32 suspendFlags{0};
+  rx::shared_atomic32 suspendFlags{0};
 
-  utils::shared_atomic32 interruptedMtx{0};
+  rx::shared_atomic32 interruptedMtx{0};
 
   std::int64_t hostTid = -1;
   lwpid_t tid = -1;
@@ -51,7 +51,7 @@ struct Thread {
   std::thread::native_handle_type nativeHandle;
 
   // Used to wake up thread in sleep queue
-  utils::shared_cv sync_cv;
+  rx::shared_cv sync_cv;
   uint64_t evfResultPattern;
   uint64_t evfIsCancelled;
 

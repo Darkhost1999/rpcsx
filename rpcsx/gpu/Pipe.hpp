@@ -1,7 +1,7 @@
 #pragma once
 #include "Registers.hpp"
 #include "Scheduler.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
@@ -42,7 +42,7 @@ struct ComputePipe {
 
   using CommandHandler = bool (ComputePipe::*)(Ring &);
   CommandHandler commandHandlers[255];
-  orbis::shared_mutex queueMtx[kQueueCount];
+  rx::shared_mutex queueMtx[kQueueCount];
   int index;
   int currentQueueId;
   Ring queues[kRingsPerQueue][kQueueCount];
@@ -54,12 +54,12 @@ struct ComputePipe {
   bool processRing(Ring &ring);
   void setIndirectRing(int queueId, int level, Ring ring);
   void mapQueue(int queueId, Ring ring,
-                std::unique_lock<orbis::shared_mutex> &lock);
-  void waitForIdle(int queueId, std::unique_lock<orbis::shared_mutex> &lock);
+                std::unique_lock<rx::shared_mutex> &lock);
+  void waitForIdle(int queueId, std::unique_lock<rx::shared_mutex> &lock);
   void submit(int queueId, std::uint32_t offset);
 
-  std::unique_lock<orbis::shared_mutex> lockQueue(int queueId) {
-    return std::unique_lock<orbis::shared_mutex>(queueMtx[queueId]);
+  std::unique_lock<rx::shared_mutex> lockQueue(int queueId) {
+    return std::unique_lock<rx::shared_mutex>(queueMtx[queueId]);
   }
 
   bool setShReg(Ring &ring);
@@ -109,7 +109,7 @@ struct GraphicsPipe {
   Ring deQueues[3];
   Ring ceQueue;
 
-  orbis::shared_mutex eopFlipMtx;
+  rx::shared_mutex eopFlipMtx;
   std::uint32_t eopFlipRequestCount{0};
   EopFlipRequest eopFlipRequests[kEopFlipRequestMax];
 

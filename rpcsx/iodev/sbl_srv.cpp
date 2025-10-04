@@ -4,14 +4,13 @@
 #include "orbis/file.hpp"
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include "vm.hpp"
-#include <cstdio>
 
 struct SblSrvFile : public orbis::File {};
 
 struct SblSrvDevice : IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   orbis::ErrorCode open(orbis::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;

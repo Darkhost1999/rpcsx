@@ -59,7 +59,7 @@ struct ProcFs : IoDevice {
   }
 };
 
-static orbis::shared_mutex gMountMtx;
+static rx::shared_mutex gMountMtx;
 static std::map<std::string, orbis::Ref<IoDevice>, std::greater<>> gMountsMap;
 static orbis::Ref<DevFs> gDevFs;
 

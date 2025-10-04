@@ -2,7 +2,7 @@
 
 #include "BitSet.hpp"
 #include "Rc.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -66,7 +66,7 @@ class RcIdMap {
 public:
   static constexpr auto npos = static_cast<IdT>(~static_cast<std::size_t>(0));
 
-  mutable shared_mutex mutex;
+  mutable rx::shared_mutex mutex;
 
   struct end_iterator {};
 

@@ -1,12 +1,10 @@
 #pragma once
 
-#include <atomic>
-#include <orbis/utils/AtomicOp.hpp>
-#include <orbis/utils/SharedAtomic.hpp>
+#include "AtomicOp.hpp"
+#include "SharedAtomic.hpp"
 #include <system_error>
 
-namespace orbis {
-inline namespace utils {
+namespace rx {
 // IPC-ready shared mutex, using only writer lock is recommended
 class shared_mutex final {
   friend class shared_cv;
@@ -147,5 +145,4 @@ public:
   explicit writer_lock(shared_mutex &mutex) : m_mutex(mutex) { m_mutex.lock(); }
   ~writer_lock() { m_mutex.unlock(); }
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

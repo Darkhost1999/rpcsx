@@ -3,8 +3,8 @@
 #include "KernelAllocator.hpp"
 #include "evf.hpp"
 #include "orbis-config.hpp"
-#include "orbis/utils/SharedCV.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedCV.hpp"
+#include "rx/SharedMutex.hpp"
 #include "utils/Rc.hpp"
 #include <list>
 #include <optional>
@@ -43,8 +43,8 @@ struct IpmiServer : RcBase {
   ptr<void> serverImpl;
   ptr<void> eventHandler;
   ptr<void> userData;
-  shared_mutex mutex;
-  shared_cv receiveCv;
+  rx::shared_mutex mutex;
+  rx::shared_cv receiveCv;
   sint pid;
   kdeque<Packet> packets;
   std::list<ConnectionRequest, kallocator<ConnectionRequest>>
@@ -55,7 +55,7 @@ struct IpmiServer : RcBase {
 
 struct IpmiClient : RcBase {
   struct MessageQueue {
-    shared_cv messageCv;
+    rx::shared_cv messageCv;
     kdeque<kvector<std::byte>> messages;
   };
 
@@ -69,10 +69,10 @@ struct IpmiClient : RcBase {
   ptr<void> clientImpl;
   ptr<void> userData;
   Ref<IpmiSession> session;
-  shared_mutex mutex;
-  shared_cv sessionCv;
-  shared_cv asyncResponseCv;
-  shared_cv connectCv;
+  rx::shared_mutex mutex;
+  rx::shared_cv sessionCv;
+  rx::shared_cv asyncResponseCv;
+  rx::shared_cv connectCv;
   std::optional<sint> connectionStatus{};
   Process *process;
   kdeque<MessageQueue> messageQueues;
@@ -93,8 +93,8 @@ struct IpmiSession : RcBase {
   ptr<void> userData;
   Ref<IpmiClient> client;
   Ref<IpmiServer> server;
-  shared_mutex mutex;
-  shared_cv responseCv;
+  rx::shared_mutex mutex;
+  rx::shared_cv responseCv;
   kdeque<SyncResponse> syncResponses;
   uint expectedOutput{0};
 };

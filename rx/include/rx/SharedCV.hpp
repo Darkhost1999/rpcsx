@@ -1,21 +1,19 @@
 #pragma once
 
-#include "orbis/utils/SharedAtomic.hpp"
+#include "SharedAtomic.hpp"
+#include "SharedMutex.hpp"
 #include <chrono>
 #include <cstdint>
 #include <mutex>
-#include <orbis/utils/AtomicOp.hpp>
-#include <orbis/utils/SharedMutex.hpp>
 #include <system_error>
 
-namespace orbis {
-inline namespace utils {
+namespace rx {
 // IPC-ready lightweight condition variable
 class shared_cv final {
   enum : unsigned {
     c_waiter_mask = 0xffff,
     c_signal_mask = 0x7fff0000,
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux
     c_locked_mask = 0x80000000,
 #endif
     c_signal_one = c_waiter_mask + 1,
@@ -88,5 +86,4 @@ public:
     }
   }
 };
-} // namespace utils
-} // namespace orbis
+} // namespace rx

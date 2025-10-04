@@ -3,7 +3,7 @@
 #include "libatrac9/libatrac9.h"
 #include "orbis-config.hpp"
 #include "orbis/KernelAllocator.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 // #include "orbis/utils/Logs.hpp"
 #include <cstdint>
 extern "C" {
@@ -326,7 +326,7 @@ struct AJMAACCodecInfoSideband {
 };
 
 struct Instance {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   AJMCodecs codec;
   AJMChannels maxChannels;
   AJMFormat outputFormat;

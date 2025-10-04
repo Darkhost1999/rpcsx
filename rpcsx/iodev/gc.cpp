@@ -8,7 +8,7 @@
 #include "orbis/thread/Process.hpp"
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include "rx/die.hpp"
 #include "rx/print.hpp"
 #include "vm.hpp"
@@ -25,7 +25,7 @@ struct ComputeQueue {
 };
 
 struct GcDevice : public IoDevice {
-  orbis::shared_mutex mtx;
+  rx::shared_mutex mtx;
   orbis::kmap<orbis::pid_t, int> clients;
   orbis::kmap<std::uint64_t, ComputeQueue> computeQueues;
   void *submitArea = nullptr;

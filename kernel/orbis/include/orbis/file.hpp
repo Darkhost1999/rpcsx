@@ -3,9 +3,9 @@
 #include "KernelAllocator.hpp"
 #include "error/ErrorCode.hpp"
 #include "note.hpp"
+#include "rx/SharedMutex.hpp"
 #include "stat.hpp"
 #include "utils/Rc.hpp"
-#include "utils/SharedMutex.hpp"
 #include <cstdint>
 
 namespace orbis {
@@ -74,7 +74,7 @@ struct FileOps {
 };
 
 struct File : RcBase {
-  shared_mutex mtx;
+  rx::shared_mutex mtx;
   Ref<EventEmitter> event;
   const FileOps *ops = nullptr;
   Ref<RcBase> device;

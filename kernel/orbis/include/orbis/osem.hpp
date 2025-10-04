@@ -1,11 +1,10 @@
 #pragma once
 
 #include "KernelAllocator.hpp"
-#include "thread/Thread.hpp"
-#include "utils/SharedCV.hpp"
-#include "utils/SharedMutex.hpp"
+#include "orbis-config.hpp"
+#include "rx/SharedCV.hpp"
+#include "rx/SharedMutex.hpp"
 #include <atomic>
-#include <condition_variable>
 
 namespace orbis {
 enum {
@@ -22,8 +21,8 @@ struct Semaphore final {
   std::atomic<unsigned> references{0};
   std::atomic<sint> value;
   const sint maxValue;
-  utils::shared_mutex mtx;
-  utils::shared_cv cond;
+  rx::shared_mutex mtx;
+  rx::shared_cv cond;
 
   Semaphore(uint attrs, sint value, sint max)
       : attrs(attrs), value(value), maxValue(max) {}

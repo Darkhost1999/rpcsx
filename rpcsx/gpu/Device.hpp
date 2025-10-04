@@ -6,7 +6,7 @@
 #include "amdgpu/tiler_vulkan.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/utils/Rc.hpp"
-#include "orbis/utils/SharedMutex.hpp"
+#include "rx/SharedMutex.hpp"
 #include "rx/MemoryTable.hpp"
 #include "shader/SemanticInfo.hpp"
 #include "shader/SpvConverter.hpp"
@@ -82,7 +82,7 @@ struct Device : orbis::RcBase, DeviceContext {
   CommandPipe commandPipe;
   FlipPipeline flipPipeline;
 
-  orbis::shared_mutex writeCommandMtx;
+  rx::shared_mutex writeCommandMtx;
   uint32_t imageIndex = 0;
   bool isImageAcquired = false;
 

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "orbis-config.hpp"
+#include "rx/SharedMutex.hpp"
 #include "utils/BitSet.hpp"
 #include "utils/Rc.hpp"
-#include "utils/SharedMutex.hpp"
 #include <array>
 #include <cstring>
 #include <mutex>
+#include <span>
 #include <string_view>
 
 namespace orbis {
@@ -132,7 +133,7 @@ public:
   [[nodiscard]] ProcessType processType() const { return mProcessType; }
 
 private:
-  mutable shared_mutex mMtx;
+  mutable rx::shared_mutex mMtx;
   orbis::BitSet<static_cast<int>(BudgetResource::_count)> mUsed;
   ProcessType mProcessType{};
   BudgetList mList;

@@ -78,7 +78,7 @@ static SysResult keventChange(KQueue *kq, KEvent &change, Thread *thread) {
     nodeIt = kq->notes.end();
   }
 
-  std::unique_lock<shared_mutex> noteLock;
+  std::unique_lock<rx::shared_mutex> noteLock;
   if (change.flags & kEvAdd) {
     if (nodeIt == kq->notes.end()) {
       auto &note = kq->notes.emplace_front();

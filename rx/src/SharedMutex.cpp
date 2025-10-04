@@ -1,5 +1,4 @@
-#include "utils/SharedMutex.hpp"
-#include "utils/Logs.hpp"
+#include "SharedMutex.hpp"
 #include <syscall.h>
 #include <unistd.h>
 #include <xmmintrin.h>
@@ -11,7 +10,7 @@ static void busy_wait(unsigned long long cycles = 3000) {
   while (__builtin_ia32_rdtsc() < stop);
 }
 
-namespace orbis::utils {
+namespace rx {
 void shared_mutex::impl_lock_shared(unsigned val) {
   if (val >= c_err)
     std::abort(); // "shared_mutex underflow"
@@ -179,4 +178,4 @@ bool shared_mutex::lock_forced(int count) {
   m_value.fetch_add(c_one * count);
   return true;
 }
-} // namespace orbis::utils
+} // namespace rx

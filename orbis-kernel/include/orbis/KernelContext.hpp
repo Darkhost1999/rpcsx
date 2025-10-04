@@ -6,11 +6,11 @@
 #include "ipmi.hpp"
 #include "orbis/note.hpp"
 #include "osem.hpp"
-#include "rx/SharedCV.hpp"
-#include "rx/SharedMutex.hpp"
 #include "thread/types.hpp"
 #include "utils/IdMap.hpp"
 #include "utils/LinkedNode.hpp"
+#include "utils/SharedCV.hpp"
+#include "utils/SharedMutex.hpp"
 
 #include <cstdint>
 #include <mutex>

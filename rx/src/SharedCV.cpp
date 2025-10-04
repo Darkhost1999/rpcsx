@@ -1,13 +1,13 @@
-#include "orbis/utils/SharedCV.hpp"
+#include "SharedCV.hpp"
 #include <chrono>
 
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux
 #include <linux/futex.h>
 #include <syscall.h>
 #include <unistd.h>
 #endif
 
-namespace orbis::utils {
+namespace rx {
 std::errc shared_cv::impl_wait(shared_mutex &mutex, unsigned _val,
                                std::uint64_t usec_timeout) noexcept {
   // Not supposed to fail
@@ -39,14 +39,14 @@ std::errc shared_cv::impl_wait(shared_mutex &mutex, unsigned _val,
         value -= c_signal_one;
       }
 
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux
       if (value & c_locked_mask) {
         value -= c_locked_mask;
       }
 #endif
     });
 
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux
     // Lock is already acquired
     if (old & c_locked_mask) {
       return {};
@@ -76,7 +76,7 @@ std::errc shared_cv::impl_wait(shared_mutex &mutex, unsigned _val,
 }
 
 void shared_cv::impl_wake(shared_mutex &mutex, int _count) noexcept {
-#ifdef ORBIS_HAS_FUTEX
+#ifdef __linux
   while (true) {
     unsigned _old = m_value.load();
     const bool is_one = _count == 1;
