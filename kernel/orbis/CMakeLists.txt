@@ -67,7 +67,7 @@ add_library(obj.orbis-kernel OBJECT
   src/utils/Logs.cpp
 )
 
-target_link_libraries(obj.orbis-kernel PUBLIC orbis::kernel::config rx)
+target_link_libraries(obj.orbis-kernel PUBLIC orbis::kernel::config rx kernel)
 
 target_include_directories(obj.orbis-kernel
     PUBLIC

@@ -272,14 +272,13 @@ target_compile_definitions(rx PRIVATE
 if (WITH_PS4)
     find_package(nlohmann_json CONFIG)
     add_subdirectory(tools)
-    add_subdirectory(kernel/orbis)
 endif()
 
 add_subdirectory(rpcsx)
+add_subdirectory(kernel)
 
 if (WITH_PS3)
     include(ConfigureCompiler)
-    add_subdirectory(kernel/cellos)
     add_subdirectory(rpcs3)
     add_subdirectory(ps3fw)
 endif()

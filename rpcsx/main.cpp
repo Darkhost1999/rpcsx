@@ -26,6 +26,7 @@
 
 #include <elf.h>
 #include <linux/prctl.h>
+#include <orbis/GlobalKernelObject.hpp>
 #include <orbis/KernelContext.hpp>
 #include <orbis/module.hpp>
 #include <orbis/module/Module.hpp>
@@ -1264,6 +1265,8 @@ int main(int argc, const char *argv[]) {
 
   guestInitDev();
   guestInitFd(mainThread);
+
+  orbis::constructAllGlobals();
 
   // data transfer mode
   // 0 - normal
