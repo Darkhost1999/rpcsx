@@ -75,7 +75,7 @@ T callDeserializeFunction(Deserializer &s)
 }
 
 template <typename T>
-concept SerializableImpl = requires(Serializer &s, const T &value) {
+constexpr auto SerializableImpl = requires(Serializer &s, const T &value) {
   value.serialize(s);
 } || requires(Serializer &s, const T &value) {
   callSerializeFunction(s, value);
@@ -84,7 +84,7 @@ concept SerializableImpl = requires(Serializer &s, const T &value) {
 };
 
 template <typename T>
-concept DeserializableImpl = requires(Deserializer &d, T &value) {
+constexpr auto DeserializableImpl = requires(Deserializer &d, T &value) {
   value.deserialize(d);
 } || requires(Deserializer &d, T &value) {
   value = std::remove_cvref_t<T>::deserialize(d);
@@ -99,16 +99,20 @@ concept DeserializableImpl = requires(Deserializer &d, T &value) {
 } || requires(Deserializer &d, T &value) {
   TypeSerializer<std::remove_cvref_t<T>>::deserialize(d, value);
 };
+
+template <typename T>
+constexpr auto IsSerializable = SerializableImpl<T> && DeserializableImpl<T>;
+
 } // namespace detail
 
 template <typename T>
-concept Serializable =
-    detail::SerializableImpl<T> && detail::DeserializableImpl<T>;
+concept Serializable = detail::IsSerializable<T>;
 
 namespace detail {
-struct SerializableFieldTest {
-  template <Serializable FieldT>
-    requires(std::is_default_constructible_v<FieldT>)
+template <typename ClassT> struct SerializableFieldTest {
+  template <typename FieldT>
+    requires(std::is_default_constructible_v<FieldT> &&
+             !std::is_same_v<FieldT, ClassT> && detail::IsSerializable<FieldT>)
   constexpr operator FieldT();
 };
 
@@ -121,7 +125,7 @@ template <typename T, std::size_t I> constexpr bool isSerializableField() {
                   std::index_sequence<Before...>,
                   std::index_sequence<After...>) {
     return requires {
-      T{(Before, SerializableAnyFieldTest{})..., SerializableFieldTest{},
+      T{(Before, SerializableAnyFieldTest{})..., SerializableFieldTest<T>{},
         (After, SerializableAnyFieldTest{})...};
     };
   };
@@ -130,18 +134,27 @@ template <typename T, std::size_t I> constexpr bool isSerializableField() {
               std::make_index_sequence<rx::fieldCount<T> - I - 1>{});
 }
 
-template <typename T, std::size_t N = rx::fieldCount<T>>
-constexpr bool isSerializableFields() {
+template <typename T> constexpr bool isSerializableFields() {
   auto impl = []<std::size_t... I>(std::index_sequence<I...>) {
-    return requires { T{(I, SerializableFieldTest{})...}; };
+    return requires { T{(I, SerializableFieldTest<T>{})...}; };
   };
 
-  return impl(std::make_index_sequence<N>{});
+  if constexpr (!std::is_class_v<T>) {
+    return false;
+  } else {
+    constexpr auto fieldCount = rx::fieldCount<T>;
+
+    if constexpr (fieldCount == 0) {
+      return false;
+    } else {
+      return impl(std::make_index_sequence<fieldCount>{});
+    }
+  }
 }
 
 template <typename T>
-concept SerializableClass = !detail::IsRange<T> && std::is_class_v<T> &&
-                            rx::fieldCount<T> > 0 && isSerializableFields<T>();
+constexpr auto SerializableClass =
+    !detail::IsRange<T> && isSerializableFields<T>();
 } // namespace detail
 
 struct Serializer {
@@ -259,7 +272,8 @@ template <detail::TriviallyRelocatable T> struct TypeSerializer<T> {
   }
 };
 
-template <Serializable A, Serializable B>
+template <typename A, typename B>
+  requires detail::IsSerializable<A> && detail::IsSerializable<B>
 struct TypeSerializer<std::pair<A, B>> {
   static void serialize(Serializer &s, const std::pair<A, B> &t) {
     s.serialize(t.first);
@@ -276,7 +290,9 @@ struct TypeSerializer<std::pair<A, B>> {
   }
 };
 
-template <Serializable... T> struct TypeSerializer<std::tuple<T...>> {
+template <typename... T>
+  requires(detail::IsSerializable<T> && ...)
+struct TypeSerializer<std::tuple<T...>> {
   static void serialize(Serializer &s, const std::tuple<T...> &t) {
     std::apply([&s](auto &value) { s.serialize(value); }, t);
   }
@@ -288,9 +304,9 @@ template <Serializable... T> struct TypeSerializer<std::tuple<T...>> {
 
 template <typename T>
   requires std::is_default_constructible_v<T> &&
-           requires(Serializer &s, T &object) {
-             s.serialize(object.size());
-             s.serialize(*object.begin());
+           (!detail::TriviallyRelocatable<T>) && requires(T &object) {
+             requires detail::IsSerializable<decltype(object.size())>;
+             requires detail::IsSerializable<decltype(*object.begin())>;
              object.resize(1);
              object.begin() != object.end();
            }
@@ -334,12 +350,13 @@ struct TypeSerializer<T> {
 template <detail::IsRange T>
   requires(
       std::is_default_constructible_v<T> &&
-      requires(Serializer &s, T &object) {
-        s.serialize(object.size());
-        s.serialize(*object.begin());
+      (!detail::TriviallyRelocatable<T>) &&
+      requires(T &object) {
+        requires detail::IsSerializable<decltype(object.size())>;
+        requires detail::IsSerializable<decltype(*object.begin())>;
         object.insert(std::move(*object.begin()));
         object.begin() != object.end();
-      } && !requires(Serializer &s, T &object) { object.resize(1); })
+      } && !requires(T &object) { object.resize(1); })
 struct TypeSerializer<T> {
   using item_type = std::remove_cvref_t<decltype(*std::declval<T>().begin())>;
 
@@ -373,7 +390,7 @@ struct TypeSerializer<T> {
 };
 
 namespace detail {
-template <SerializableClass T> struct StructSerializerBuilder {
+template <typename T> struct StructSerializerBuilder {
   static constexpr std::array<StructSerializerField, rx::fieldCount<T>>
   build() {
     StructSerializerBuilder result;
@@ -425,10 +442,8 @@ private:
 };
 } // namespace detail
 
-template <detail::SerializableClass T>
-  requires(!requires {
-    std::index_sequence<detail::StructSerializerBuilder<T>::build().size()>{};
-  })
+template <typename T>
+  requires detail::SerializableClass<T> && (!detail::TriviallyRelocatable<T>)
 struct TypeSerializer<T> {
   static const auto &getFields() {
     static const auto fields = detail::StructSerializerBuilder<T>::build();
@@ -452,39 +467,6 @@ struct TypeSerializer<T> {
     auto bytes = std::bit_cast<std::byte *>(&object);
     for (auto field : getFields()) {
       field.deserialize(s, bytes + field.offset);
-      if (s.failure()) {
-        return;
-      }
-    }
-  }
-};
-
-// all fields are constructable at compile time overload
-template <detail::SerializableClass T>
-  requires requires {
-    std::index_sequence<detail::StructSerializerBuilder<T>::build().size()>{};
-  }
-struct TypeSerializer<T> {
-  static constexpr auto fields = detail::StructSerializerBuilder<T>::build();
-
-  static void serialize(Serializer &s, const T &object) {
-    s.serialize<std::uint32_t>(sizeof(object));
-    auto bytes = std::bit_cast<std::byte *>(&object);
-    for (auto field : fields) {
-      field.serialize(s, bytes + field.offset);
-    }
-  }
-
-  static void deserialize(Deserializer &s, T &object) {
-    if (s.deserialize<std::uint32_t>() != sizeof(object)) {
-      s.setFailure();
-      return;
-    }
-
-    auto bytes = std::bit_cast<std::byte *>(&object);
-    for (auto field : fields) {
-      field.deserialize(s, bytes + field.offset);
-
       if (s.failure()) {
         return;
       }
