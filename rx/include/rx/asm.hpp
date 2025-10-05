@@ -2,8 +2,8 @@
 
 #include "rx/tsc.hpp"
 #include "types.hpp"
-#include <thread>
 #include <atomic>
+#include <thread>
 
 extern bool g_use_rtm;
 extern u64 g_rtm_tx_limit1;

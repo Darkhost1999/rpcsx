@@ -10,7 +10,7 @@
 #include "cellGcmSys.h"
 #include "sysPrxForUser.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(cellGcmSys);
 
@@ -1491,7 +1491,7 @@ s32 cellGcmCallback(ppu_thread& ppu, vm::ptr<CellGcmContextData> context, u32 co
 			return 0;
 		}
 
-		busy_wait();
+		rx::busy_wait();
 	}
 
 	return CELL_OK;

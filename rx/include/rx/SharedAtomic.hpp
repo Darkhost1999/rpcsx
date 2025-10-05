@@ -1,5 +1,6 @@
 #pragma once
 
+#include "asm.hpp"
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -7,7 +8,6 @@
 #include <limits>
 #include <system_error>
 #include <type_traits>
-#include "asm.hpp"
 
 namespace rx {
 static constexpr auto kRelaxSpinCount = 12;

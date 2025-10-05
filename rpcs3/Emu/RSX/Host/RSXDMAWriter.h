@@ -86,7 +86,7 @@ namespace rsx
 	{
 	public:
 		RSXDMAWriter(void* mem)
-			: m_host_context_ptr(new (mem) host_gpu_context_t)
+			: m_host_context_ptr(new(mem) host_gpu_context_t)
 		{
 		}
 

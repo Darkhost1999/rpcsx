@@ -4145,7 +4145,7 @@ s32 _spurs::create_task(vm::ptr<CellSpursTaskset> taskset, vm::ptr<u32> task_id,
 		{
 			v128 ls_pattern_128 = v128::from64r(ls_pattern->_u64[0], ls_pattern->_u64[1]);
 
-			const u32 ls_blocks = utils::popcnt128(ls_pattern_128._u);
+			const u32 ls_blocks = rx::popcnt128(ls_pattern_128._u);
 
 			if (ls_blocks > alloc_ls_blocks)
 			{

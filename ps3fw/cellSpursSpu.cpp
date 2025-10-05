@@ -1446,7 +1446,7 @@ s32 spursTasksetProcessRequest(spu_thread& spu, s32 request, u32* taskId, u32* i
 		{
 			v128 newlyReadyTasks = gv_andn(ready, signalled | pready);
 
-			numNewlyReadyTasks = utils::popcnt128(newlyReadyTasks._u);
+			numNewlyReadyTasks = rx::popcnt128(newlyReadyTasks._u);
 		}
 
 		v128 readyButNotRunning;
@@ -1701,7 +1701,7 @@ s32 spursTasketSaveTaskContext(spu_thread& spu)
 	u32 allocLsBlocks = static_cast<u32>(taskInfo->context_save_storage_and_alloc_ls_blocks & 0x7F);
 	v128 ls_pattern = v128::from64r(taskInfo->ls_pattern._u64[0], taskInfo->ls_pattern._u64[1]);
 
-	const u32 lsBlocks = utils::popcnt128(ls_pattern._u);
+	const u32 lsBlocks = rx::popcnt128(ls_pattern._u);
 
 	if (lsBlocks > allocLsBlocks)
 	{
