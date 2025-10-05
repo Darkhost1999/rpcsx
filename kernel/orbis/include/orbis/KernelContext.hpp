@@ -8,7 +8,6 @@
 #include "osem.hpp"
 #include "rx/IdMap.hpp"
 #include "rx/LinkedNode.hpp"
-#include "rx/SharedCV.hpp"
 #include "rx/SharedMutex.hpp"
 #include "thread/types.hpp"
 
@@ -21,35 +20,6 @@
 namespace orbis {
 struct Process;
 struct Thread;
-
-struct UmtxKey {
-  // TODO: may contain a reference to a shared memory
-  std::uintptr_t addr;
-  orbis::pid_t pid;
-
-  auto operator<=>(const UmtxKey &) const = default;
-};
-
-struct UmtxCond {
-  Thread *thr;
-  rx::shared_cv cv;
-
-  UmtxCond(Thread *thr) : thr(thr) {}
-};
-
-struct UmtxChain {
-  rx::shared_mutex mtx;
-  using queue_type = utils::kmultimap<UmtxKey, UmtxCond>;
-  queue_type sleep_queue;
-  queue_type spare_queue;
-
-  std::pair<const UmtxKey, UmtxCond> *enqueue(UmtxKey &key, Thread *thr);
-  void erase(std::pair<const UmtxKey, UmtxCond> *obj);
-  queue_type::iterator erase(queue_type::iterator it);
-  uint notify_one(const UmtxKey &key);
-  uint notify_all(const UmtxKey &key);
-  uint notify_n(const UmtxKey &key, sint count);
-};
 
 enum class FwType : std::uint8_t {
   Unknown,
@@ -172,26 +142,6 @@ public:
     kenvValue[len] = '0';
   }
 
-  enum {
-    c_golden_ratio_prime = 2654404609u,
-    c_umtx_chains = 512,
-    c_umtx_shifts = 23,
-  };
-
-  // Use getUmtxChain0 or getUmtxChain1
-  std::tuple<UmtxChain &, UmtxKey, std::unique_lock<rx::shared_mutex>>
-  getUmtxChainIndexed(int i, Thread *t, uint32_t flags, void *ptr);
-
-  // Internal Umtx: Wait/Cv/Sem
-  auto getUmtxChain0(Thread *t, uint32_t flags, void *ptr) {
-    return getUmtxChainIndexed(0, t, flags, ptr);
-  }
-
-  // Internal Umtx: Mutex/Umtx/Rwlock
-  auto getUmtxChain1(Thread *t, uint32_t flags, void *ptr) {
-    return getUmtxChainIndexed(1, t, flags, ptr);
-  }
-
   rx::Ref<EventEmitter> deviceEventEmitter;
   rx::Ref<rx::RcBase> shmDevice;
   rx::Ref<rx::RcBase> dmemDevice;
@@ -234,8 +184,6 @@ private:
 
   utils::kmultimap<std::size_t, void *> m_free_heap;
   utils::kmultimap<std::size_t, void *> m_used_node;
-
-  UmtxChain m_umtx_chains[2][c_umtx_chains]{};
 
   std::atomic<long> m_tsc_freq{0};
 

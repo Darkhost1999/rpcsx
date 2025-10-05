@@ -283,24 +283,6 @@ void KernelContext::kfree(void *ptr, std::size_t size) {
   }
 }
 
-std::tuple<UmtxChain &, UmtxKey, std::unique_lock<rx::shared_mutex>>
-KernelContext::getUmtxChainIndexed(int i, Thread *t, uint32_t flags,
-                                   void *ptr) {
-  auto pid = t->tproc->pid;
-  auto p = reinterpret_cast<std::uintptr_t>(ptr);
-  if (flags & 1) {
-    pid = 0; // Process shared (TODO)
-    ORBIS_LOG_WARNING("Using process-shared umtx", t->tid, ptr, (p % 0x4000));
-    t->where();
-  }
-  auto n = p + pid;
-  if (flags & 1)
-    n %= 0x4000;
-  n = ((n * c_golden_ratio_prime) >> c_umtx_shifts) % c_umtx_chains;
-  std::unique_lock lock(m_umtx_chains[i][n].mtx);
-  return {m_umtx_chains[i][n], UmtxKey{p, pid}, std::move(lock)};
-}
-
 inline namespace utils {
 void kfree(void *ptr, std::size_t size) { return g_context.kfree(ptr, size); }
 void *kalloc(std::size_t size, std::size_t align) {
