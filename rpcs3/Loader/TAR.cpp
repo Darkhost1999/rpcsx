@@ -7,8 +7,8 @@
 
 #include "TAR.h"
 
-#include "util/asm.hpp"
-
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "util/serialization_ext.hpp"
 
 #include <charconv>
@@ -164,7 +164,7 @@ std::unique_ptr<utils::serial> tar_object::get_file(const std::string& path, std
 		const u64 size = emplace_single_entry(largest_offset, m_ar->get_size(umax) - m_ar_tar_start).first;
 
 		// Advance offset to next block
-		largest_offset += utils::align(size, 512);
+		largest_offset += rx::alignUp(size, 512);
 	}
 	// Continue scanning from last file entered
 	else if (m_file)
@@ -181,7 +181,7 @@ std::unique_ptr<utils::serial> tar_object::get_file(const std::string& path, std
 			}
 
 			// Advance offset to next block
-			largest_offset += utils::align(size, 512);
+			largest_offset += rx::alignUp(size, 512);
 
 			if (!path.empty() && path == filename)
 			{
@@ -408,7 +408,7 @@ void tar_object::save_directory(const std::string& target_path, utils::serial& a
 			return;
 		}
 
-		ptr += utils::aligned_div(static_cast<u32>(std::bit_width(i)), 3) - 1;
+		ptr += rx::aligned_div(static_cast<u32>(std::bit_width(i)), 3) - 1;
 
 		for (; i; ptr--, i /= 8)
 		{
@@ -425,7 +425,7 @@ void tar_object::save_directory(const std::string& target_path, utils::serial& a
 
 		if (is_null && !func)
 		{
-			ar.pos += utils::align(file_stat.size, 512);
+			ar.pos += rx::alignUp(file_stat.size, 512);
 			return;
 		}
 
@@ -458,7 +458,7 @@ void tar_object::save_directory(const std::string& target_path, utils::serial& a
 				if (is_null)
 				{
 					// Align
-					ar.pos += utils::align(ar.pos - old_pos, 512);
+					ar.pos += rx::alignUp(ar.pos - old_pos, 512);
 					return;
 				}
 			}
@@ -485,7 +485,7 @@ void tar_object::save_directory(const std::string& target_path, utils::serial& a
 
 			// Align
 			const usz diff = ar.pos - old_pos;
-			ar.data.resize(ar.data.size() + utils::align(diff, 512) - diff);
+			ar.data.resize(ar.data.size() + rx::alignUp(diff, 512) - diff);
 			ar.seek_end();
 
 			fd.close();

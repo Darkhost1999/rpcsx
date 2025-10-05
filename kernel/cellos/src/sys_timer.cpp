@@ -9,9 +9,9 @@
 
 #include "Emu/System.h"
 #include "Emu/system_config.h"
+#include "rx/asm.hpp"
 #include "sys_event.h"
 #include "sys_process.h"
-#include "util/asm.hpp"
 
 #include <deque>
 #include <thread>
@@ -77,9 +77,9 @@ u64 lv2_timer::check_unlocked(u64 _now) noexcept {
 
   if (period) {
     // Set next expiration time and check again
-    const u64 expire0 = utils::add_saturate<u64>(next, period);
+    const u64 expire0 = rx::add_saturate<u64>(next, period);
     expire.release(expire0);
-    return utils::sub_saturate<u64>(expire0, _now);
+    return rx::sub_saturate<u64>(expire0, _now);
   }
 
   // Stop after oneshot
@@ -265,11 +265,11 @@ error_code _sys_timer_start(ppu_thread &ppu, u32 timer_id, u64 base_time,
         const u64 expire =
             period == 0 ? base_time : // oneshot
                 base_time == 0
-                ? utils::add_saturate(start_time, period)
+                ? rx::add_saturate(start_time, period)
                 :
                 // periodic timer with no base (using start time as base)
-                start_time < utils::add_saturate(base_time, period)
-                ? utils::add_saturate(base_time, period)
+                start_time < rx::add_saturate(base_time, period)
+                ? rx::add_saturate(base_time, period)
                 :
                 // periodic with base time over start time
                 [&]() -> u64 // periodic timer base before start time (align to
@@ -282,10 +282,10 @@ error_code _sys_timer_start(ppu_thread &ppu, u32 timer_id, u64 base_time,
           // }
           // while (base_time < start_time);
 
-          const u64 start_time_with_base_time_reminder = utils::add_saturate(
+          const u64 start_time_with_base_time_reminder = rx::add_saturate(
               start_time - start_time % period, base_time % period);
 
-          return utils::add_saturate(
+          return rx::add_saturate(
               start_time_with_base_time_reminder,
               start_time_with_base_time_reminder < start_time ? period : 0);
         }();
@@ -428,10 +428,10 @@ error_code sys_timer_usleep(ppu_thread &ppu, u64 sleep_time) {
 
     // Over/underflow checks
     if (add_time >= 0) {
-      sleep_time = utils::add_saturate<u64>(sleep_time, add_time);
+      sleep_time = rx::add_saturate<u64>(sleep_time, add_time);
     } else {
       sleep_time =
-          std::max<u64>(1, utils::sub_saturate<u64>(sleep_time, -add_time));
+          std::max<u64>(1, rx::sub_saturate<u64>(sleep_time, -add_time));
     }
 
     lv2_obj::sleep(ppu, g_cfg.core.sleep_timers_accuracy <

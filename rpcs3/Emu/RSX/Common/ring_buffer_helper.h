@@ -1,7 +1,8 @@
 #pragma once
 
 #include "util/StrFmt.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 /**
  * Ring buffer memory helper :
@@ -20,8 +21,8 @@ protected:
 	template <int Alignment>
 	bool can_alloc(usz size) const
 	{
-		usz alloc_size = utils::align(size, Alignment);
-		usz aligned_put_pos = utils::align(m_put_pos, Alignment);
+		usz alloc_size = rx::alignUp(size, Alignment);
+		usz aligned_put_pos = rx::alignUp(m_put_pos, Alignment);
 		if (aligned_put_pos + alloc_size < m_size)
 		{
 			// range before get
@@ -85,8 +86,8 @@ public:
 	template <int Alignment>
 	usz alloc(usz size)
 	{
-		const usz alloc_size = utils::align(size, Alignment);
-		const usz aligned_put_pos = utils::align(m_put_pos, Alignment);
+		const usz alloc_size = rx::alignUp(size, Alignment);
+		const usz aligned_put_pos = rx::alignUp(m_put_pos, Alignment);
 
 		if (!can_alloc<Alignment>(size) && !grow(alloc_size))
 		{

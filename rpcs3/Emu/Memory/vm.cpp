@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include "rx/align.hpp"
 #include "vm_locking.h"
 #include "vm_ptr.h"
 #include "vm_ref.h"
@@ -14,7 +16,8 @@
 #include <span>
 
 #include "util/vm.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "util/simd.hpp"
 #include "util/serialization.hpp"
 
@@ -245,7 +248,7 @@ namespace vm
 
 					// Try triggering a page fault (write)
 					// TODO: Read memory if needed
-					utils::trigger_write_page_fault(vm::base(test / 4096 == begin / 4096 ? begin : test));
+					rx::trigger_write_page_fault(vm::base(test / 4096 == begin / 4096 ? begin : test));
 					continue;
 				}
 			}
@@ -258,7 +261,7 @@ namespace vm
 				perf0.restart();
 			}
 
-			busy_wait(200);
+			rx::busy_wait(200);
 
 			if (i >= 2 && !_cpu)
 			{
@@ -339,9 +342,9 @@ namespace vm
 		auto range_lock = &*std::prev(std::end(vm::g_range_lock_set));
 		*range_lock = addr | u64{size} << 32 | flags;
 
-		utils::prefetch_read(g_range_lock_set + 0);
-		utils::prefetch_read(g_range_lock_set + 2);
-		utils::prefetch_read(g_range_lock_set + 4);
+		rx::prefetch_read(g_range_lock_set + 0);
+		rx::prefetch_read(g_range_lock_set + 2);
+		rx::prefetch_read(g_range_lock_set + 4);
 
 		const auto range = utils::address_range::start_length(addr, size);
 
@@ -364,7 +367,7 @@ namespace vm
 				break;
 			}
 
-			utils::pause();
+			rx::pause();
 		}
 
 		return range_lock;
@@ -407,7 +410,7 @@ namespace vm
 				}
 
 				if (i < 100)
-					busy_wait(200);
+					rx::busy_wait(200);
 				else
 					std::this_thread::yield();
 
@@ -516,12 +519,12 @@ namespace vm
 				if (to_prepare_memory)
 				{
 					// We have some spare time, prepare cache lines (todo: reservation tests here)
-					utils::prefetch_write(vm::get_super_ptr(addr));
-					utils::prefetch_write(vm::get_super_ptr(addr) + 64);
+					rx::prefetch_write(vm::get_super_ptr(addr));
+					rx::prefetch_write(vm::get_super_ptr(addr) + 64);
 					to_prepare_memory = false;
 				}
 
-				busy_wait(200);
+				rx::busy_wait(200);
 			}
 			else
 			{
@@ -552,9 +555,9 @@ namespace vm
 				addr1 = static_cast<u16>(addr) | is_shared;
 			}
 
-			utils::prefetch_read(g_range_lock_set + 0);
-			utils::prefetch_read(g_range_lock_set + 2);
-			utils::prefetch_read(g_range_lock_set + 4);
+			rx::prefetch_read(g_range_lock_set + 0);
+			rx::prefetch_read(g_range_lock_set + 2);
+			rx::prefetch_read(g_range_lock_set + 4);
 
 			u64 to_clear = get_range_lock_bits(false);
 
@@ -568,7 +571,7 @@ namespace vm
 						for (u64 hi = addr2 >> 16, max = (addr2 + size2 - 1) >> 16; hi <= max; hi++)
 						{
 							u64 addr3 = addr2;
-							u64 size3 = std::min<u64>(addr2 + size2, utils::align(addr2, 0x10000)) - addr2;
+							u64 size3 = std::min<u64>(addr2 + size2, rx::alignUp(addr2, 0x10000)) - addr2;
 
 							if (u64 is_shared = g_shmem[hi]) [[unlikely]]
 							{
@@ -594,12 +597,12 @@ namespace vm
 
 				if (to_prepare_memory)
 				{
-					utils::prefetch_write(vm::get_super_ptr(addr));
-					utils::prefetch_write(vm::get_super_ptr(addr) + 64);
+					rx::prefetch_write(vm::get_super_ptr(addr));
+					rx::prefetch_write(vm::get_super_ptr(addr) + 64);
 					to_prepare_memory = false;
 				}
 
-				utils::pause();
+				rx::pause();
 			}
 
 			for (auto lock = g_locks.cbegin(), end = lock + g_cfg.core.ppu_threads; lock != end; lock++)
@@ -610,12 +613,12 @@ namespace vm
 					{
 						if (to_prepare_memory)
 						{
-							utils::prefetch_write(vm::get_super_ptr(addr));
-							utils::prefetch_write(vm::get_super_ptr(addr) + 64);
+							rx::prefetch_write(vm::get_super_ptr(addr));
+							rx::prefetch_write(vm::get_super_ptr(addr) + 64);
 							to_prepare_memory = false;
 						}
 
-						utils::pause();
+						rx::pause();
 					}
 				}
 			}
@@ -642,7 +645,7 @@ namespace vm
 			}
 			else if (i < 15)
 			{
-				busy_wait(500);
+				rx::busy_wait(500);
 			}
 			else
 			{
@@ -683,7 +686,7 @@ namespace vm
 			}
 			else if (i < 15)
 			{
-				busy_wait(500);
+				rx::busy_wait(500);
 			}
 			else
 			{
@@ -1078,13 +1081,13 @@ namespace vm
 
 			if (state & page_1m_size)
 			{
-				i = utils::align(i + 1, 0x100000 / 4096);
+				i = rx::alignUp(i + 1, 0x100000 / 4096);
 				continue;
 			}
 
 			if (state & page_64k_size)
 			{
-				i = utils::align(i + 1, 0x10000 / 4096);
+				i = rx::alignUp(i + 1, 0x10000 / 4096);
 				continue;
 			}
 
@@ -1359,7 +1362,7 @@ namespace vm
 		const u32 min_page_size = flags & page_size_4k ? 0x1000 : 0x10000;
 
 		// Align to minimal page size
-		const u32 size = utils::align(orig_size, min_page_size) + (flags & stack_guarded ? 0x2000 : 0);
+		const u32 size = rx::alignUp(orig_size, min_page_size) + (flags & stack_guarded ? 0x2000 : 0);
 
 		// Check alignment (it's page allocation, so passing small values there is just silly)
 		if (align < min_page_size || align != (0x80000000u >> std::countl_zero(align)))
@@ -1387,7 +1390,7 @@ namespace vm
 
 		const u32 max = (this->addr + this->size - size) & (0 - align);
 
-		u32 addr = utils::align(this->addr, align);
+		u32 addr = rx::alignUp(this->addr, align);
 
 		if (this->addr > max || addr > max)
 		{
@@ -1434,7 +1437,7 @@ namespace vm
 		const u32 size0 = orig_size + addr % min_page_size;
 
 		// Align to minimal page size
-		const u32 size = utils::align(size0, min_page_size);
+		const u32 size = rx::alignUp(size0, min_page_size);
 
 		// Return if addr or size is invalid
 		// If shared memory is provided, addr/size must be aligned
@@ -1870,7 +1873,7 @@ namespace vm
 			return nullptr;
 		}
 
-		for (u32 addr = utils::align<u32>(0x10000000, align);; addr += align)
+		for (u32 addr = rx::alignUp<u32>(0x10000000, align);; addr += align)
 		{
 			if (_test_map(addr, size))
 			{
@@ -1950,7 +1953,7 @@ namespace vm
 		vm::writer_lock lock;
 
 		// Align to minimal page size
-		const u32 size = utils::align(orig_size, 0x10000);
+		const u32 size = rx::alignUp(orig_size, 0x10000);
 
 		// Check alignment
 		if (align < 0x10000 || align != (0x80000000u >> std::countl_zero(align)))
@@ -2178,7 +2181,7 @@ namespace vm
 			// Wait a bit before accessing global lock
 			range_lock->release(0);
 
-			busy_wait(200);
+			rx::busy_wait(200);
 		}
 
 		const bool result = try_access_internal(begin, ptr, size, is_write);
@@ -2399,7 +2402,7 @@ namespace vm
 		// Prevent overflow
 		const u32 size = 0 - max_size < addr ? (0 - addr) : max_size;
 
-		for (u32 i = addr, end = utils::align(addr + size, 4096) - 1; i <= end;)
+		for (u32 i = addr, end = rx::alignUp(addr + size, 4096) - 1; i <= end;)
 		{
 			if (check_pages && !vm::check_addr(i, vm::page_readable))
 			{

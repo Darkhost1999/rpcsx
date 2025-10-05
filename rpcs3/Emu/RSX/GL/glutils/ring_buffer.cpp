@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "ring_buffer.h"
 
+#include "rx/align.hpp"
+
 namespace gl
 {
 	void ring_buffer::recreate(GLsizeiptr size, const void* data)
@@ -37,7 +39,7 @@ namespace gl
 	{
 		u32 offset = m_data_loc;
 		if (m_data_loc)
-			offset = utils::align(offset, alignment);
+			offset = rx::alignUp(offset, alignment);
 
 		if ((offset + alloc_size) > m_size)
 		{
@@ -56,7 +58,7 @@ namespace gl
 		}
 
 		// Align data loc to 256; allows some "guard" region so we dont trample our own data inadvertently
-		m_data_loc = utils::align(offset + alloc_size, 256);
+		m_data_loc = rx::alignUp(offset + alloc_size, 256);
 		return std::make_pair(static_cast<char*>(m_memory_mapping) + offset, offset);
 	}
 
@@ -108,9 +110,9 @@ namespace gl
 
 		u32 offset = m_data_loc;
 		if (m_data_loc)
-			offset = utils::align(offset, 256);
+			offset = rx::alignUp(offset, 256);
 
-		const u32 block_size = utils::align(alloc_size + 16, 256); // Overallocate just in case we need to realign base
+		const u32 block_size = rx::alignUp(alloc_size + 16, 256); // Overallocate just in case we need to realign base
 
 		if ((offset + block_size) > m_size)
 		{
@@ -144,10 +146,10 @@ namespace gl
 	{
 		u32 offset = m_data_loc;
 		if (m_data_loc)
-			offset = utils::align(offset, alignment);
+			offset = rx::alignUp(offset, alignment);
 
 		u32 padding = (offset - m_data_loc);
-		u32 real_size = utils::align(padding + alloc_size, alignment); // Ensures we leave the loc pointer aligned after we exit
+		u32 real_size = rx::alignUp(padding + alloc_size, alignment); // Ensures we leave the loc pointer aligned after we exit
 
 		if (real_size > m_mapped_bytes)
 		{
@@ -158,10 +160,10 @@ namespace gl
 
 			offset = m_data_loc;
 			if (m_data_loc)
-				offset = utils::align(offset, alignment);
+				offset = rx::alignUp(offset, alignment);
 
 			padding = (offset - m_data_loc);
-			real_size = utils::align(padding + alloc_size, alignment);
+			real_size = rx::alignUp(padding + alloc_size, alignment);
 		}
 
 		m_data_loc = offset + real_size;
@@ -270,7 +272,7 @@ namespace gl
 
 	u32 scratch_ring_buffer::alloc(u32 size, u32 alignment)
 	{
-		u64 start = utils::align(m_alloc_pointer, alignment);
+		u64 start = rx::alignUp(m_alloc_pointer, alignment);
 		m_alloc_pointer = (start + size);
 
 		if (static_cast<GLsizeiptr>(m_alloc_pointer) > m_storage.size())

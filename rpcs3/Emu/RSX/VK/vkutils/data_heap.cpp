@@ -6,6 +6,7 @@
 #include "../VKHelpers.h"
 #include "../VKResourceManager.h"
 #include "Emu/IdManager.h"
+#include "rx/align.hpp"
 
 #include <memory>
 
@@ -60,7 +61,7 @@ namespace vk
 
 		// Create new heap. All sizes are aligned up by 64M, upto 1GiB
 		const usz size_limit = 1024 * 0x100000;
-		usz aligned_new_size = utils::align(m_size + size, 64 * 0x100000);
+		usz aligned_new_size = rx::alignUp(m_size + size, 64 * 0x100000);
 
 		if (aligned_new_size >= size_limit)
 		{

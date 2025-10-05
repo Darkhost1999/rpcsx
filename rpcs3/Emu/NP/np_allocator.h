@@ -4,7 +4,8 @@
 
 #include "Emu/Memory/vm_ptr.h"
 #include "util/mutex.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "util/logs.hpp"
 
 LOG_CHANNEL(np_mem_allocator);
@@ -52,7 +53,7 @@ namespace np
 			}
 
 			// Align allocs
-			const u32 alloc_size = utils::align(size, 4);
+			const u32 alloc_size = rx::alignUp(size, 4);
 			if (alloc_size > m_avail)
 			{
 				np_mem_allocator.error("Not enough memory available in NP pool!");

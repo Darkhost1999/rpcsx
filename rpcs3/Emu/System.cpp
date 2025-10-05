@@ -52,6 +52,7 @@
 #include "util/logs.hpp"
 #include "util/init_mutex.hpp"
 #include "util/sysinfo.hpp"
+#include "rx/asm.hpp"
 
 #include <memory>
 #include <regex>
@@ -1266,7 +1267,7 @@ game_boot_result Emulator::Load(const std::string& title_id, bool is_disc_patch,
 			auto load_tar = [&](const std::string& path, const std::string& special_file)
 			{
 				const usz size = m_ar->pop<usz>();
-				const usz max_data_size = m_ar->get_size(utils::add_saturate<usz>(size, m_ar->pos));
+				const usz max_data_size = m_ar->get_size(rx::add_saturate<usz>(size, m_ar->pos));
 
 				if (size % 512 || max_data_size < size || max_data_size - size < m_ar->pos)
 				{
@@ -3687,7 +3688,7 @@ void Emulator::Kill(bool allow_autoexit, bool savestate, savestate_stage* save_s
 			{
 				// Write merged TTY output after emulation has been safely stopped
 
-				if (usz attempted_read_size = utils::sub_saturate<usz>(g_tty.pos(), m_tty_file_init_pos))
+				if (usz attempted_read_size = rx::sub_saturate<usz>(g_tty.pos(), m_tty_file_init_pos))
 				{
 					if (fs::file tty_read_fd{fs::get_log_dir() + "TTY.log"})
 					{
@@ -3731,7 +3732,7 @@ void Emulator::Kill(bool allow_autoexit, bool savestate, savestate_stage* save_s
 						{
 							std::string_view to_log = not_logged;
 							to_log = to_log.substr(0, 0x8000);
-							to_log = to_log.substr(0, utils::add_saturate<usz>(to_log.rfind("\n========== SPU BLOCK"sv), 1));
+							to_log = to_log.substr(0, rx::add_saturate<usz>(to_log.rfind("\n========== SPU BLOCK"sv), 1));
 							to_remove = to_log.size();
 
 							std::string new_log(to_log);

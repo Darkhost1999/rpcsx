@@ -2,7 +2,7 @@
 
 #include "../OpenGL.h"
 #include <util/types.hpp>
-#include <util/asm.hpp>
+#include <rx/asm.hpp>
 #include <util/logs.hpp>
 
 namespace gl

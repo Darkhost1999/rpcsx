@@ -18,7 +18,7 @@
 #include "Crypto/utils.h"
 #include "Loader/PSF.h"
 #include "util/StrUtil.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/init_mutex.hpp"
 
 #include <span>
@@ -691,7 +691,7 @@ error_code cellHddGameGetSizeKB(ppu_thread& ppu, vm::ptr<u32> size)
 	// This function is very slow by nature
 	// TODO: Check if after first use the result is being cached so the sleep can
 	// be reduced in this case
-	lv2_sleep(utils::sub_saturate<u64>(dirsz == umax ? 2000 : 200000,
+	lv2_sleep(rx::sub_saturate<u64>(dirsz == umax ? 2000 : 200000,
 				  get_guest_system_time() - start_sleep),
 		&ppu);
 
@@ -757,7 +757,7 @@ error_code cellGameDataGetSizeKB(ppu_thread& ppu, vm::ptr<u32> size)
 	// This function is very slow by nature
 	// TODO: Check if after first use the result is being cached so the sleep can
 	// be reduced in this case
-	lv2_sleep(utils::sub_saturate<u64>(dirsz == umax ? 2000 : 200000,
+	lv2_sleep(rx::sub_saturate<u64>(dirsz == umax ? 2000 : 200000,
 				  get_guest_system_time() - start_sleep),
 		&ppu);
 
@@ -1127,7 +1127,7 @@ cellGameContentPermit(ppu_thread& ppu,
 	}
 
 	// This function is very slow by nature
-	lv2_sleep(utils::sub_saturate<u64>(
+	lv2_sleep(rx::sub_saturate<u64>(
 				  !perm.temp.empty() || perm.can_create ? 200000 : 2000,
 				  get_guest_system_time() - start_sleep),
 		&ppu);
@@ -1886,7 +1886,7 @@ error_code cellGameGetSizeKB(ppu_thread& ppu, vm::ptr<s32> size)
 	// This function is very slow by nature
 	// TODO: Check if after first use the result is being cached so the sleep can
 	// be reduced in this case
-	lv2_sleep(utils::sub_saturate<u64>(dirsz == umax ? 1000 : 200000,
+	lv2_sleep(rx::sub_saturate<u64>(dirsz == umax ? 1000 : 200000,
 				  get_guest_system_time() - start_sleep),
 		&ppu);
 

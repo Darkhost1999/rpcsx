@@ -6,7 +6,7 @@
 #include "Emu/Cell/SPUAnalyser.h"
 #include "Emu/system_config.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
 #include "util/sysinfo.hpp"
@@ -289,7 +289,7 @@ bool ROT(spu_thread& spu, spu_opcode_t op)
 
 	for (u32 i = 0; i < 4; i++)
 	{
-		spu.gpr[op.rt]._u32[i] = utils::rol32(a._u32[i], b._u32[i]);
+		spu.gpr[op.rt]._u32[i] = rx::rol32(a._u32[i], b._u32[i]);
 	}
 	return true;
 }
@@ -344,7 +344,7 @@ bool ROTH(spu_thread& spu, spu_opcode_t op)
 
 	for (u32 i = 0; i < 8; i++)
 	{
-		spu.gpr[op.rt]._u16[i] = utils::rol16(a._u16[i], b._u16[i]);
+		spu.gpr[op.rt]._u16[i] = rx::rol16(a._u16[i], b._u16[i]);
 	}
 	return true;
 }

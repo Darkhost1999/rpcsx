@@ -9,7 +9,7 @@
 
 #include "sys_cond.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_cond);
 
@@ -454,7 +454,7 @@ error_code sys_cond_wait(ppu_thread &ppu, u32 cond_id, u64 timeout) {
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 50; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

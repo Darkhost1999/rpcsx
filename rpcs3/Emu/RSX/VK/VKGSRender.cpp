@@ -22,7 +22,8 @@
 
 #include "../Program/SPIRVCommon.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 namespace vk
 {
@@ -919,7 +920,7 @@ bool VKGSRender::on_access_violation(u32 address, bool is_writing)
 			// Wait for deadlock to clear
 			while (m_queue_status & flush_queue_state::deadlock)
 			{
-				utils::pause();
+				rx::pause();
 			}
 
 			g_fxo->get<rsx::dma_manager>().clear_mem_fault_flag();
@@ -2081,13 +2082,13 @@ void VKGSRender::load_program_env()
 
 		rsx::io_buffer indirection_table_buf([&](usz size) -> std::pair<void*, usz>
 			{
-				indirection_table_offset = m_instancing_buffer_ring_info.alloc<1>(utils::align(size, alignment));
+				indirection_table_offset = m_instancing_buffer_ring_info.alloc<1>(rx::alignUp(size, alignment));
 				return std::make_pair(m_instancing_buffer_ring_info.map(indirection_table_offset, size), size);
 			});
 
 		rsx::io_buffer constants_array_buf([&](usz size) -> std::pair<void*, usz>
 			{
-				constants_data_table_offset = m_instancing_buffer_ring_info.alloc<1>(utils::align(size, alignment));
+				constants_data_table_offset = m_instancing_buffer_ring_info.alloc<1>(rx::alignUp(size, alignment));
 				return std::make_pair(m_instancing_buffer_ring_info.map(constants_data_table_offset, size), size);
 			});
 
@@ -2105,7 +2106,7 @@ void VKGSRender::load_program_env()
 		auto alloc_storage = [&](usz size) -> std::pair<void*, usz>
 		{
 			const auto alignment = m_device->gpu().get_limits().minUniformBufferOffsetAlignment;
-			mem_offset = m_transform_constants_ring_info.alloc<1>(utils::align(size, alignment));
+			mem_offset = m_transform_constants_ring_info.alloc<1>(rx::alignUp(size, alignment));
 			return std::make_pair(m_transform_constants_ring_info.map(mem_offset, size), size);
 		};
 
@@ -2921,7 +2922,7 @@ void VKGSRender::get_occlusion_query_result(rsx::reports::occlusion_query_info* 
 			}
 
 			rsx_log.warning("[Performance warning] Unexpected ZCULL read caused a hard sync");
-			busy_wait();
+			rx::busy_wait();
 		}
 
 		data.sync();

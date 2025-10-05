@@ -5,7 +5,8 @@
 #include "../rsx_utils.h"
 #include "3rdparty/bcdec/bcdec.hpp"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 namespace utils
 {
@@ -661,13 +662,13 @@ namespace
 					}
 					else if constexpr (block_edge_in_texel == 4)
 					{
-						current_subresource_layout.width_in_block = utils::aligned_div(miplevel_width_in_texel, block_edge_in_texel);
-						current_subresource_layout.height_in_block = utils::aligned_div(miplevel_height_in_texel, block_edge_in_texel);
+						current_subresource_layout.width_in_block = rx::aligned_div(miplevel_width_in_texel, block_edge_in_texel);
+						current_subresource_layout.height_in_block = rx::aligned_div(miplevel_height_in_texel, block_edge_in_texel);
 					}
 					else
 					{
 						// Only the width is compressed
-						current_subresource_layout.width_in_block = utils::aligned_div(miplevel_width_in_texel, block_edge_in_texel);
+						current_subresource_layout.width_in_block = rx::aligned_div(miplevel_width_in_texel, block_edge_in_texel);
 						current_subresource_layout.height_in_block = miplevel_height_in_texel;
 					}
 
@@ -699,7 +700,7 @@ namespace
 
 				if (!padded_row) // Only swizzled textures obey this restriction
 				{
-					offset_in_src = utils::align(offset_in_src, 128);
+					offset_in_src = rx::alignUp(offset_in_src, 128);
 				}
 			}
 
@@ -1429,8 +1430,8 @@ namespace rsx
 		usz result = 0;
 		for (u16 i = 0; i < mipmap; ++i)
 		{
-			usz rowPitch = utils::align(block_size_in_byte * width_in_blocks, row_pitch_alignment);
-			result += utils::align(rowPitch * height_in_blocks * depth, mipmap_alignment);
+			usz rowPitch = rx::alignUp(block_size_in_byte * width_in_blocks, row_pitch_alignment);
+			result += rx::alignUp(rowPitch * height_in_blocks * depth, mipmap_alignment);
 			height_in_blocks = std::max<usz>(height_in_blocks / 2, 1);
 			width_in_blocks = std::max<usz>(width_in_blocks / 2, 1);
 		}

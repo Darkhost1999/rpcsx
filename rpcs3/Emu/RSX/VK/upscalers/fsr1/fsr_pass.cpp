@@ -117,8 +117,8 @@ namespace vk
 			configure(cmd);
 
 			constexpr auto wg_size = 16;
-			const auto invocations_x = utils::aligned_div(output_size.width, wg_size);
-			const auto invocations_y = utils::aligned_div(output_size.height, wg_size);
+			const auto invocations_x = rx::aligned_div(output_size.width, wg_size);
+			const auto invocations_y = rx::aligned_div(output_size.height, wg_size);
 
 			ensure(invocations_x == (output_size.width + (wg_size - 1)) / wg_size);
 			ensure(invocations_y == (output_size.height + (wg_size - 1)) / wg_size);

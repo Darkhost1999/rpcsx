@@ -50,9 +50,9 @@ static bool has_waitv()
 #include <array>
 #include <random>
 
-#include "asm.hpp"
+#include "rx/asm.hpp"
 #include "endian.hpp"
-#include "tsc.hpp"
+#include "rx/tsc.hpp"
 
 // Total number of entries.
 static constexpr usz s_hashtable_size = 1u << 17;
@@ -402,7 +402,7 @@ static u32 cond_alloc(uptr iptr, u32 tls_slot = -1)
 			constexpr u128 max_mask = dup8(8192);
 
 			// Leave only bits indicating sub-semaphore is full, find free one
-			const u32 pos = utils::ctz128(~val & max_mask);
+			const u32 pos = rx::ctz128(~val & max_mask);
 
 			if (pos == 128) [[unlikely]]
 			{
@@ -422,7 +422,7 @@ static u32 cond_alloc(uptr iptr, u32 tls_slot = -1)
 											{
 												constexpr u128 max_mask = dup8(1024);
 
-												const u32 pos = utils::ctz128(~val & max_mask);
+												const u32 pos = rx::ctz128(~val & max_mask);
 
 												val += u128{1} << (pos / 11 * 11);
 
@@ -433,7 +433,7 @@ static u32 cond_alloc(uptr iptr, u32 tls_slot = -1)
 											 {
 												 constexpr u128 max_mask = dup8(64) | (dup8(64) << 56);
 
-												 const u32 pos = utils::ctz128(~val & max_mask);
+												 const u32 pos = rx::ctz128(~val & max_mask);
 
 												 val += u128{1} << (pos / 7 * 7);
 
@@ -495,15 +495,15 @@ static void cond_free(u32 cond_id, u32 tls_slot = -1)
 	}
 
 	// Call the destructor if necessary
-	utils::prefetch_write(s_cond_bits + cond_id / 64);
+	rx::prefetch_write(s_cond_bits + cond_id / 64);
 
 	const u32 level3 = cond_id / 64 % 16;
 	const u32 level2 = cond_id / 1024 % 8;
 	const u32 level1 = cond_id / 8192 % 8;
 
-	utils::prefetch_write(s_cond_sem3 + level2);
-	utils::prefetch_write(s_cond_sem2 + level1);
-	utils::prefetch_write(&s_cond_sem1);
+	rx::prefetch_write(s_cond_sem3 + level2);
+	rx::prefetch_write(s_cond_sem2 + level1);
+	rx::prefetch_write(&s_cond_sem1);
 
 	cond->destroy();
 
@@ -676,7 +676,7 @@ namespace
 
 u64 utils::get_unique_tsc()
 {
-	const u64 stamp0 = utils::get_tsc();
+	const u64 stamp0 = rx::get_tsc();
 
 	if (!s_min_tsc.fetch_op([=](u64& tsc)
 					  {
@@ -832,7 +832,7 @@ FORCE_INLINE auto root_info::slot_search(uptr iptr, F func) noexcept
 		{
 			if (u16 cond_id = _this->slots[std::countr_zero(bits)])
 			{
-				utils::prefetch_read(s_cond_list + cond_id);
+				rx::prefetch_read(s_cond_list + cond_id);
 				cond_ids[cond_count++] = cond_id;
 			}
 		}

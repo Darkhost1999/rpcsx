@@ -1,9 +1,9 @@
 #include "stdafx.h"
 
+#include "rx/asm.hpp"
 #include "sys_fs.h"
 #include "sys_memory.h"
 #include "sys_sync.h"
-#include "util/asm.hpp"
 
 #include "Crypto/unedat.h"
 #include "Emu/Cell/PPUThread.h"
@@ -618,7 +618,7 @@ struct lv2_file::file_view : fs::file_base {
     fs::stat_t stat = m_file->file.get_stat();
 
     // TODO: Check this on realhw
-    // stat.size = utils::sub_saturate<u64>(stat.size, m_off);
+    // stat.size = rx::sub_saturate<u64>(stat.size, m_off);
 
     stat.is_writable = false;
     return stat;
@@ -655,7 +655,7 @@ struct lv2_file::file_view : fs::file_base {
   }
 
   u64 size() override {
-    return utils::sub_saturate<u64>(m_file->file.size(), m_off);
+    return rx::sub_saturate<u64>(m_file->file.size(), m_off);
   }
 
   fs::file_id get_id() override {

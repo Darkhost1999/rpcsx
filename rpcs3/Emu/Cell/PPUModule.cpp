@@ -28,7 +28,8 @@
 #include <span>
 #include <set>
 #include <algorithm>
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 LOG_CHANNEL(ppu_loader);
 
@@ -341,7 +342,7 @@ static void ppu_initialize_modules(ppu_linkage_info* link, utils::serial* ar = n
 	if (!hle_funcs_addr)
 		hle_funcs_addr = vm::alloc(::size32(hle_funcs) * 8, vm::main);
 	else
-		vm::page_protect(hle_funcs_addr, utils::align(::size32(hle_funcs) * 8, 0x1000), 0, vm::page_writable);
+		vm::page_protect(hle_funcs_addr, rx::alignUp(::size32(hle_funcs) * 8, 0x1000), 0, vm::page_writable);
 
 	// Initialize as PPU executable code
 	ppu_register_range(hle_funcs_addr, ::size32(hle_funcs) * 8);
@@ -359,7 +360,7 @@ static void ppu_initialize_modules(ppu_linkage_info* link, utils::serial* ar = n
 	}
 
 	// Set memory protection to read-only
-	vm::page_protect(hle_funcs_addr, utils::align(::size32(hle_funcs) * 8, 0x1000), 0, 0, vm::page_writable);
+	vm::page_protect(hle_funcs_addr, rx::alignUp(::size32(hle_funcs) * 8, 0x1000), 0, 0, vm::page_writable);
 
 	// Initialize function names
 	const bool is_first = g_ppu_function_names.empty();
@@ -489,7 +490,7 @@ static void ppu_initialize_modules(ppu_linkage_info* link, utils::serial* ar = n
 			}
 			else
 			{
-				const u32 next = utils::align(alloc_addr, variable.second.align);
+				const u32 next = rx::alignUp(alloc_addr, variable.second.align);
 				const u32 end = next + variable.second.size - 1;
 
 				if (!next || (end >> 16 != alloc_addr >> 16))
@@ -1191,7 +1192,7 @@ static void ppu_check_patch_spu_images(const ppu_module<lv2_obj>& mod, const ppu
 
 	u32 prev_bound = 0;
 
-	for (u32 i = find_first_of_multiple(seg_view, prefixes, 0); i < seg.size; i = find_first_of_multiple(seg_view, prefixes, utils::align<u32>(i + 1, 4)))
+	for (u32 i = find_first_of_multiple(seg_view, prefixes, 0); i < seg.size; i = find_first_of_multiple(seg_view, prefixes, rx::alignUp<u32>(i + 1, 4)))
 	{
 		const auto elf_header = ensure(mod.get_ptr<u8>(seg.addr + i));
 
@@ -1201,7 +1202,7 @@ static void ppu_check_patch_spu_images(const ppu_module<lv2_obj>& mod, const ppu
 			const u32 old_i = i;
 			u32 guid_start = umax, guid_end = umax;
 
-			for (u32 search = i & -128, tries = 10; tries && search >= prev_bound; tries--, search = utils::sub_saturate<u32>(search, 128))
+			for (u32 search = i & -128, tries = 10; tries && search >= prev_bound; tries--, search = rx::sub_saturate<u32>(search, 128))
 			{
 				if (seg_view[search] != 0x42 && seg_view[search] != 0x43)
 				{
@@ -1271,7 +1272,7 @@ static void ppu_check_patch_spu_images(const ppu_module<lv2_obj>& mod, const ppu
 				if (addr_last >= 0x80 && valid_count >= 2)
 				{
 					const u32 begin = i & -128;
-					u32 end = std::min<u32>(seg.size, utils::align<u32>(i + addr_last + 256, 128));
+					u32 end = std::min<u32>(seg.size, rx::alignUp<u32>(i + addr_last + 256, 128));
 
 					u32 guessed_ls_addr = 0;
 
@@ -1611,7 +1612,7 @@ shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_load, c
 
 				if (virtual_load)
 				{
-					addr = std::exchange(allocating_address, allocating_address + utils::align<u32>(mem_size, 0x10000));
+					addr = std::exchange(allocating_address, allocating_address + rx::alignUp<u32>(mem_size, 0x10000));
 				}
 				else
 				{
@@ -1625,7 +1626,7 @@ shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_load, c
 					// Leave additional room for the analyser so it can safely access beyond limit a bit
 					// Because with VM the address sapce is not really a limit so any u32 address is valid there, here it is UB to create pointer that goes beyond the boundaries
 					// TODO: Use make_shared_for_overwrite when all compilers support it
-					const usz alloc_size = utils::align<usz>(mem_size, 0x10000) + 4096;
+					const usz alloc_size = rx::alignUp<usz>(mem_size, 0x10000) + 4096;
 					prx->allocations.push_back(std::shared_ptr<u8[]>(new u8[alloc_size]));
 					_seg.ptr = prx->allocations.back().get();
 					std::memset(static_cast<u8*>(_seg.ptr) + prog.bin.size(), 0, alloc_size - 4096 - prog.bin.size());
@@ -1725,7 +1726,7 @@ shared_ptr<lv2_prx> ppu_load_prx(const ppu_prx_object& elf, bool virtual_load, c
 			{
 				const auto& rel = reinterpret_cast<const ppu_prx_relocation_info&>(prog.bin[i]);
 
-				if (rel.offset >= utils::align<u64>(::at32(prx->segs, rel.index_addr).size, 0x100))
+				if (rel.offset >= rx::alignUp<u64>(::at32(prx->segs, rel.index_addr).size, 0x100))
 				{
 					fmt::throw_exception("Relocation offset out of segment memory! (offset=0x%x, index_addr=%u, seg_size=0x%x)", rel.offset, rel.index_addr, prx->segs[rel.index_addr].size);
 				}
@@ -2201,7 +2202,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 				// Leave additional room for the analyser so it can safely access beyond limit a bit
 				// Because with VM the address sapce is not really a limit so any u32 address is valid there, here it is UB to create pointer that goes beyond the boundaries
 				// TODO: Use make_shared_for_overwrite when all compilers support it
-				const usz alloc_size = utils::align<usz>(size, 0x10000) + 4096;
+				const usz alloc_size = rx::alignUp<usz>(size, 0x10000) + 4096;
 				_main.allocations.push_back(std::shared_ptr<u8[]>(new u8[alloc_size]));
 				_seg.ptr = _main.allocations.back().get();
 				std::memset(static_cast<u8*>(_seg.ptr) + prog.bin.size(), 0, alloc_size - 4096 - prog.bin.size());
@@ -2247,7 +2248,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 			else
 			{
 				// For backwards compatibility: already loaded memory will always be writable
-				const u32 size0 = utils::align(size + addr % 0x10000, 0x10000);
+				const u32 size0 = rx::alignUp(size + addr % 0x10000, 0x10000);
 				const u32 addr0 = addr & -0x10000;
 				vm::page_protect(addr0, size0, 0, vm::page_writable | vm::page_readable, vm::page_executable);
 			}
@@ -2721,7 +2722,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 	default:
 	{
 		// According to elad335, the min value seems to be 64KB instead of the expected 4KB (SYS_PROCESS_PARAM_STACK_SIZE_MIN)
-		primary_stacksize = utils::align<u32>(std::clamp<u32>(sz, 0x10000, SYS_PROCESS_PARAM_STACK_SIZE_MAX), 4096);
+		primary_stacksize = rx::alignUp<u32>(std::clamp<u32>(sz, 0x10000, SYS_PROCESS_PARAM_STACK_SIZE_MAX), 4096);
 		break;
 	}
 	}
@@ -2738,29 +2739,29 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 	if (!Emu.data.empty())
 	{
 		std::memcpy(vm::base(ppu->stack_addr + ppu->stack_size - ::size32(Emu.data)), Emu.data.data(), Emu.data.size());
-		ppu->gpr[1] -= utils::align<u32>(::size32(Emu.data), 0x10);
+		ppu->gpr[1] -= rx::alignUp<u32>(::size32(Emu.data), 0x10);
 	}
 
 	// Initialize process arguments
 
 	// Calculate storage requirements on the stack
-	const u32 pointers_storage_size = u32{sizeof(u64)} * utils::align<u32>(::size32(Emu.envp) + ::size32(Emu.argv) + 2, 2);
+	const u32 pointers_storage_size = u32{sizeof(u64)} * rx::alignUp<u32>(::size32(Emu.envp) + ::size32(Emu.argv) + 2, 2);
 
 	u32 stack_alloc_size = pointers_storage_size;
 
 	for (const auto& arg : Emu.argv)
 	{
-		stack_alloc_size += utils::align<u32>(::size32(arg) + 1, 0x10);
+		stack_alloc_size += rx::alignUp<u32>(::size32(arg) + 1, 0x10);
 	}
 
 	for (const auto& arg : Emu.envp)
 	{
-		stack_alloc_size += utils::align<u32>(::size32(arg) + 1, 0x10);
+		stack_alloc_size += rx::alignUp<u32>(::size32(arg) + 1, 0x10);
 	}
 
 	ensure(ppu->stack_size > stack_alloc_size);
 
-	vm::ptr<u64> args = vm::cast(static_cast<u32>(ppu->stack_addr + ppu->stack_size - stack_alloc_size - utils::align<u32>(::size32(Emu.data), 0x10)));
+	vm::ptr<u64> args = vm::cast(static_cast<u32>(ppu->stack_addr + ppu->stack_size - stack_alloc_size - rx::alignUp<u32>(::size32(Emu.data), 0x10)));
 	vm::ptr<u8> args_data = vm::cast(args.addr() + pointers_storage_size);
 
 	const vm::ptr<u64> argv = args;
@@ -2772,7 +2773,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 		std::memcpy(args_data.get_ptr(), arg.data(), arg_size);
 
 		*args++ = args_data.addr();
-		args_data = vm::cast(args_data.addr() + utils::align<u32>(arg_size, 0x10));
+		args_data = vm::cast(args_data.addr() + rx::alignUp<u32>(arg_size, 0x10));
 	}
 
 	*args++ = 0;
@@ -2787,7 +2788,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 		std::memcpy(args_data.get_ptr(), arg.data(), arg_size);
 
 		*args++ = args_data.addr();
-		args_data = vm::cast(args_data.addr() + utils::align<u32>(arg_size, 0x10));
+		args_data = vm::cast(args_data.addr() + rx::alignUp<u32>(arg_size, 0x10));
 	}
 
 	*args++ = 0;
@@ -2855,7 +2856,7 @@ bool ppu_load_exec(const ppu_exec_object& elf, bool virtual_load, const std::str
 		if (prog.p_type == 0x1u /* LOAD */ && prog.p_memsz && (prog.p_flags & 0x022000002) == 0u /* W */)
 		{
 			// Set memory protection to read-only when necessary (only if PPU-W, SPU-W, RSX-W are all disabled)
-			ensure(vm::page_protect(addr, utils::align(size, 0x1000), 0, 0, vm::page_writable));
+			ensure(vm::page_protect(addr, rx::alignUp(size, 0x1000), 0, 0, vm::page_writable));
 		}
 	}
 
@@ -2934,7 +2935,7 @@ std::pair<shared_ptr<lv2_overlay>, CellError> ppu_load_overlay(const ppu_exec_ob
 				// Leave additional room for the analyser so it can safely access beyond limit a bit
 				// Because with VM the address sapce is not really a limit so any u32 address is valid there, here it is UB to create pointer that goes beyond the boundaries
 				// TODO: Use make_shared_for_overwrite when all compilers support it
-				const usz alloc_size = utils::align<usz>(size, 0x10000) + 4096;
+				const usz alloc_size = rx::alignUp<usz>(size, 0x10000) + 4096;
 				ovlm->allocations.push_back(std::shared_ptr<u8[]>(new u8[alloc_size]));
 				_seg.ptr = ovlm->allocations.back().get();
 				std::memset(static_cast<u8*>(_seg.ptr) + prog.bin.size(), 0, alloc_size - 4096 - prog.bin.size());
@@ -3230,7 +3231,7 @@ bool ppu_load_rel_exec(const ppu_rel_object& elf)
 	{
 		if (s.sh_type != sec_type::sht_progbits)
 		{
-			memsize = utils::align<u32>(memsize + vm::cast(s.sh_size), 128);
+			memsize = rx::alignUp<u32>(memsize + vm::cast(s.sh_size), 128);
 		}
 	}
 
@@ -3278,7 +3279,7 @@ bool ppu_load_rel_exec(const ppu_rel_object& elf)
 			relm.secs.emplace_back(_sec);
 
 			std::memcpy(vm::base(addr), s.get_bin().data(), size);
-			addr = utils::align<u32>(addr + size, 128);
+			addr = rx::alignUp<u32>(addr + size, 128);
 		}
 	}
 

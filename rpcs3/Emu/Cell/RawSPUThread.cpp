@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "Emu/IdManager.h"
 #include "Loader/ELF.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 #include "SPUThread.h"
 
@@ -450,7 +451,7 @@ void spu_load_rel_exec(const spu_rel_object& elf)
 	{
 		if (shdr.sh_type == sec_type::sht_progbits && shdr.sh_flags().all_of(sh_flag::shf_alloc))
 		{
-			total_memsize = utils::align<u32>(total_memsize + shdr.sh_size, 4);
+			total_memsize = rx::alignUp<u32>(total_memsize + shdr.sh_size, 4);
 		}
 	}
 
@@ -462,7 +463,7 @@ void spu_load_rel_exec(const spu_rel_object& elf)
 		if (shdr.sh_type == sec_type::sht_progbits && shdr.sh_flags().all_of(sh_flag::shf_alloc))
 		{
 			std::memcpy(spu->_ptr<void>(offs), shdr.get_bin().data(), shdr.sh_size);
-			offs = utils::align<u32>(offs + shdr.sh_size, 4);
+			offs = rx::alignUp<u32>(offs + shdr.sh_size, 4);
 		}
 	}
 

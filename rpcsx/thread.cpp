@@ -155,7 +155,7 @@ handleSigUser(int sig, siginfo_t *info, void *ucontext) {
 
 std::size_t rx::thread::getSigAltStackSize() {
   static auto sigStackSize = std::max<std::size_t>(
-      SIGSTKSZ, ::rx::alignUp(64 * 1024 * 1024, rx::mem::pageSize));
+      SIGSTKSZ, rx::alignUp(64u * 1024 * 1024, rx::mem::pageSize));
   return sigStackSize;
 }
 
@@ -199,7 +199,8 @@ bool rx::thread::invokeSignalHandler(orbis::Thread *thread, int guestSignal,
   guestContext->uc_mcontext.gregs[REG_RCX] = 0;         // arg4, si_addr
   guestContext->uc_mcontext.gregs[REG_RIP] = handlerPtr;
 
-  guestContext->uc_mcontext.gregs[REG_RSP] = rx::alignDown(rsp, 16);
+  guestContext->uc_mcontext.gregs[REG_RSP] =
+      rx::alignDown(static_cast<std::uint64_t>(rsp), 16);
   return true;
 }
 

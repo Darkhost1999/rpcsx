@@ -9,7 +9,8 @@
 #include <map>
 #include <iostream>
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 #include "util/coro.hpp"
 
 using namespace std::literals::string_literals;
@@ -2386,7 +2387,7 @@ u64 fs::get_dir_size(const std::string& path, u64 rounding_alignment, atomic_t<b
 
 		if (!entry.is_directory)
 		{
-			result += utils::align(entry.size, rounding_alignment);
+			result += rx::alignUp(entry.size, rounding_alignment);
 		}
 		else
 		{

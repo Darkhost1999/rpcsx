@@ -3,7 +3,8 @@
 #include "GLTextureCache.h"
 #include "../Common/BufferUtils.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 namespace gl
 {
@@ -82,7 +83,7 @@ namespace gl
 				}
 				else
 				{
-					const u32 num_rows = utils::align(valid_length, rsx_pitch) / rsx_pitch;
+					const u32 num_rows = rx::alignUp(valid_length, rsx_pitch) / rsx_pitch;
 					u32* data = static_cast<u32*>(dst);
 					for (u32 row = 0; row < num_rows; ++row)
 					{
@@ -212,7 +213,7 @@ namespace gl
 				// Dimensions were given in 'dst' space. Work out the real source coordinates
 				const auto src_bpp = slice.src->pitch() / slice.src->width();
 				src_x = (src_x * dst_bpp) / src_bpp;
-				src_w = utils::aligned_div<u16>(src_w * dst_bpp, src_bpp);
+				src_w = rx::aligned_div<u16>(src_w * dst_bpp, src_bpp);
 			}
 
 			if (auto surface = dynamic_cast<gl::render_target*>(slice.src))

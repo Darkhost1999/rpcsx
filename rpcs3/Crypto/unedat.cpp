@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include "rx/align.hpp"
 #include "key_vault.h"
 #include "unedat.h"
 #include "sha1.h"
@@ -8,7 +10,7 @@
 
 #include "Emu/system_utils.hpp"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include <algorithm>
 #include <span>
 
@@ -233,7 +235,7 @@ s64 decrypt_block(const fs::file* in, u8* out, EDAT_HEADER* edat, NPD_HEADER* np
 
 	// Locate the real data.
 	const usz pad_length = length;
-	length = utils::align<usz>(pad_length, 0x10);
+	length = rx::alignUp<usz>(pad_length, 0x10);
 
 	// Setup buffers for decryption and read the data.
 	std::vector<u8> enc_data_buf(is_out_buffer_aligned || length == pad_length ? 0 : length);
@@ -432,12 +434,12 @@ bool check_data(u8* key, EDAT_HEADER* edat, NPD_HEADER* npd, const fs::file* f, 
 		return false;
 	}
 
-	const usz block_num = utils::aligned_div<u64>(edat->file_size, edat->block_size);
+	const usz block_num = rx::aligned_div<u64>(edat->file_size, edat->block_size);
 	constexpr usz metadata_offset = 0x100;
-	const usz metadata_size = utils::mul_saturate<u64>(metadata_section_size, block_num);
+	const usz metadata_size = rx::mul_saturate<u64>(metadata_section_size, block_num);
 	u64 metadata_section_offset = metadata_offset;
 
-	if (utils::add_saturate<u64>(utils::add_saturate<u64>(file_offset, metadata_section_offset), metadata_size) > f->size())
+	if (rx::add_saturate<u64>(rx::add_saturate<u64>(file_offset, metadata_section_offset), metadata_size) > f->size())
 	{
 		return false;
 	}
@@ -860,7 +862,7 @@ bool EDATADecrypter::ReadHeader()
 	//}
 
 	file_size = edatHeader.file_size;
-	total_blocks = ::narrow<u32>(utils::aligned_div(edatHeader.file_size, edatHeader.block_size));
+	total_blocks = ::narrow<u32>(rx::aligned_div(edatHeader.file_size, edatHeader.block_size));
 
 	// Try decrypting the first block instead
 	u8 data_sample[1];
@@ -886,7 +888,7 @@ u64 EDATADecrypter::ReadData(u64 pos, u8* data, u64 size)
 	// Now we need to offset things to account for the actual 'range' requested
 	const u64 startOffset = pos % edatHeader.block_size;
 
-	const u64 num_blocks = utils::aligned_div(startOffset + size, edatHeader.block_size);
+	const u64 num_blocks = rx::aligned_div(startOffset + size, edatHeader.block_size);
 
 	// Find and decrypt block range covering pos + size
 	const u32 starting_block = ::narrow<u32>(pos / edatHeader.block_size);

@@ -15,7 +15,7 @@
 #include "sysPrxForUser.h"
 #include "cellSpurs.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
 

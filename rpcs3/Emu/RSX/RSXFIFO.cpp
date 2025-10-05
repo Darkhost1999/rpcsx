@@ -9,7 +9,8 @@
 #include "cellos/sys_rsx.h"
 #include "NV47/HW/context.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 #include <thread>
 #include <bitset>
@@ -139,7 +140,7 @@ namespace rsx
 				u32 bytes_read = 0;
 
 				// Find the next set bit after every iteration
-				for (int i = 0;; i = (std::countr_zero<u32>(utils::rol8(to_fetch, 0 - i - 1)) + i + 1) % 8)
+				for (int i = 0;; i = (std::countr_zero<u32>(rx::rol8(to_fetch, 0 - i - 1)) + i + 1) % 8)
 				{
 					// If a reservation is being updated, try to load another
 					const auto& res = vm::reservation_acquire(addr1 + i * 128);
@@ -193,7 +194,7 @@ namespace rsx
 					}
 					else
 					{
-						busy_wait(200);
+						rx::busy_wait(200);
 					}
 
 					if (strict_fetch_ordering)
@@ -247,7 +248,7 @@ namespace rsx
 
 			for (u32 remaining = size, addr = m_internal_get, ptr = from; remaining > 0;)
 			{
-				const u32 next_block = utils::align(addr + 1, _1M);
+				const u32 next_block = rx::alignUp(addr + 1, _1M);
 				const u32 available = (next_block - addr);
 				if (remaining <= available)
 				{

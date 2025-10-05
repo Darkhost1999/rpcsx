@@ -8,7 +8,8 @@
 #include "Emu/Memory/vm_locking.h"
 #include "rpcsx/fw/ps3/sys_lv2dbg.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 void ppu_register_function_at(u32 addr, u32 size,
                               ppu_intrp_func_t ptr = nullptr);
@@ -92,7 +93,7 @@ error_code sys_dbg_write_process_memory(s32 pid, u32 address, u32 size,
 
   for (u32 i = address, exec_update_size = 0; i < end;) {
     const u32 op_size =
-        std::min<u32>(utils::align<u32>(i + 1, 0x10000), end) - i;
+        std::min<u32>(rx::alignUp<u32>(i + 1, 0x10000), end) - i;
 
     const bool is_exec =
         vm::check_addr(i, vm::page_executable | vm::page_readable);

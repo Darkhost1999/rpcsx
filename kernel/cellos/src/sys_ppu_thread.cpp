@@ -15,7 +15,8 @@
 #include "sys_mmapper.h"
 #include "sys_process.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 #include <thread>
 
@@ -148,7 +149,7 @@ void _sys_ppu_thread_exit(ppu_thread &ppu, u64 errorcode) {
   // Need to wait until the current writers finish
   if (ppu.state & cpu_flag::memory) {
     for (; writer_mask; writer_mask &= vm::g_range_lock_bits[1]) {
-      busy_wait(200);
+      rx::busy_wait(200);
     }
   }
 }
@@ -468,7 +469,7 @@ error_code _sys_ppu_thread_create(ppu_thread &ppu, vm::ptr<u64> thread_id,
   const u32 tls = param->tls;
 
   // Compute actual stack size and allocate
-  const u32 stack_size = utils::align<u32>(std::max<u32>(_stacksz, 4096), 4096);
+  const u32 stack_size = rx::alignUp<u32>(std::max<u32>(_stacksz, 4096), 4096);
 
   auto &dct = g_fxo->get<lv2_memory_container>();
 

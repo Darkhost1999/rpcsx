@@ -8,7 +8,8 @@
 #include "Emu/IdManager.h"
 #include "Emu/Memory/vm_locking.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_memory);
 
@@ -75,11 +76,11 @@ struct sys_memory_address_table {
 };
 
 std::shared_ptr<vm::block_t> reserve_map(u32 alloc_size, u32 align) {
-  return vm::reserve_map(
-      align == 0x10000 ? vm::user64k : vm::user1m, 0,
-      align == 0x10000 ? 0x20000000 : utils::align(alloc_size, 0x10000000),
-      align == 0x10000 ? (vm::page_size_64k | vm::bf0_0x1)
-                       : (vm::page_size_1m | vm::bf0_0x1));
+  return vm::reserve_map(align == 0x10000 ? vm::user64k : vm::user1m, 0,
+                         align == 0x10000 ? 0x20000000
+                                          : rx::alignUp(alloc_size, 0x10000000),
+                         align == 0x10000 ? (vm::page_size_64k | vm::bf0_0x1)
+                                          : (vm::page_size_1m | vm::bf0_0x1));
 }
 
 // Todo: fix order of error checks

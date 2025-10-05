@@ -1,11 +1,13 @@
 #include "stdafx.h"
+
+#include "rx/align.hpp"
 #include "Emu/perf_meter.hpp"
 #include "Emu/Cell/PPUModule.h"
 #include "cellos/sys_sync.h"
 #include "cellos/sys_ppu_thread.h"
 #include "Emu/savestate_utils.hpp"
 #include "sysPrxForUser.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/media_utils.h"
 
 #include "cellAtracXdec.h"
@@ -182,7 +184,7 @@ error_code AtracXdecDecoder::set_config_info(u32 sampling_freq, u32 ch_config_id
 	this->sampling_freq = sampling_freq;
 	this->ch_config_idx = ch_config_idx;
 	this->nbytes = nbytes;
-	this->nbytes_128_aligned = utils::align(nbytes, 0x80);
+	this->nbytes_128_aligned = rx::alignUp(nbytes, 0x80);
 	this->nch_in = ch_config_idx <= 4 ? ch_config_idx : ch_config_idx + 1;
 
 	if (ch_config_idx > 7u)
@@ -741,7 +743,7 @@ error_code _CellAdecCoreOpGetMemSize_atracx(vm::ptr<CellAdecAttr> attr)
 	constexpr u32 mem_size =
 		sizeof(AtracXdecContext) + 0x7f + ATXDEC_SPURS_STRUCTS_SIZE + 0x1d8 + atracXdecGetSpursMemSize(nch_in) + ATXDEC_SAMPLES_PER_FRAME * sizeof(f32) * nch_in;
 
-	attr->workMemSize = utils::align(mem_size, 0x80);
+	attr->workMemSize = rx::alignUp(mem_size, 0x80);
 
 	return CELL_OK;
 }
@@ -765,7 +767,7 @@ error_code _CellAdecCoreOpOpenExt_atracx(ppu_thread& ppu, vm::ptr<AtracXdecConte
 	ensure(!!notifyAuDone && !!notifyAuDoneArg && !!notifyPcmOut && !!notifyPcmOutArg && !!notifyError && !!notifyErrorArg && !!notifySeqDone && !!notifySeqDoneArg); // These should always be set by cellAdec
 
 	write_to_ptr(handle.get_ptr(), AtracXdecContext(notifyAuDone, notifyAuDoneArg, notifyPcmOut, notifyPcmOutArg, notifyError, notifyErrorArg, notifySeqDone, notifySeqDoneArg,
-									   vm::bptr<u8>::make(handle.addr() + utils::align(static_cast<u32>(sizeof(AtracXdecContext)), 0x80) + ATXDEC_SPURS_STRUCTS_SIZE)));
+									   vm::bptr<u8>::make(handle.addr() + rx::alignUp(static_cast<u32>(sizeof(AtracXdecContext)), 0x80) + ATXDEC_SPURS_STRUCTS_SIZE)));
 
 	const vm::var<sys_mutex_attribute_t> mutex_attr{{SYS_SYNC_PRIORITY, SYS_SYNC_NOT_RECURSIVE, SYS_SYNC_NOT_PROCESS_SHARED, SYS_SYNC_NOT_ADAPTIVE, 0, 0, 0, {"_atd001"_u64}}};
 	const vm::var<sys_cond_attribute_t> cond_attr{{SYS_SYNC_NOT_PROCESS_SHARED, 0, 0, {"_atd002"_u64}}};

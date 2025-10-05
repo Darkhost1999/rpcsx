@@ -4,7 +4,7 @@
 #include "util/types.hpp"
 #include "util/v128.hpp"
 #include "util/sysinfo.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/JIT.h"
 #include <rx/simd.hpp>
 

@@ -1,7 +1,9 @@
 #include "stdafx.h"
+
 #include "Emu/Cell/PPUModule.h"
 #include "Emu/IdManager.h"
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 #include "sceNp.h"
 #include "sceNp2.h"
@@ -946,7 +948,7 @@ error_code cellSysutilAvc2Load_shared(SceNpMatching2ContextId /*ctx_id*/, u32 /*
 				window_count++;
 			}
 
-			total_bitrate = utils::align<u32>(window_count * bitrate, 0x100000) + 0x100000;
+			total_bitrate = rx::alignUp<u32>(window_count * bitrate, 0x100000) + 0x100000;
 		}
 
 		settings.video_stream_sharing = init_param->video_param.video_stream_sharing;

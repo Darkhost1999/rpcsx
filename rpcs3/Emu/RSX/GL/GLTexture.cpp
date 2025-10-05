@@ -9,7 +9,8 @@
 
 #include "../RSXThread.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 namespace gl
 {
@@ -664,7 +665,7 @@ namespace gl
 			u8 block_size_in_bytes = rsx::get_format_block_size_in_bytes(format);
 			u64 image_linear_size = staging_buffer.size();
 
-			const auto min_required_buffer_size = std::max<u64>(utils::align(image_linear_size * 4, 0x100000), 16 * 0x100000);
+			const auto min_required_buffer_size = std::max<u64>(rx::alignUp(image_linear_size * 4, 0x100000), 16 * 0x100000);
 
 			if (driver_caps.ARB_compute_shader_supported)
 			{
@@ -825,7 +826,7 @@ namespace gl
 		}
 		else
 		{
-			const auto aligned_pitch = utils::align<u32>(dst->pitch(), 4);
+			const auto aligned_pitch = rx::alignUp<u32>(dst->pitch(), 4);
 			const u32 texture_data_sz = dst->depth() * dst->height() * aligned_pitch;
 			data_upload_buf.resize(texture_data_sz);
 		}
@@ -1002,7 +1003,7 @@ namespace gl
 
 			u32 scratch_offset = 0;
 			const u64 min_storage_requirement = src_mem.image_size_in_bytes + dst_mem.image_size_in_bytes;
-			const u64 min_required_buffer_size = utils::align(min_storage_requirement, 256);
+			const u64 min_required_buffer_size = rx::alignUp(min_storage_requirement, 256);
 
 			if (g_typeless_transfer_buffer.size() >= min_required_buffer_size) [[likely]]
 			{

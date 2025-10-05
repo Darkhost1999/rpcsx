@@ -7,7 +7,7 @@
 #include "cellos/sys_mutex.h"
 #include "sysPrxForUser.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sysPrxForUser);
 
@@ -151,7 +151,7 @@ error_code sys_lwmutex_lock(ppu_thread& ppu, vm::ptr<sys_lwmutex_t> lwmutex, u64
 
 	for (u32 i = 0; i < 10; i++)
 	{
-		busy_wait();
+		rx::busy_wait();
 
 		if (lwmutex->vars.owner.load() == lwmutex_free)
 		{
@@ -210,7 +210,7 @@ error_code sys_lwmutex_lock(ppu_thread& ppu, vm::ptr<sys_lwmutex_t> lwmutex, u64
 		{
 			for (u32 i = 0; i < 10; i++)
 			{
-				busy_wait();
+				rx::busy_wait();
 
 				if (lwmutex->vars.owner.load() == lwmutex_free)
 				{

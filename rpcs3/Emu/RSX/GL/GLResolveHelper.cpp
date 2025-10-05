@@ -2,6 +2,8 @@
 #include "GLResolveHelper.h"
 #include "GLTexture.h"
 
+#include "rx/align.hpp"
+
 #include <unordered_map>
 #include <stack>
 
@@ -225,8 +227,8 @@ namespace gl
 		multisampled = msaa_image;
 		resolve = resolve_image;
 
-		const u32 invocations_x = utils::align(resolve_image->width(), cs_wave_x) / cs_wave_x;
-		const u32 invocations_y = utils::align(resolve_image->height(), cs_wave_y) / cs_wave_y;
+		const u32 invocations_x = rx::alignUp(resolve_image->width(), cs_wave_x) / cs_wave_x;
+		const u32 invocations_y = rx::alignUp(resolve_image->height(), cs_wave_y) / cs_wave_y;
 
 		compute_task::run(cmd, invocations_x, invocations_y);
 	}

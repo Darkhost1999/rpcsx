@@ -1215,7 +1215,7 @@ class spu_llvm_recompiler : public spu_recompiler_base, public cpu_translator
 						rsx::reservation_lock rsx_lock(raddr, 128);
 
 						// Touch memory
-						utils::trigger_write_page_fault(vm::base(dest ^ (4096 / 2)));
+						rx::trigger_write_page_fault(vm::base(dest ^ (4096 / 2)));
 
 						auto [old_res, ok] = res.fetch_op([&](u64& rval)
 							{

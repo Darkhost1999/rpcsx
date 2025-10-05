@@ -41,12 +41,13 @@
 #include "rpcs3_version.h"
 #include "rpcsx/fw/ps3/cellMsgDialog.h"
 #include "rpcsx/fw/ps3/cellSysutil.h"
+#include "rx/asm.hpp"
+#include "rx/debug.hpp"
 #include "util/File.h"
 #include "util/JIT.h"
 #include "util/StrFmt.h"
 #include "util/StrUtil.h"
 #include "util/Thread.h"
-#include "util/asm.hpp"
 #include "util/console.h"
 #include "util/fixed_typemap.hpp"
 #include "util/logs.hpp"
@@ -241,7 +242,7 @@ void jit_announce(uptr, usz, std::string_view);
   __android_log_write(ANDROID_LOG_FATAL, "RPCS3", buf.c_str());
 
   jit_announce(0, 0, "");
-  utils::trap();
+  rx::breakpoint();
   std::abort();
   std::terminate();
 }

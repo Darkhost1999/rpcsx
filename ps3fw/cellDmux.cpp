@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include "rx/align.hpp"
 #include "Emu/System.h"
 #include "Emu/IdManager.h"
 #include "Emu/Cell/PPUModule.h"
@@ -7,7 +9,7 @@
 #include "cellPamf.h"
 #include "cellDmux.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 #include <thread>
 
@@ -765,7 +767,7 @@ PesHeader::PesHeader(DemuxerStream& stream)
 }
 
 ElementaryStream::ElementaryStream(Demuxer* dmux, u32 addr, u32 size, u32 fidMajor, u32 fidMinor, u32 sup1, u32 sup2, vm::ptr<CellDmuxCbEsMsg> cbFunc, u32 cbArg, u32 spec)
-	: put(utils::align(addr, 128)), dmux(dmux), memAddr(utils::align(addr, 128)), memSize(size - (addr - memAddr)), fidMajor(fidMajor), fidMinor(fidMinor), sup1(sup1), sup2(sup2), cbFunc(cbFunc), cbArg(cbArg), spec(spec)
+	: put(rx::alignUp(addr, 128)), dmux(dmux), memAddr(rx::alignUp(addr, 128)), memSize(size - (addr - memAddr)), fidMajor(fidMajor), fidMinor(fidMinor), sup1(sup1), sup2(sup2), cbFunc(cbFunc), cbArg(cbArg), spec(spec)
 {
 }
 
@@ -849,7 +851,7 @@ void ElementaryStream::push_au(u32 size, u64 dts, u64 pts, u64 userdata, bool ra
 
 		addr = put;
 
-		put = utils::align(put + 128 + size, 128);
+		put = rx::alignUp(put + 128 + size, 128);
 
 		put_count++;
 	}

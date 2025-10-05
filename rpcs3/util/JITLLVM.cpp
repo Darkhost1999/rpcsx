@@ -7,7 +7,8 @@
 #include "util/logs.hpp"
 #include "mutex.h"
 #include "util/vm.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "Crypto/unzip.h"
 
 #include <charconv>
@@ -216,7 +217,7 @@ struct MemoryManager1 : llvm::RTDyldMemoryManager
 	~MemoryManager1() override
 	{
 		// Hack: don't release to prevent reuse of address space, see jit_announce
-		// constexpr auto how_much = [](u64 pos) { return utils::align(pos, pos < c_page_size ? c_page_size / 4 : c_page_size); };
+		// constexpr auto how_much = [](u64 pos) { return rx::alignUp(pos, pos < c_page_size ? c_page_size / 4 : c_page_size); };
 		// utils::memory_decommit(m_code_mems, how_much(code_ptr));
 		// utils::memory_decommit(m_data_ro_mems, how_much(data_ro_ptr));
 		// utils::memory_decommit(m_data_rw_mems, how_much(data_rw_ptr));
@@ -249,7 +250,7 @@ struct MemoryManager1 : llvm::RTDyldMemoryManager
 	{
 		align = align ? align : 16;
 
-		const u64 sizea = utils::align(size, align);
+		const u64 sizea = rx::alignUp(size, align);
 
 		if (!size || align > c_page_size || sizea > c_max_size || sizea < size)
 		{
@@ -259,7 +260,7 @@ struct MemoryManager1 : llvm::RTDyldMemoryManager
 
 		u64 oldp = alloc_pos;
 
-		u64 olda = utils::align(oldp, align);
+		u64 olda = rx::alignUp(oldp, align);
 
 		ensure(olda >= oldp);
 		ensure(olda < ~sizea);
@@ -285,8 +286,8 @@ struct MemoryManager1 : llvm::RTDyldMemoryManager
 		// Optimization: split the first allocation to 512 KiB for single-module compilers
 		if (oldp < c_page_size && align < page_quarter && (std::min(newp, c_page_size) - 1) / page_quarter != (oldp - 1) / page_quarter)
 		{
-			const u64 pagea = utils::align(oldp, page_quarter);
-			const u64 psize = utils::align(std::min(newp, c_page_size) - pagea, page_quarter);
+			const u64 pagea = rx::alignUp(oldp, page_quarter);
+			const u64 psize = rx::alignUp(std::min(newp, c_page_size) - pagea, page_quarter);
 			utils::memory_commit(reinterpret_cast<u8*>(block) + (pagea % c_max_size), psize, prot);
 
 			// Advance
@@ -296,8 +297,8 @@ struct MemoryManager1 : llvm::RTDyldMemoryManager
 		if ((newp - 1) / c_page_size != (oldp - 1) / c_page_size)
 		{
 			// Allocate pages on demand
-			const u64 pagea = utils::align(oldp, c_page_size);
-			const u64 psize = utils::align(newp - pagea, c_page_size);
+			const u64 pagea = rx::alignUp(oldp, c_page_size);
+			const u64 psize = rx::alignUp(newp - pagea, c_page_size);
 			utils::memory_commit(reinterpret_cast<u8*>(block) + (pagea % c_max_size), psize, prot);
 		}
 

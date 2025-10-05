@@ -4,7 +4,8 @@
 
 #include "../VKResourceManager.h"
 
-#include <util/asm.hpp>
+#include <rx/align.hpp>
+#include <rx/asm.hpp>
 
 namespace vk
 {
@@ -123,8 +124,8 @@ namespace vk
 	{
 		auto create_texture = [&]()
 		{
-			u32 new_width = utils::align(requested_width, 256u);
-			u32 new_height = utils::align(requested_height, 256u);
+			u32 new_width = rx::alignUp(requested_width, 256u);
+			u32 new_height = rx::alignUp(requested_height, 256u);
 
 			return new vk::image(*g_render_device, g_render_device->get_memory_mapping().device_local, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 				VK_IMAGE_TYPE_2D, format, new_width, new_height, 1, 1, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -165,7 +166,7 @@ namespace vk
 		if (!scratch_buffer)
 		{
 			// Choose optimal size
-			const u64 alloc_size = utils::align(min_required_size, 0x100000);
+			const u64 alloc_size = rx::alignUp(min_required_size, 0x100000);
 
 			scratch_buffer = std::make_unique<vk::buffer>(*g_render_device, alloc_size,
 				g_render_device->get_memory_mapping().device_local, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -184,7 +185,7 @@ namespace vk
 		if (init_mem || zero_memory)
 		{
 			// Zero-initialize the allocated VRAM
-			const u64 zero_length = init_mem ? buf->size() : utils::align(min_required_size, 4);
+			const u64 zero_length = init_mem ? buf->size() : rx::alignUp(min_required_size, 4);
 			VK_GET_SYMBOL(vkCmdFillBuffer)(cmd, buf->value, 0, zero_length, 0);
 
 			insert_buffer_memory_barrier(cmd, buf->value, 0, zero_length,

@@ -27,7 +27,8 @@
 
 #include "util/date_time.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 #include <span>
 #include <thread>
@@ -332,11 +333,11 @@ namespace rsx
 				{
 					// Division operator
 					_min_index = std::min(_min_index, first / attrib.frequency);
-					_max_index = std::max<u32>(_max_index, utils::aligned_div(max_index, attrib.frequency));
+					_max_index = std::max<u32>(_max_index, rx::aligned_div(max_index, attrib.frequency));
 
 					if (freq_count > 0 && freq_count != umax)
 					{
-						const u32 max = utils::aligned_div(max_index, attrib.frequency);
+						const u32 max = rx::aligned_div(max_index, attrib.frequency);
 						max_result_by_division = std::max<u32>(max_result_by_division, max);
 
 						// Discard lower frequencies because it has been proven that there are indices higher than them
@@ -365,7 +366,7 @@ namespace rsx
 			// The alternative would be re-iterating again over all of them
 			if (get_location(real_offset_address) == CELL_GCM_LOCATION_LOCAL)
 			{
-				if (utils::add_saturate<u32>(real_offset_address - rsx::constants::local_mem_base, (_max_index + 1) * attribute_stride) <= render->local_mem_size)
+				if (rx::add_saturate<u32>(real_offset_address - rsx::constants::local_mem_base, (_max_index + 1) * attribute_stride) <= render->local_mem_size)
 				{
 					break;
 				}
@@ -734,7 +735,7 @@ namespace rsx
 		{
 			// Be compatible with previous bitwise serialization
 			ar(std::span<u8>(reinterpret_cast<u8*>(this), OFFSET_OF(avconf, scan_mode)));
-			ar.pos += utils::align<usz>(OFFSET_OF(avconf, scan_mode), alignof(avconf)) - OFFSET_OF(avconf, scan_mode);
+			ar.pos += rx::alignUp<usz>(OFFSET_OF(avconf, scan_mode), alignof(avconf)) - OFFSET_OF(avconf, scan_mode);
 			return;
 		}
 
@@ -1169,7 +1170,7 @@ namespace rsx
 
 			for (; t == now; now = get_time_ns())
 			{
-				utils::pause();
+				rx::pause();
 			}
 
 			timestamp_ctrl = now;
@@ -2590,7 +2591,7 @@ namespace rsx
 			{
 				if (u32 advance = disasm.disasm(pcs_of_valid_cmds.back()))
 				{
-					pcs_of_valid_cmds.push_back(utils::add_saturate<u32>(pcs_of_valid_cmds.back(), advance));
+					pcs_of_valid_cmds.push_back(rx::add_saturate<u32>(pcs_of_valid_cmds.back(), advance));
 				}
 				else
 				{
@@ -2722,7 +2723,7 @@ namespace rsx
 		}
 
 		// Some cases do not need full delay
-		remaining = utils::aligned_div(remaining, div);
+		remaining = rx::aligned_div(remaining, div);
 		const u64 until = get_system_time() + remaining;
 
 		while (true)
@@ -2751,7 +2752,7 @@ namespace rsx
 			}
 			else
 			{
-				busy_wait(100);
+				rx::busy_wait(100);
 			}
 
 			const u64 current = get_system_time();
@@ -2862,7 +2863,7 @@ namespace rsx
 
 			for (u32 ea = address >> 20, end = ea + (size >> 20); ea < end; ea++)
 			{
-				const u32 io = utils::rol32(iomap_table.io[ea], 32 - 20);
+				const u32 io = rx::rol32(iomap_table.io[ea], 32 - 20);
 
 				if (io + 1)
 				{
@@ -2892,7 +2893,7 @@ namespace rsx
 
 						while (to_unmap)
 						{
-							bit = (std::countr_zero<u64>(utils::rol64(to_unmap, 0 - bit)) + bit);
+							bit = (std::countr_zero<u64>(rx::rol64(to_unmap, 0 - bit)) + bit);
 							to_unmap &= ~(1ull << bit);
 
 							constexpr u16 null_entry = 0xFFFF;
@@ -2998,7 +2999,7 @@ namespace rsx
 
 		while (!external_interrupt_ack && !is_stopped())
 		{
-			utils::pause();
+			rx::pause();
 		}
 	}
 
@@ -3022,7 +3023,7 @@ namespace rsx
 			while (external_interrupt_lock && (cpu_flag::ret - state))
 			{
 				// TODO: Investigate non busy-spinning method
-				utils::pause();
+				rx::pause();
 			}
 
 			external_interrupt_ack.store(false);
@@ -3364,7 +3365,7 @@ namespace rsx
 		}
 
 		const u64 current_time = get_system_time();
-		const u64 current_tsc = utils::get_tsc();
+		const u64 current_tsc = rx::get_tsc();
 		u64 preempt_count = 0;
 
 		if (frame_times.size() >= 60)

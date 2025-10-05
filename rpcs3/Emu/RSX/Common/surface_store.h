@@ -8,7 +8,8 @@
 #include "../rsx_utils.h"
 #include <list>
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 namespace rsx
 {
@@ -806,7 +807,7 @@ namespace rsx
 						continue;
 					}
 
-					num_rows = utils::aligned_div(this_range.length(), rsx_pitch);
+					num_rows = rx::aligned_div(this_range.length(), rsx_pitch);
 				}
 
 				for (u32 row = 0, offset = (this_range.start - range.start), section_len = (this_range.end - range.start + 1);
@@ -1186,7 +1187,7 @@ namespace rsx
 					{
 						// Width is calculated in the coordinate-space of the requester; normalize
 						info.src_area.x = (info.src_area.x * required_bpp) / surface_bpp;
-						info.src_area.width = utils::align(width * required_bpp, surface_bpp) / surface_bpp;
+						info.src_area.width = rx::alignUp(width * required_bpp, surface_bpp) / surface_bpp;
 					}
 					else
 					{

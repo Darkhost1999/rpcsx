@@ -4,7 +4,7 @@
 #include "VKCompute.h"
 #include "VKAsyncScheduler.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 namespace vk
 {
@@ -450,7 +450,7 @@ namespace vk
 				// Dimensions were given in 'dst' space. Work out the real source coordinates
 				const auto src_bpp = vk::get_format_texel_width(section.src->format());
 				src_x = (src_x * dst_bpp) / src_bpp;
-				src_w = utils::aligned_div<u16>(src_w * dst_bpp, src_bpp);
+				src_w = rx::aligned_div<u16>(src_w * dst_bpp, src_bpp);
 
 				transform &= ~(rsx::surface_transform::coordinate_transform);
 			}

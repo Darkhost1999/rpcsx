@@ -4,7 +4,7 @@
 #include "PPUAnalyser.h"
 #include "Emu/IdManager.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 #include <cmath>
 
@@ -222,7 +222,7 @@ std::pair<PPUDisAsm::const_op, u64> PPUDisAsm::try_get_const_op_gpr_value(u32 re
 
 			GET_CONST_REG(reg_rs, op.rs);
 
-			return {form, utils::rol64(reg_rs, op.sh64) & (~0ull << (op.mbe64 ^ 63))};
+			return {form, rx::rol64(reg_rs, op.sh64) & (~0ull << (op.mbe64 ^ 63))};
 		}
 		case ppu_itype::OR:
 		{

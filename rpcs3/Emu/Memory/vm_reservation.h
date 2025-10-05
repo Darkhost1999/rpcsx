@@ -3,7 +3,7 @@
 #include "vm.h"
 #include "vm_locking.h"
 #include "util/atomic.hpp"
-#include "util/tsc.hpp"
+#include "rx/tsc.hpp"
 #include <functional>
 
 extern bool g_use_rtm;
@@ -209,7 +209,7 @@ namespace vm
 			unsigned status = -1;
 			u64 _old = 0;
 
-			auto stamp0 = utils::get_tsc(), stamp1 = stamp0, stamp2 = stamp0;
+			auto stamp0 = rx::get_tsc(), stamp1 = stamp0, stamp2 = stamp0;
 
 #ifndef _MSC_VER
 			__asm__ goto("xbegin %l[stage2];" ::: "memory" : stage2);
@@ -271,16 +271,16 @@ namespace vm
 #ifndef _MSC_VER
 			__asm__ volatile("mov %%eax, %0;" : "=r"(status)::"memory");
 #endif
-			stamp1 = utils::get_tsc();
+			stamp1 = rx::get_tsc();
 
 			// Stage 2: try to lock reservation first
 			_old = res.fetch_add(1);
 
 			// Compute stamps excluding memory touch
-			stamp2 = utils::get_tsc() - (stamp1 - stamp0);
+			stamp2 = rx::get_tsc() - (stamp1 - stamp0);
 
 			// Start lightened transaction
-			for (; !(_old & vm::rsrv_unique_lock) && stamp2 - stamp0 <= g_rtm_tx_limit2; stamp2 = utils::get_tsc())
+			for (; !(_old & vm::rsrv_unique_lock) && stamp2 - stamp0 <= g_rtm_tx_limit2; stamp2 = rx::get_tsc())
 			{
 				if (cpu.has_pause_flag())
 				{

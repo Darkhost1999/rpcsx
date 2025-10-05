@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "PPUAnalyser.h"
 
 #include "cellos/sys_sync.h"
@@ -8,7 +9,8 @@
 
 #include <unordered_set>
 #include "util/yaml.hpp"
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(ppu_validator);
 
@@ -25,7 +27,6 @@ void fmt_class_string<ppu_attr>::format(std::string& out, u64 arg)
 			case ppu_attr::no_return: return "no_return";
 			case ppu_attr::no_size: return "no_size";
 			case ppu_attr::has_mfvscr: return "has_mfvscr";
-			case ppu_attr::bitset_last: break;
 			}
 
 			return unknown;
@@ -2243,7 +2244,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 										}
 									}
 
-									jt_end = utils::align<u32>(static_cast<u32>(std::min<u64>(jt_end - 1, ctr(maxv) - 1) + 1), 4);
+									jt_end = rx::alignUp<u32>(static_cast<u32>(std::min<u64>(jt_end - 1, ctr(maxv) - 1) + 1), 4);
 
 									get_jumptable_end(jumpatble_off, jumpatble_ptr, false);
 
@@ -2882,7 +2883,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 				block.attr = ppu_attr::no_size;
 			}
 
-			per_instruction_bytes += utils::sub_saturate<u32>(lim, func.addr);
+			per_instruction_bytes += rx::sub_saturate<u32>(lim, func.addr);
 			addr_next = std::max<u32>(addr_next, lim);
 			continue;
 		}
@@ -3291,7 +3292,7 @@ bool ppu_module<lv2_obj>::analyse(u32 lib_toc, u32 entry, const u32 sec_end, con
 
 	if (per_instruction_bytes)
 	{
-		const bool error = per_instruction_bytes >= 200 && per_instruction_bytes / 4 >= utils::aligned_div<u32>(::size32(funcs), 128);
+		const bool error = per_instruction_bytes >= 200 && per_instruction_bytes / 4 >= rx::aligned_div<u32>(::size32(funcs), 128);
 		(error ? ppu_log.error : ppu_log.notice)("%d instructions will be compiled on per-instruction basis in total", per_instruction_bytes / 4);
 	}
 

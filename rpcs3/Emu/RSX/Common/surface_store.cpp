@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "surface_store.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 namespace rsx
 {
@@ -39,20 +40,20 @@ namespace rsx
 		{
 			switch (format)
 			{
-			case surface_color_format::b8: return utils::align(width, 256);
+			case surface_color_format::b8: return rx::alignUp(width, 256);
 			case surface_color_format::g8b8:
 			case surface_color_format::x1r5g5b5_o1r5g5b5:
 			case surface_color_format::x1r5g5b5_z1r5g5b5:
-			case surface_color_format::r5g6b5: return utils::align(width * 2, 256);
+			case surface_color_format::r5g6b5: return rx::alignUp(width * 2, 256);
 			case surface_color_format::a8b8g8r8:
 			case surface_color_format::x8b8g8r8_o8b8g8r8:
 			case surface_color_format::x8b8g8r8_z8b8g8r8:
 			case surface_color_format::x8r8g8b8_o8r8g8b8:
 			case surface_color_format::x8r8g8b8_z8r8g8b8:
 			case surface_color_format::x32:
-			case surface_color_format::a8r8g8b8: return utils::align(width * 4, 256);
-			case surface_color_format::w16z16y16x16: return utils::align(width * 8, 256);
-			case surface_color_format::w32z32y32x32: return utils::align(width * 16, 256);
+			case surface_color_format::a8r8g8b8: return rx::alignUp(width * 4, 256);
+			case surface_color_format::w16z16y16x16: return rx::alignUp(width * 8, 256);
+			case surface_color_format::w32z32y32x32: return rx::alignUp(width * 16, 256);
 			}
 			fmt::throw_exception("Unknown color surface format");
 		}

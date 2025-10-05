@@ -1,6 +1,6 @@
 #include "mutex.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 void shared_mutex::imp_lock_shared(u32 val)
 {
@@ -26,7 +26,7 @@ void shared_mutex::imp_lock_shared(u32 val)
 			return;
 		}
 
-		busy_wait();
+		rx::busy_wait();
 	}
 
 	// Acquire writer lock and downgrade
@@ -96,7 +96,7 @@ void shared_mutex::imp_lock(u32 val)
 
 	for (int i = 0; i < 10; i++)
 	{
-		busy_wait();
+		rx::busy_wait();
 
 		const u32 old = m_value;
 
@@ -138,7 +138,7 @@ void shared_mutex::imp_lock_upgrade()
 {
 	for (int i = 0; i < 10; i++)
 	{
-		busy_wait();
+		rx::busy_wait();
 
 		if (try_lock_upgrade())
 		{
@@ -178,7 +178,7 @@ void shared_mutex::imp_lock_unlock()
 
 		_max = val / c_one;
 
-		busy_wait(1500);
+		rx::busy_wait(1500);
 	}
 
 	// Lock and unlock

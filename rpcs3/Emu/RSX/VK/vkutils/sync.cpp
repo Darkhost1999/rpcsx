@@ -9,7 +9,7 @@
 #include "Emu/Cell/timers.hpp"
 
 #include "util/sysinfo.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 namespace vk
 {
@@ -170,7 +170,7 @@ namespace vk
 	{
 		while (!flushed)
 		{
-			utils::pause();
+			rx::pause();
 		}
 	}
 
@@ -553,7 +553,7 @@ namespace vk
 				switch (status)
 				{
 				case VK_NOT_READY:
-					utils::pause();
+					rx::pause();
 					continue;
 				default:
 					die_with_error(status);
@@ -592,7 +592,7 @@ namespace vk
 
 			if (timeout)
 			{
-				const auto now = freq ? utils::get_tsc() : get_system_time();
+				const auto now = freq ? rx::get_tsc() : get_system_time();
 
 				if (!start)
 				{
@@ -608,7 +608,7 @@ namespace vk
 				}
 			}
 
-			utils::pause();
+			rx::pause();
 		}
 	}
 } // namespace vk

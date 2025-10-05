@@ -4,6 +4,8 @@
 #include "vkutils/buffer_object.h"
 #include "VKPipelineCompiler.h"
 
+#include "rx/align.hpp"
+
 #define VK_MAX_COMPUTE_TASKS 8192 // Max number of jobs per frame
 
 namespace vk
@@ -219,7 +221,7 @@ namespace vk
 #include "../Program/GLSLSnippets/ShuffleBytes.glsl"
 			;
 
-		const auto parameters_size = utils::align(push_constants_size, 16) / 16;
+		const auto parameters_size = rx::alignUp(push_constants_size, 16) / 16;
 		const std::pair<std::string_view, std::string> syntax_replace[] =
 			{
 				{"%loc", "0"},
@@ -387,7 +389,7 @@ namespace vk
 		word_count = num_words;
 		block_length = num_words * 4;
 
-		const u32 linear_invocations = utils::aligned_div(word_count, optimal_group_size);
+		const u32 linear_invocations = rx::aligned_div(word_count, optimal_group_size);
 		compute_task::run(cmd, linear_invocations);
 	}
 } // namespace vk

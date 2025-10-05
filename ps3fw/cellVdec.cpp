@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "Emu/Cell/PPUModule.h"
 #include "cellos/sys_ppu_thread.h"
 #include "cellos/sys_process.h"
@@ -5,7 +7,7 @@
 #include "Emu/IdManager.h"
 #include "Emu/perf_meter.hpp"
 #include "Emu/savestate_utils.hpp"
-#include "stdafx.h"
+#include "rx/align.hpp"
 #include "sysPrxForUser.h"
 #include "util/media_utils.h"
 
@@ -32,7 +34,7 @@ extern "C"
 #include "cellPamf.h"
 #include "cellVdec.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/lockless.h"
 #include <cmath>
 #include <mutex>
@@ -1660,7 +1662,7 @@ error_code cellVdecGetPicItem(ppu_thread& ppu, u32 handle,
 	const int buffer_size = av_image_get_buffer_size(
 		vdec->ctx->pix_fmt, vdec->ctx->width, vdec->ctx->height, 1);
 	ensure(buffer_size >= 0);
-	info->size = utils::align<u32>(buffer_size, 128);
+	info->size = rx::alignUp<u32>(buffer_size, 128);
 	info->auNum = 1;
 	info->auPts[0].lower = static_cast<u32>(pts);
 	info->auPts[0].upper = static_cast<u32>(pts >> 32);

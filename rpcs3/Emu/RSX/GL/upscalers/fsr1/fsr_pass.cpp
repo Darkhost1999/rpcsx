@@ -58,7 +58,7 @@ namespace gl
 			m_src = fmt::replace_all(m_src, replacement_table);
 
 			// Fill with 0 to avoid sending incomplete/unused variables to the GPU
-			m_constants_buf.resize(utils::rounded_div(push_constants_size, 4), 0);
+			m_constants_buf.resize(rx::rounded_div(push_constants_size, 4), 0);
 
 			create();
 
@@ -106,8 +106,8 @@ namespace gl
 			glBindImageTexture(GL_COMPUTE_IMAGE_SLOT(0), dst->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
 
 			constexpr auto wg_size = 16;
-			const auto invocations_x = utils::aligned_div(output_size.width, wg_size);
-			const auto invocations_y = utils::aligned_div(output_size.height, wg_size);
+			const auto invocations_x = rx::aligned_div(output_size.width, wg_size);
+			const auto invocations_y = rx::aligned_div(output_size.height, wg_size);
 
 			ensure(invocations_x == (output_size.width + (wg_size - 1)) / wg_size);
 			ensure(invocations_y == (output_size.height + (wg_size - 1)) / wg_size);

@@ -1,6 +1,6 @@
 #include "util/types.hpp"
 #include "util/logs.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/sysinfo.hpp"
 #include "util/endian.hpp"
 #include "util/lockless.h"
@@ -112,7 +112,7 @@ bool uncompressed_serialization_file_handler::handle_file_op(utils::serial& ar, 
 		ar.data_offset = pos;
 	}
 
-	const usz read_pre_buffer = ar.data.empty() ? 0 : utils::sub_saturate<usz>(ar.data_offset, pos);
+	const usz read_pre_buffer = ar.data.empty() ? 0 : rx::sub_saturate<usz>(ar.data_offset, pos);
 
 	if (read_pre_buffer)
 	{
@@ -128,8 +128,8 @@ bool uncompressed_serialization_file_handler::handle_file_op(utils::serial& ar, 
 
 	// Adjustment to prevent overflow
 	const usz subtrahend = ar.data.empty() ? 0 : 1;
-	const usz read_past_buffer = utils::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
-	const usz read_limit = utils::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
+	const usz read_past_buffer = rx::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
+	const usz read_limit = rx::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
 
 	if (read_past_buffer)
 	{
@@ -410,7 +410,7 @@ bool compressed_serialization_file_handler::handle_file_op(utils::serial& ar, us
 	// 	ar.seek_pos(pos);
 	// }
 
-	const usz read_pre_buffer = utils::sub_saturate<usz>(ar.data_offset, pos);
+	const usz read_pre_buffer = rx::sub_saturate<usz>(ar.data_offset, pos);
 
 	if (read_pre_buffer)
 	{
@@ -421,8 +421,8 @@ bool compressed_serialization_file_handler::handle_file_op(utils::serial& ar, us
 
 	// Adjustment to prevent overflow
 	const usz subtrahend = ar.data.empty() ? 0 : 1;
-	const usz read_past_buffer = utils::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
-	const usz read_limit = utils::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
+	const usz read_past_buffer = rx::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
+	const usz read_limit = rx::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
 
 	if (read_past_buffer)
 	{
@@ -506,7 +506,7 @@ usz compressed_serialization_file_handler::read_at(utils::serial& ar, usz read_p
 			m_stream_data_index = m_zs.avail_in ? m_zs.next_in - m_stream_data.data() : m_stream_data.size();
 
 			// Adjust again in case the values simply did not fit into uInt
-			m_zs.avail_out = adjust_for_uint(utils::sub_saturate<usz>(total_to_read, read_size));
+			m_zs.avail_out = adjust_for_uint(rx::sub_saturate<usz>(total_to_read, read_size));
 			m_zs.avail_in = adjust_for_uint(m_stream_data.size() - m_stream_data_index);
 
 			if (need_more_file_memory)
@@ -779,7 +779,7 @@ usz compressed_serialization_file_handler::get_size(const utils::serial& ar, usz
 		return memory_available;
 	}
 
-	return std::max<usz>(utils::mul_saturate<usz>(m_file->size(), 6), memory_available);
+	return std::max<usz>(rx::mul_saturate<usz>(m_file->size(), 6), memory_available);
 }
 
 struct compressed_zstd_stream_data
@@ -973,7 +973,7 @@ bool compressed_zstd_serialization_file_handler::handle_file_op(utils::serial& a
 	// 	ar.seek_pos(pos);
 	// }
 
-	const usz read_pre_buffer = utils::sub_saturate<usz>(ar.data_offset, pos);
+	const usz read_pre_buffer = rx::sub_saturate<usz>(ar.data_offset, pos);
 
 	if (read_pre_buffer)
 	{
@@ -984,8 +984,8 @@ bool compressed_zstd_serialization_file_handler::handle_file_op(utils::serial& a
 
 	// Adjustment to prevent overflow
 	const usz subtrahend = ar.data.empty() ? 0 : 1;
-	const usz read_past_buffer = utils::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
-	const usz read_limit = utils::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
+	const usz read_past_buffer = rx::sub_saturate<usz>(pos + (size - subtrahend), ar.data_offset + (ar.data.size() - subtrahend));
+	const usz read_limit = rx::sub_saturate<usz>(ar.m_max_data, ar.data_offset);
 
 	if (read_past_buffer)
 	{
@@ -1326,7 +1326,7 @@ usz compressed_zstd_serialization_file_handler::get_size(const utils::serial& ar
 	}
 
 	return recommended;
-	// return std::max<usz>(utils::mul_saturate<usz>(ZSTD_decompressBound(m_file->size()), 2), memory_available);
+	// return std::max<usz>(rx::mul_saturate<usz>(ZSTD_decompressBound(m_file->size()), 2), memory_available);
 }
 
 bool null_serialization_file_handler::handle_file_op(utils::serial&, usz, usz, const void*)

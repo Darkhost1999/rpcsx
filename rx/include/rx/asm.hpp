@@ -1,6 +1,8 @@
 #pragma once
 
+#include "rx/tsc.hpp"
 #include "types.hpp"
+#include <thread>
 #include <atomic>
 
 extern bool g_use_rtm;
@@ -275,6 +277,16 @@ inline void pause() {
 #endif
 }
 
+inline void yield() { std::this_thread::yield(); }
+
+// Synchronization helper (cache-friendly busy waiting)
+inline void busy_wait(usz cycles = 3000) {
+  const u64 stop = get_tsc() + cycles;
+  do
+    pause();
+  while (get_tsc() < stop);
+}
+
 // Align to power of 2
 template <typename T, typename U>
   requires std::is_unsigned_v<T>
@@ -311,12 +323,6 @@ constexpr T rational_mul(T value, std::type_identity_t<T> numerator,
   if constexpr (sizeof(T) <= sizeof(u64) / 2) {
     return static_cast<T>(value * u64{numerator} / u64{denominator});
   }
-
-#if is_u128_emulated
-  if constexpr (sizeof(T) <= sizeof(u128) / 2) {
-    return static_cast<T>(u128_from_mul(value, numerator) / u64{denominator});
-  }
-#endif
 
   return static_cast<T>(value / denominator * numerator +
                         (value % denominator) * numerator / denominator);

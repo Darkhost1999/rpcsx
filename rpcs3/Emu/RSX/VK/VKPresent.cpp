@@ -8,7 +8,8 @@
 #include "upscalers/bilinear_pass.hpp"
 #include "upscalers/fsr_pass.h"
 #include "upscalers/nearest_pass.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "util/video_provider.h"
 
 extern atomic_t<bool> g_user_asked_for_screenshot;
@@ -762,7 +763,7 @@ void VKGSRender::flip(const rsx::display_flip_info_t& info)
 		{
 			const usz sshot_size = buffer_height * buffer_width * 4;
 
-			vk::buffer sshot_vkbuf(*m_device, utils::align(sshot_size, 0x100000), m_device->get_memory_mapping().host_visible_coherent,
+			vk::buffer sshot_vkbuf(*m_device, rx::alignUp(sshot_size, 0x100000), m_device->get_memory_mapping().host_visible_coherent,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT, 0, VMM_ALLOCATION_POOL_UNDEFINED);
 
 			VkBufferImageCopy copy_info;

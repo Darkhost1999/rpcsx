@@ -5,7 +5,7 @@
 #include "Emu/Cell/ErrorCodes.h"
 #include "Emu/Cell/PPUThread.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 #include "sys_mutex.h"
 
@@ -147,7 +147,7 @@ error_code sys_mutex_lock(ppu_thread &ppu, u32 mutex_id, u64 timeout) {
           // Try busy waiting a bit if advantageous
           for (u32 i = 0, end = lv2_obj::has_ppus_in_running_state() ? 3 : 10;
                id_manager::g_mutex.is_lockable() && i < end; i++) {
-            busy_wait(300);
+            rx::busy_wait(300);
             result = mutex.try_lock(ppu);
 
             if (!result ||
@@ -212,7 +212,7 @@ error_code sys_mutex_lock(ppu_thread &ppu, u32 mutex_id, u64 timeout) {
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 40; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

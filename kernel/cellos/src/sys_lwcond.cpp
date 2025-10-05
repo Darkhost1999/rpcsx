@@ -8,7 +8,7 @@
 #include "Emu/Cell/PPUThread.h"
 #include "sys_lwmutex.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_lwcond);
 
@@ -490,7 +490,7 @@ error_code _sys_lwcond_queue_wait(ppu_thread &ppu, u32 lwcond_id,
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 50; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

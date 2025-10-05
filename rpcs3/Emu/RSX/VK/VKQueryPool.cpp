@@ -4,7 +4,7 @@
 #include "VKQueryPool.h"
 #include "VKRenderPass.h"
 #include "VKResourceManager.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "VKGSRender.h"
 
 namespace vk
@@ -172,7 +172,7 @@ namespace vk
 
 			while (!query_info.ready)
 			{
-				utils::pause();
+				rx::pause();
 				poke_query(query_info, index, result_flags);
 			}
 		}

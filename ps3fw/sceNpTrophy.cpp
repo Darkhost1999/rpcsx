@@ -20,7 +20,7 @@
 #include "cellos/sys_event.h"
 #include "cellos/sys_fs.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include <algorithm>
 #include <functional>
 #include <shared_mutex>
@@ -1490,7 +1490,7 @@ error_code sceNpTrophyGetGameProgress(u32 context, u32 handle,
 	const u32 trp_count = ctxt->tropusr->GetTrophiesCount();
 
 	// Round result to nearest (TODO: Check 0 trophies)
-	*percentage = trp_count ? utils::rounded_div(unlocked * 100, trp_count) : 0;
+	*percentage = trp_count ? rx::rounded_div(unlocked * 100, trp_count) : 0;
 
 	if (trp_count == 0 || trp_count > 128)
 	{

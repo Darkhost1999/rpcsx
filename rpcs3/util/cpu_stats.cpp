@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #ifdef _WIN32
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "windows.h"
 #include "tlhelp32.h"
 #ifdef _MSC_VER
@@ -148,7 +148,7 @@ namespace utils
 		status = PdhGetFormattedCounterArray(m_cpu_cores, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, nullptr);
 		if (static_cast<PDH_STATUS>(PDH_MORE_DATA) == status)
 		{
-			std::vector<PDH_FMT_COUNTERVALUE_ITEM> items(utils::aligned_div(dwBufferSize, sizeof(PDH_FMT_COUNTERVALUE_ITEM)));
+			std::vector<PDH_FMT_COUNTERVALUE_ITEM> items(rx::aligned_div(dwBufferSize, sizeof(PDH_FMT_COUNTERVALUE_ITEM)));
 			if (items.size() >= dwItemCount)
 			{
 				status = PdhGetFormattedCounterArray(m_cpu_cores, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, items.data());

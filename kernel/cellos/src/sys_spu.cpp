@@ -21,7 +21,8 @@
 #include "sys_mmapper.h"
 #include "sys_process.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_spu);
 
@@ -129,7 +130,7 @@ void sys_spu_image::load(const fs::file &stream) {
   this->nsegs = 0;
   this->segs = vm::null;
 
-  vm::page_protect(segs.addr(), utils::align(mem_size, 4096), 0, 0,
+  vm::page_protect(segs.addr(), rx::alignUp(mem_size, 4096), 0, 0,
                    vm::page_writable);
 }
 
@@ -196,8 +197,8 @@ void sys_spu_image::deploy(u8 *loc, std::span<const sys_spu_segment> segs,
   }
 
   auto mem_translate = [loc](u32 addr, u32 size) {
-    return utils::add_saturate<u32>(addr, size) <= SPU_LS_SIZE ? loc + addr
-                                                               : nullptr;
+    return rx::add_saturate<u32>(addr, size) <= SPU_LS_SIZE ? loc + addr
+                                                            : nullptr;
   };
 
   // Apply the patch
@@ -1259,7 +1260,7 @@ error_code sys_spu_thread_group_terminate(ppu_thread &ppu, u32 id, s32 value) {
   // termination
   auto short_sleep = [](ppu_thread &ppu) {
     lv2_obj::sleep(ppu);
-    busy_wait(3000);
+    rx::busy_wait(3000);
     ppu.check_state();
     ppu.state += cpu_flag::wait;
   };

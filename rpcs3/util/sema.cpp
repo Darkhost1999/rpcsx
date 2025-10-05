@@ -1,12 +1,12 @@
 #include "sema.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 void semaphore_base::imp_wait()
 {
 	for (int i = 0; i < 10; i++)
 	{
-		busy_wait();
+		rx::busy_wait();
 
 		const u32 value = m_value.load();
 

@@ -25,6 +25,7 @@
 #include <optional>
 #include <unordered_set>
 
+#include "rx/align.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
 #include "util/sysinfo.hpp"
@@ -658,7 +659,7 @@ std::deque<spu_program> spu_cache::get()
 		const u32 size = block_info.size;
 		const u32 addr = block_info.addr;
 
-		if (utils::add_saturate<u32>(addr, size * 4) > SPU_LS_SIZE)
+		if (rx::add_saturate<u32>(addr, size * 4) > SPU_LS_SIZE)
 		{
 			break;
 		}
@@ -1253,7 +1254,7 @@ void spu_cache::initialize(bool build_existing_cache)
 
 				fmt::append(dump, "\n\t%49s", "");
 
-				for (u32 i = 0; i < std::min<usz>(f->data.size(), std::max<usz>(64, utils::aligned_div<u32>(depth_m, 4))); i++)
+				for (u32 i = 0; i < std::min<usz>(f->data.size(), std::max<usz>(64, rx::aligned_div<u32>(depth_m, 4))); i++)
 				{
 					fmt::append(dump, "%-10s", g_spu_iname.decode(std::bit_cast<be_t<u32>>(f->data[i])));
 				}
@@ -2308,12 +2309,12 @@ std::vector<u32> spu_thread::discover_functions(u32 base_addr, std::span<const u
 	// TODO: Does not detect jumptables or fixed-addr indirect calls
 	const v128 brasl_mask = is_known_addr ? v128::from32p(0x62u << 23) : v128::from32p(umax);
 
-	for (u32 i = utils::align<u32>(base_addr, 0x10); i < std::min<u32>(base_addr + ::size32(ls), 0x3FFF0); i += 0x10)
+	for (u32 i = rx::alignUp<u32>(base_addr, 0x10); i < std::min<u32>(base_addr + ::size32(ls), 0x3FFF0); i += 0x10)
 	{
 		// Search for BRSL LR and BRASL LR or BR
 		// TODO: BISL
 		const v128 inst = read_from_ptr<be_t<v128>>(ls.data(), i - base_addr);
-		const v128 cleared_i16 = gv_and32(inst, v128::from32p(utils::rol32(~0xffff, 7)));
+		const v128 cleared_i16 = gv_and32(inst, v128::from32p(rx::rol32(~0xffff, 7)));
 		const v128 eq_brsl = gv_eq32(cleared_i16, v128::from32p(0x66u << 23));
 		const v128 eq_brasl = gv_eq32(cleared_i16, brasl_mask);
 		const v128 eq_br = gv_eq32(cleared_i16, v128::from32p(0x64u << 23));
@@ -5376,7 +5377,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 									const usz block_tail = duplicate_positions[it_begin - it_tail];
 
 									// Check if the distance is precisely two times from the end
-									if (reg_state_it.size() - block_start != utils::rol64(reg_state_it.size() - block_tail, 1))
+									if (reg_state_it.size() - block_start != rx::rol64(reg_state_it.size() - block_tail, 1))
 									{
 										continue;
 									}
@@ -7143,7 +7144,7 @@ spu_program spu_recompiler_base::analyse(const be_t<u32>* ls, u32 entry_point, s
 			v_reg2 = 3,
 		};
 
-		for (auto it = infos.lower_bound(utils::sub_saturate<u32>(pattern.put_pc, 512)); it != infos.end() && it->first < pattern.put_pc + 512; it++)
+		for (auto it = infos.lower_bound(rx::sub_saturate<u32>(pattern.put_pc, 512)); it != infos.end() && it->first < pattern.put_pc + 512; it++)
 		{
 			for (auto& state : it->second->end_reg_state)
 			{
@@ -7622,7 +7623,7 @@ struct spu_llvm
 			// Notify all before queue runs out if there is considerable excess
 			// Optimized that: if there are many workers, it acts soon
 			// If there are only a few workers, it postpones notifications until there is some more workload
-			if (notify_compile_count && std::min<u32>(7, utils::aligned_div<u32>(worker_count * 2, 3) + 2) <= compile_pending)
+			if (notify_compile_count && std::min<u32>(7, rx::aligned_div<u32>(worker_count * 2, 3) + 2) <= compile_pending)
 			{
 				for (usz i = 0; i < worker_count; i++)
 				{

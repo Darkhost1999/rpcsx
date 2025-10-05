@@ -9,7 +9,8 @@
 #include "Emu/VFS.h"
 
 #include "util/types.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 #include <charconv>
 #include <regex>
@@ -972,10 +973,10 @@ static usz apply_modification(std::vector<u32>& applied, patch_engine::patch_inf
 		// Do not allow null address or if resultant ptr is not a VM ptr
 		if (const u32 alloc_at = (p.offset & -4096); alloc_at >> 16)
 		{
-			const u32 alloc_size = utils::align(static_cast<u32>(p.value.long_value) + alloc_at % 4096, 4096);
+			const u32 alloc_size = rx::alignUp(static_cast<u32>(p.value.long_value) + alloc_at % 4096, 4096);
 
 			// Allocate map if needed, if allocated flags will indicate that bit 62 is set (unique identifier)
-			auto alloc_map = vm::reserve_map(vm::any, alloc_at & -0x10000, utils::align(alloc_size, 0x10000), vm::page_size_64k | (1ull << 62));
+			auto alloc_map = vm::reserve_map(vm::any, alloc_at & -0x10000, rx::alignUp(alloc_size, 0x10000), vm::page_size_64k | (1ull << 62));
 
 			u64 flags = vm::alloc_unwritable;
 
@@ -1106,7 +1107,7 @@ static usz apply_modification(std::vector<u32>& applied, patch_engine::patch_inf
 		}
 		case patch_type::c_utf8:
 		{
-			memory_size = utils::add_saturate<u32>(::size32(p.original_value), 1);
+			memory_size = rx::add_saturate<u32>(::size32(p.original_value), 1);
 			break;
 		}
 		case patch_type::move_file:
@@ -1165,7 +1166,7 @@ static usz apply_modification(std::vector<u32>& applied, patch_engine::patch_inf
 				continue;
 			}
 
-			const u32 alloc_size = utils::align(static_cast<u32>(p.value.long_value + 1) * 4, 0x10000);
+			const u32 alloc_size = rx::alignUp(static_cast<u32>(p.value.long_value + 1) * 4, 0x10000);
 
 			// Check if should maybe reuse previous code cave allocation (0 size)
 			if (alloc_size - 4 != 0)

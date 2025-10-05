@@ -7,7 +7,7 @@
 #include "Emu/Cell/ErrorCodes.h"
 #include "Emu/Cell/PPUThread.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_lwmutex);
 
@@ -194,7 +194,7 @@ error_code _sys_lwmutex_lock(ppu_thread &ppu, u32 lwmutex_id, u64 timeout) {
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 50; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

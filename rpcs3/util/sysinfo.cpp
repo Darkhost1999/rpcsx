@@ -18,14 +18,14 @@
 #include <sys/resource.h>
 #ifndef __APPLE__
 #include <sys/utsname.h>
-#include <errno.h>
+#include <cerrno>
 #endif
 #endif
 
 #include <thread>
 #include <fstream>
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/fence.hpp"
 
 #if defined(_M_X64) && defined(_MSC_VER)
@@ -790,7 +790,7 @@ static constexpr ullong round_tsc(ullong val, ullong known_error)
 		known_error /= 10;
 	}
 
-	return utils::rounded_div(val, by) * by;
+	return rx::rounded_div(val, by) * by;
 }
 
 namespace utils
@@ -898,7 +898,7 @@ static const bool s_tsc_freq_evaluated = []() -> bool
 		{
 			for (usz i = 0; i < retry_count; i++)
 			{
-				const u64 rdtsc_read = (utils::lfence(), utils::get_tsc());
+				const u64 rdtsc_read = (utils::lfence(), rx::get_tsc());
 #ifdef _WIN32
 				LARGE_INTEGER ctr;
 				QueryPerformanceCounter(&ctr);
@@ -906,7 +906,7 @@ static const bool s_tsc_freq_evaluated = []() -> bool
 				struct timespec ts;
 				clock_gettime(CLOCK_MONOTONIC, &ts);
 #endif
-				const u64 rdtsc_read2 = (utils::lfence(), utils::get_tsc());
+				const u64 rdtsc_read2 = (utils::lfence(), rx::get_tsc());
 
 #ifdef _WIN32
 				const u64 timer_read = ctr.QuadPart - time_base;
@@ -961,10 +961,10 @@ static const bool s_tsc_freq_evaluated = []() -> bool
 
 		const u128 data = u128_from_mul(rdtsc_data[1] - rdtsc_data[0], timer_freq);
 
-		const u64 res = utils::udiv128(static_cast<u64>(data >> 64), static_cast<u64>(data), (timer_data[1] - timer_data[0]));
+		const u64 res = rx::udiv128(static_cast<u64>(data >> 64), static_cast<u64>(data), (timer_data[1] - timer_data[0]));
 
 		// Rounding
-		return round_tsc(res, utils::mul_saturate<u64>(utils::add_saturate<u64>(rdtsc_diff[0], rdtsc_diff[1]), utils::aligned_div(timer_freq, timer_data[1] - timer_data[0])));
+		return round_tsc(res, rx::mul_saturate<u64>(rx::add_saturate<u64>(rdtsc_diff[0], rdtsc_diff[1]), rx::aligned_div(timer_freq, timer_data[1] - timer_data[0])));
 	}();
 
 	atomic_storage<u64>::store(utils::s_tsc_freq, cal_tsc);

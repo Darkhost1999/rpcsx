@@ -106,20 +106,6 @@ template <typename F> fn_helper(F &&f) -> fn_helper<F>;
                       [[maybe_unused]] auto &&z,                               \
                       [[maybe_unused]] auto &&w) { return (__VA_ARGS__); })
 
-#if __cpp_lib_bit_cast < 201806L
-namespace std {
-template <typename To, typename From>
-[[nodiscard]] constexpr To bit_cast(const From &from) noexcept {
-  return __builtin_bit_cast(To, from);
-}
-} // namespace std
-#endif
-
-#if defined(__INTELLISENSE__) || (defined(__clang__) && (__clang_major__ <= 16))
-#define consteval constexpr
-#define constinit
-#endif
-
 // FIXME: move to ps3 kernel implementation
 using schar = signed char;
 using uchar = unsigned char;
@@ -206,9 +192,9 @@ public:
 };
 
 #if defined(ARCH_X64) && !defined(_MSC_VER)
-using __m128i = long long __attribute__((vector_size(16)));
-using __m128d = double __attribute__((vector_size(16)));
-using __m128 = float __attribute__((vector_size(16)));
+using __m128i = long long __attribute__((vector_size(16), aligned(16)));
+using __m128d = double __attribute__((vector_size(16), aligned(16)));
+using __m128 = float __attribute__((vector_size(16), aligned(16)));
 #endif
 
 #ifndef _MSC_VER

@@ -7,7 +7,7 @@
 #include "Emu/Cell/ErrorCodes.h"
 #include "Emu/Cell/PPUThread.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_event_flag);
 
@@ -195,7 +195,7 @@ error_code sys_event_flag_wait(ppu_thread &ppu, u32 id, u64 bitptn, u32 mode,
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 50; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

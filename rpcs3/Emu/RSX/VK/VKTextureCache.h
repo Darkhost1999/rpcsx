@@ -4,10 +4,13 @@
 #include "VKRenderTargets.h"
 #include "VKResourceManager.h"
 #include "VKRenderPass.h"
+#include "VKGSRenderTypes.hpp"
 #include "vkutils/image_helpers.h"
 
 #include "../Common/texture_cache.h"
 #include "../Common/tiled_dma_copy.hpp"
+
+#include "rx/align.hpp"
 
 #include <memory>
 #include <vector>
@@ -289,7 +292,7 @@ namespace vk
 			if (tiled_region)
 			{
 				const auto available_tile_size = tiled_region.tile->size - (range.start - tiled_region.base_address);
-				const auto max_content_size = tiled_region.tile->pitch * utils::align(height, 64);
+				const auto max_content_size = tiled_region.tile->pitch * rx::alignUp(height, 64);
 				flush_length = std::min(max_content_size, available_tile_size);
 			}
 

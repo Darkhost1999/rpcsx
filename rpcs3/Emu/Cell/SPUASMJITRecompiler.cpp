@@ -9,7 +9,8 @@
 #include "SPUInterpreter.h"
 #include "Crypto/sha1.h"
 
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/asm.hpp"
 #include "util/v128.hpp"
 #include "util/sysinfo.hpp"
 
@@ -282,7 +283,7 @@ spu_function_t spu_recompiler::compile(spu_program&& _func)
 		words_align = 64;
 
 		const u32 starta = start & -64;
-		const u32 enda = utils::align(end, 64);
+		const u32 enda = rx::alignUp(end, 64);
 		const u32 sizea = (enda - starta) / 64;
 		ensure(sizea);
 
@@ -363,7 +364,7 @@ spu_function_t spu_recompiler::compile(spu_program&& _func)
 		words_align = 32;
 
 		const u32 starta = start & -32;
-		const u32 enda = utils::align(end, 32);
+		const u32 enda = rx::alignUp(end, 32);
 		const u32 sizea = (enda - starta) / 32;
 		ensure(sizea);
 
@@ -486,7 +487,7 @@ spu_function_t spu_recompiler::compile(spu_program&& _func)
 		words_align = 32;
 
 		const u32 starta = start & -32;
-		const u32 enda = utils::align(end, 32);
+		const u32 enda = rx::alignUp(end, 32);
 		const u32 sizea = (enda - starta) / 32;
 		ensure(sizea);
 
@@ -3211,7 +3212,7 @@ void spu_recompiler::ROTQBYI(spu_opcode_t op)
 	}
 	else if (s == 4 || s == 8 || s == 12)
 	{
-		c->pshufd(va, va, utils::rol8(0xE4, s / 2));
+		c->pshufd(va, va, rx::rol8(0xE4, s / 2));
 	}
 	else if (utils::has_ssse3())
 	{

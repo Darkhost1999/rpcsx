@@ -7,7 +7,8 @@
 #include "cellos/sys_memory.h"
 #include "Emu/RSX/RSXThread.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 #include <thread>
 
@@ -26,7 +27,7 @@ namespace rsx
 		}
 
 		// User memory + fifo size
-		buffer_size = utils::align<u32>(buffer_size, 0x100000) + 0x10000000;
+		buffer_size = rx::alignUp<u32>(buffer_size, 0x100000) + 0x10000000;
 		// We are not allowed to drain all memory so add a little
 		g_fxo->init<lv2_memory_container>(buffer_size + 0x1000000);
 

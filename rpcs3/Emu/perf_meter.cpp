@@ -3,7 +3,7 @@
 
 #include "util/sysinfo.hpp"
 #include "util/fence.hpp"
-#include "util/tsc.hpp"
+#include "rx/tsc.hpp"
 #include "util/Thread.h"
 #include "util/mutex.h"
 
@@ -75,7 +75,7 @@ SAFE_BUFFERS(void)
 perf_stat_base::push(u64 data[66], u64 start_time, const char* name) noexcept
 {
 	// Event end
-	const u64 end_time = (utils::lfence(), utils::get_tsc());
+	const u64 end_time = (utils::lfence(), rx::get_tsc());
 
 	// Compute difference in seconds
 	const f64 diff = (end_time - start_time) * 1. / utils::get_tsc_freq();

@@ -6,19 +6,10 @@
 #include <functional>
 #include <limits>
 #include <system_error>
-#include <thread>
 #include <type_traits>
+#include "asm.hpp"
 
 namespace rx {
-inline void yield() { std::this_thread::yield(); }
-inline void relax() {
-#if defined(__GNUC__) && (defined __i386__ || defined __x86_64__)
-  __builtin_ia32_pause();
-#else
-  yield();
-#endif
-}
-
 static constexpr auto kRelaxSpinCount = 12;
 static constexpr auto kSpinCount = 16;
 
@@ -31,7 +22,7 @@ bool try_spin_wait(auto &&pred) {
     }
 
     if (i < kRelaxSpinCount) {
-      relax();
+      pause();
     } else {
       yield();
     }

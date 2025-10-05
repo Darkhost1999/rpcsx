@@ -10,9 +10,9 @@
 #include "Emu/RSX/Core/RSXReservationLock.hpp"
 #include "Emu/RSX/RSXThread.h"
 #include "Emu/System.h"
+#include "rx/asm.hpp"
 #include "sys_event.h"
 #include "sys_vm.h"
-#include "util/asm.hpp"
 
 LOG_CHANNEL(sys_rsx);
 
@@ -46,7 +46,7 @@ static void set_rsx_dmactl(rsx::thread *render, u64 get_put) {
         }
       }
 
-      utils::pause();
+      rx::pause();
     }
 
     // Schedule FIFO interrupt to deal with this immediately

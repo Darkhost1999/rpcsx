@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "cellSysutil.h"
 #include "cellUserInfo.h"
 #include "Emu/Cell/PPUModule.h"
@@ -12,7 +14,6 @@
 #include "Emu/localized_string.h"
 #include "Emu/savestate_utils.hpp"
 #include "Emu/system_config.h"
-#include "stdafx.h"
 
 #include "cellMsgDialog.h"
 #include "cellSaveData.h"
@@ -26,7 +27,9 @@
 #include <mutex>
 #include <span>
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/types.hpp"
 
 LOG_CHANNEL(cellSaveData);
 
@@ -65,11 +68,11 @@ std::string SaveDataEntry::date() const
 std::string SaveDataEntry::data_size() const
 {
 	std::string metric = "KB";
-	u64 sz = utils::aligned_div(size, 1000);
+	u64 sz = rx::aligned_div(size, 1000);
 	if (sz > 1000)
 	{
 		metric = "MB";
-		sz = utils::aligned_div(sz, 1000);
+		sz = rx::aligned_div(sz, 1000);
 	}
 	return fmt::format("%lu %s", sz, metric);
 }
@@ -1286,7 +1289,7 @@ savedata_op(ppu_thread& ppu, u32 operation, u32 version, vm::cptr<char> dirName,
 			{
 				if (!file.is_directory)
 				{
-					size_bytes += utils::align(file.size, 1024);
+					size_bytes += rx::alignUp(file.size, 1024);
 				}
 			}
 
@@ -1728,7 +1731,7 @@ savedata_op(ppu_thread& ppu, u32 operation, u32 version, vm::cptr<char> dirName,
 				statGet->fileNum++;
 
 				size_bytes +=
-					utils::align(entry.size, 1024); // firmware rounds this value up
+					rx::alignUp(entry.size, 1024); // firmware rounds this value up
 
 				if (statGet->fileListNum >= setBuf->fileListMax)
 					continue;
@@ -2345,7 +2348,7 @@ savedata_op(ppu_thread& ppu, u32 operation, u32 version, vm::cptr<char> dirName,
 		final_blist = fmt::merge(blist, "/");
 		psf::assign(
 			psf, "RPCS3_BLIST",
-			psf::string(utils::align(::size32(final_blist) + 1, 4), final_blist));
+			psf::string(rx::alignUp(::size32(final_blist) + 1, 4), final_blist));
 
 		// Write all files in temporary directory
 		auto& fsfo = all_files["PARAM.SFO"];

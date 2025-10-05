@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include "rx/debug.hpp"
 #include "Emu/Cell/timers.hpp"
 #include "Emu/System.h"
 #include "Emu/Cell/SPUThread.h"
@@ -88,7 +90,7 @@ DYNAMIC_IMPORT_RENAME("Kernel32.dll", SetThreadDescriptionImport, "SetThreadDesc
 
 #include "util/vm.hpp"
 #include "util/logs.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
 #include "util/sysinfo.hpp"
@@ -141,74 +143,11 @@ std::string dump_useful_thread_info()
 	return result;
 }
 
-#ifndef _WIN32
-bool IsDebuggerPresent()
-{
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-	int mib[] = {
-		CTL_KERN,
-		KERN_PROC,
-		KERN_PROC_PID,
-		getpid(),
-#if defined(__NetBSD__) || defined(__OpenBSD__)
-		sizeof(struct kinfo_proc),
-		1,
-#endif
-	};
-	u_int miblen = std::size(mib);
-	struct kinfo_proc info;
-	usz size = sizeof(info);
-
-	if (sysctl(mib, miblen, &info, &size, NULL, 0))
-	{
-		return false;
-	}
-
-	return info.KP_FLAGS & P_TRACED;
-#else
-	char buf[4096];
-	fs::file status_fd("/proc/self/status");
-	if (!status_fd)
-	{
-		std::fprintf(stderr, "Failed to open /proc/self/status\n");
-		return false;
-	}
-
-	const auto num_read = status_fd.read(buf, sizeof(buf) - 1);
-	if (num_read == 0 || num_read == umax)
-	{
-		std::fprintf(stderr, "Failed to read /proc/self/status (%d)\n", errno);
-		return false;
-	}
-
-	buf[num_read] = '\0';
-	std::string_view status = buf;
-
-	const auto found = status.find("TracerPid:");
-	if (found == umax)
-	{
-		std::fprintf(stderr, "Failed to find 'TracerPid:' in /proc/self/status\n");
-		return false;
-	}
-
-	for (const char* cp = status.data() + found + 10; cp <= status.data() + num_read; ++cp)
-	{
-		if (!std::isspace(*cp))
-		{
-			return std::isdigit(*cp) != 0 && *cp != '0';
-		}
-	}
-
-	return false;
-#endif
-}
-#endif
-
 bool is_debugger_present()
 {
 	if (g_cfg.core.external_debugger)
 		return true;
-	return IsDebuggerPresent();
+	return rx::isDebuggerPresent();
 }
 
 #if defined(ARCH_X64)
@@ -2071,7 +2010,7 @@ static void signal_handler(int /*sig*/, siginfo_t* info, void* uct) noexcept
 	sys_log.notice("\n%s", dump_useful_thread_info());
 	logs::listener::sync_all();
 
-	if (IsDebuggerPresent())
+	if (rx::isDebuggerPresent())
 	{
 		// Convert to SIGTRAP
 		raise(SIGTRAP);
@@ -2091,7 +2030,7 @@ static void sigill_handler(int /*sig*/, siginfo_t* info, void* /*uct*/) noexcept
 	sys_log.notice("\n%s", dump_useful_thread_info());
 	logs::listener::sync_all();
 
-	if (IsDebuggerPresent())
+	if (rx::isDebuggerPresent())
 	{
 		// Convert to SIGTRAP
 		raise(SIGTRAP);
@@ -2140,7 +2079,7 @@ const bool s_exception_handler_set = []() -> bool
 		std::abort();
 	}
 
-	std::printf("Debugger: %d\n", +IsDebuggerPresent());
+	std::printf("Debugger: %d\n", +rx::isDebuggerPresent());
 	return true;
 }();
 
@@ -2150,10 +2089,10 @@ const bool s_terminate_handler_set = []() -> bool
 {
 	std::set_terminate([]()
 		{
-			if (IsDebuggerPresent())
+			if (rx::isDebuggerPresent())
 			{
 				logs::listener::sync_all();
-				utils::trap();
+				rx::breakpoint();
 			}
 
 			report_fatal_error("RPCS3 has abnormally terminated.");
@@ -2214,7 +2153,7 @@ void thread_base::initialize(void (*error_cb)())
 		{
 			if (attempts == umax)
 			{
-				g_tls_wait_time += utils::get_tsc() - stamp0;
+				g_tls_wait_time += rx::get_tsc() - stamp0;
 			}
 			else if (attempts > 1)
 			{
@@ -2246,7 +2185,7 @@ void thread_base::set_name(std::string name)
 	};
 
 	// Set thread name for VS debugger
-	if (IsDebuggerPresent())
+	if (rx::isDebuggerPresent())
 		[&]() NEVER_INLINE
 		{
 			THREADNAME_INFO info;
@@ -2527,7 +2466,7 @@ void thread_ctrl::wait_for(u64 usec, [[maybe_unused]] bool alert /* true */)
 
 void thread_ctrl::wait_until(u64* wait_time, u64 add_time, u64 min_wait, bool update_to_current_time)
 {
-	*wait_time = utils::add_saturate<u64>(*wait_time, add_time);
+	*wait_time = rx::add_saturate<u64>(*wait_time, add_time);
 
 	// TODO: Implement proper support for "waiting until" inside atomic wait engine
 	const u64 current_time = get_system_time();
@@ -2546,7 +2485,7 @@ void thread_ctrl::wait_until(u64* wait_time, u64 add_time, u64 min_wait, bool up
 
 	if (min_wait)
 	{
-		*wait_time = std::max<u64>(*wait_time, utils::add_saturate<u64>(current_time, min_wait));
+		*wait_time = std::max<u64>(*wait_time, rx::add_saturate<u64>(current_time, min_wait));
 	}
 
 	wait_for(*wait_time - current_time);
@@ -2588,7 +2527,7 @@ void thread_ctrl::wait_for_accurate(u64 usec)
 		}
 		else
 		{
-			busy_wait(100);
+			rx::busy_wait(100);
 		}
 
 		const auto current = std::chrono::steady_clock::now();
@@ -2663,7 +2602,7 @@ bool thread_base::join(bool dtor) const
 	// Hacked for too sleepy threads (1ms) TODO: make sure it's unneeded and remove
 	const auto timeout = dtor && Emu.IsStopped() ? atomic_wait_timeout{1'000'000} : atomic_wait_timeout::inf;
 
-	auto stamp0 = utils::get_tsc();
+	auto stamp0 = rx::get_tsc();
 
 	for (u64 i = 0; (m_sync & 3) <= 1; i++)
 	{
@@ -2676,7 +2615,7 @@ bool thread_base::join(bool dtor) const
 
 		if (i >= 16 && !(i & (i - 1)) && timeout != atomic_wait_timeout::inf)
 		{
-			sig_log.error("Thread [%s] is too sleepy. Waiting for it %.3fus already!", *m_tname.load(), (utils::get_tsc() - stamp0) / (utils::get_tsc_freq() / 1000000.));
+			sig_log.error("Thread [%s] is too sleepy. Waiting for it %.3fus already!", *m_tname.load(), (rx::get_tsc() - stamp0) / (utils::get_tsc_freq() / 1000000.));
 		}
 	}
 
@@ -2764,7 +2703,7 @@ void thread_base::exec()
 
 		for (thread_future* prev{};;)
 		{
-			utils::prefetch_exec(prev_head->exec.load());
+			rx::prefetch_exec(prev_head->exec.load());
 
 			if (auto next = prev_head->next.get())
 			{
@@ -2836,7 +2775,7 @@ void thread_base::exec()
 
 	logs::listener::sync_all();
 
-	if (IsDebuggerPresent())
+	if (rx::isDebuggerPresent())
 	{
 		// Prevent repeatedly halting the debugger in case multiple threads crashed at once
 		static atomic_t<u64> s_last_break = 0;
@@ -2861,7 +2800,7 @@ void thread_base::exec()
 							})
 				.second)
 		{
-			utils::trap();
+			rx::breakpoint();
 		}
 	}
 

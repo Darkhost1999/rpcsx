@@ -6,7 +6,8 @@
 #include "Emu/IdManager.h"
 
 #include "util/StrUtil.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 
 #include <unordered_map>
 
@@ -484,7 +485,7 @@ namespace vk
 			set_parameters(cmd);
 
 			const u32 num_bytes_per_invocation = (sizeof(_BlockType) * optimal_group_size);
-			const u32 linear_invocations = utils::aligned_div(data_length, num_bytes_per_invocation);
+			const u32 linear_invocations = rx::aligned_div(data_length, num_bytes_per_invocation);
 			compute_task::run(cmd, linear_invocations);
 		}
 	};
@@ -602,8 +603,8 @@ namespace vk
 			this->out_offset = config.dst_offset;
 
 			const auto tile_aligned_height = std::min(
-				utils::align<u32>(config.image_height, 64),
-				utils::aligned_div(config.tile_size - config.tile_base_offset, config.tile_pitch));
+				rx::alignUp<u32>(config.image_height, 64),
+				rx::aligned_div(config.tile_size - config.tile_base_offset, config.tile_pitch));
 
 			if constexpr (Op == RSX_detiler_op::decode)
 			{
@@ -656,7 +657,7 @@ namespace vk
 
 			const u32 subtexels_per_invocation = (config.image_bpp < 4) ? (4 / config.image_bpp) : 1;
 			const u32 virtual_width = config.image_width / subtexels_per_invocation;
-			const u32 invocations_x = utils::aligned_div(virtual_width, optimal_group_size);
+			const u32 invocations_x = rx::aligned_div(virtual_width, optimal_group_size);
 			compute_task::run(cmd, invocations_x, config.image_height, 1);
 		}
 	};

@@ -8719,10 +8719,22 @@ FORCE_INLINE __m128i _mm_aeskeygenassist_si128(__m128i a, const int rcon)
 
 	uint8x16_t dest = {
 		// Undo ShiftRows step from AESE and extract X1 and X3
-		u8[0x4], u8[0x1], u8[0xE], u8[0xB], // SubBytes(X1)
-		u8[0x1], u8[0xE], u8[0xB], u8[0x4], // ROT(SubBytes(X1))
-		u8[0xC], u8[0x9], u8[0x6], u8[0x3], // SubBytes(X3)
-		u8[0x9], u8[0x6], u8[0x3], u8[0xC], // ROT(SubBytes(X3))
+		u8[0x4],
+		u8[0x1],
+		u8[0xE],
+		u8[0xB], // SubBytes(X1)
+		u8[0x1],
+		u8[0xE],
+		u8[0xB],
+		u8[0x4], // ROT(SubBytes(X1))
+		u8[0xC],
+		u8[0x9],
+		u8[0x6],
+		u8[0x3], // SubBytes(X3)
+		u8[0x9],
+		u8[0x6],
+		u8[0x3],
+		u8[0xC], // ROT(SubBytes(X3))
 	};
 	uint32x4_t r = {0, (unsigned)rcon, 0, (unsigned)rcon};
 	return vreinterpretq_m128i_u8(dest) ^ vreinterpretq_m128i_u32(r);

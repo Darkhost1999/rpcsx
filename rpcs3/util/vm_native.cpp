@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "util/vm.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
+
 #ifdef _WIN32
 #include "util/File.h"
 #include "util/dyn_lib.hpp"
@@ -492,7 +494,7 @@ namespace utils
 	}
 
 	shm::shm(u64 size, u32 flags)
-		: m_flags(flags), m_size(utils::align(size, 0x10000))
+		: m_flags(flags), m_size(rx::alignUp(size, 0x10000))
 	{
 #ifdef _WIN32
 		const ULARGE_INTEGER max_size{.QuadPart = m_size};
@@ -535,7 +537,7 @@ namespace utils
 	}
 
 	shm::shm(u64 size, const std::string& storage)
-		: m_size(utils::align(size, 0x10000))
+		: m_size(rx::alignUp(size, 0x10000))
 	{
 #ifdef _WIN32
 		fs::file f;
@@ -857,7 +859,7 @@ namespace utils
 		{
 			const u64 res64 = reinterpret_cast<u64>(::mmap(reinterpret_cast<void*>(ptr64), m_size + 0xf000, PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0));
 
-			const u64 aligned = utils::align(res64, 0x10000);
+			const u64 aligned = rx::alignUp(res64, 0x10000);
 			const auto result = ::mmap(reinterpret_cast<void*>(aligned), m_size, +prot, (cow ? MAP_PRIVATE : MAP_SHARED) | MAP_FIXED, m_file, 0);
 
 			// Now cleanup remnants

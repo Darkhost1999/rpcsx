@@ -1,6 +1,7 @@
 #include "GLCompute.h"
 #include "GLTexture.h"
 #include "util/StrUtil.h"
+#include "rx/align.hpp"
 
 namespace gl
 {
@@ -196,7 +197,7 @@ namespace gl
 		m_data_length = data_length;
 
 		const auto num_bytes_per_invocation = optimal_group_size * kernel_size * 4;
-		const auto num_bytes_to_process = utils::align(data_length, num_bytes_per_invocation);
+		const auto num_bytes_to_process = rx::alignUp(data_length, num_bytes_per_invocation);
 		const auto num_invocations = num_bytes_to_process / num_bytes_per_invocation;
 
 		if ((num_bytes_to_process + data_offset) > data->size())
@@ -364,7 +365,7 @@ namespace gl
 
 		dst->bind_range(gl::buffer::target::ssbo, GL_COMPUTE_BUFFER_SLOT(2), out_offset, row_pitch * 4 * region.height);
 
-		const int num_invocations = utils::aligned_div(region.width * region.height, optimal_kernel_size * optimal_group_size);
+		const int num_invocations = rx::aligned_div(region.width * region.height, optimal_kernel_size * optimal_group_size);
 		compute_task::run(cmd, num_invocations);
 	}
 
@@ -411,7 +412,7 @@ namespace gl
 
 		dst->bind_range(gl::buffer::target::ssbo, GL_COMPUTE_BUFFER_SLOT(1), out_offset, row_pitch * 4 * region.height);
 
-		const int num_invocations = utils::aligned_div(region.width * region.height, optimal_kernel_size * optimal_group_size);
+		const int num_invocations = rx::aligned_div(region.width * region.height, optimal_kernel_size * optimal_group_size);
 		compute_task::run(cmd, num_invocations);
 	}
 
@@ -437,7 +438,7 @@ namespace gl
 	void cs_ssbo_to_color_image::run(gl::command_context& cmd, const buffer* src, const texture_view* dst, const u32 src_offset, const coordu& dst_region, const pixel_buffer_layout& layout)
 	{
 		const u32 bpp = dst->image()->pitch() / dst->image()->width();
-		const u32 row_length = utils::align(dst_region.width * bpp, std::max<int>(layout.alignment, 1)) / bpp;
+		const u32 row_length = rx::alignUp(dst_region.width * bpp, std::max<int>(layout.alignment, 1)) / bpp;
 
 		m_program.uniforms["swap_bytes"] = layout.swap_bytes;
 		m_program.uniforms["src_pitch"] = row_length;
@@ -448,7 +449,7 @@ namespace gl
 		src->bind_range(gl::buffer::target::ssbo, GL_COMPUTE_BUFFER_SLOT(0), src_offset, row_length * bpp * dst_region.height);
 		glBindImageTexture(GL_COMPUTE_IMAGE_SLOT(0), dst->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, dst->view_format());
 
-		const int num_invocations = utils::aligned_div(dst_region.width * dst_region.height, optimal_kernel_size * optimal_group_size);
+		const int num_invocations = rx::aligned_div(dst_region.width * dst_region.height, optimal_kernel_size * optimal_group_size);
 		compute_task::run(cmd, num_invocations);
 	}
 

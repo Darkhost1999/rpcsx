@@ -1,14 +1,7 @@
 #include "SharedMutex.hpp"
+#include "asm.hpp"
 #include <syscall.h>
 #include <unistd.h>
-#include <xmmintrin.h>
-
-static void busy_wait(unsigned long long cycles = 3000) {
-  const auto stop = __builtin_ia32_rdtsc() + cycles;
-  do
-    _mm_pause();
-  while (__builtin_ia32_rdtsc() < stop);
-}
 
 namespace rx {
 void shared_mutex::impl_lock_shared(unsigned val) {

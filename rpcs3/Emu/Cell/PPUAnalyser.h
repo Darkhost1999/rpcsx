@@ -1,11 +1,12 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <map>
 #include <deque>
 #include <span>
-#include "util/types.hpp"
-#include "util/asm.hpp"
+#include "rx/align.hpp"
+#include "rx/types.hpp"
 #include "util/to_endian.hpp"
 
 #include "rx/EnumBitSet.hpp"
@@ -218,7 +219,7 @@ struct ppu_module : public Type
 		const u32 seg_size = seg.size;
 		const u32 seg_addr = seg.addr;
 
-		if (seg_size >= std::max<usz>(size_bytes, 1) && addr <= utils::align<u32>(seg_addr + seg_size, 0x10000) - size_bytes)
+		if (seg_size >= std::max<usz>(size_bytes, 1) && addr <= rx::alignUp<u32>(seg_addr + seg_size, 0x10000) - size_bytes)
 		{
 			return reinterpret_cast<to_be_t<T>*>(static_cast<u8*>(seg.ptr) + (addr - seg_addr));
 		}

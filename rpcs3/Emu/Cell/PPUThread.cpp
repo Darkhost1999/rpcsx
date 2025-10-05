@@ -62,7 +62,8 @@
 #include <optional>
 #include <charconv>
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
+#include "rx/align.hpp"
 #include "util/vm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
@@ -217,7 +218,7 @@ public:
 
 	user acquire(u64 amount)
 	{
-		amount = utils::aligned_div<u64>(amount, k_block_size);
+		amount = rx::aligned_div<u64>(amount, k_block_size);
 
 		u32 allocated = 0;
 		while (!m_free.fetch_op([&, this](u32& value)
@@ -225,7 +226,7 @@ public:
 							  if (value >= amount || value == m_total)
 							  {
 								  // Allow at least allocation, make 0 the "memory unavailable" sign value for atomic waiting efficiency
-								  const u32 new_val = static_cast<u32>(utils::sub_saturate<u64>(value, amount));
+								  const u32 new_val = static_cast<u32>(rx::sub_saturate<u64>(value, amount));
 								  allocated = value - new_val;
 								  value = new_val;
 								  return true;
@@ -869,7 +870,7 @@ extern void ppu_register_range(u32 addr, u32 size)
 		return;
 	}
 
-	size = utils::align(size + addr % 0x10000, 0x10000);
+	size = rx::alignUp(size + addr % 0x10000, 0x10000);
 	addr &= -0x10000;
 
 	// Register executable range at
@@ -1816,7 +1817,7 @@ std::vector<std::pair<u32, u32>> ppu_thread::dump_callstack_list() const
 
 				if (pos_dist >= inst_pos.size())
 				{
-					const u32 inst_bound = utils::align<u32>(pos, 256);
+					const u32 inst_bound = rx::alignUp<u32>(pos, 256);
 
 					const usz old_size = inst_pos.size();
 					const usz new_size = pos_dist + (inst_bound - pos) / 4 + 1;
@@ -1903,7 +1904,7 @@ std::vector<std::pair<u32, u32>> ppu_thread::dump_callstack_list() const
 
 						for (u32 back = 1; back < 20; back++)
 						{
-							be_t<u32>& opcode = get_inst(utils::sub_saturate<u32>(_cia, back * 4));
+							be_t<u32>& opcode = get_inst(rx::sub_saturate<u32>(_cia, back * 4));
 
 							if (!opcode)
 							{
@@ -3588,11 +3589,11 @@ static bool ppu_store_reservation(ppu_thread& ppu, u32 addr, u64 reg_value)
 							return false;
 						}
 
-						utils::prefetch_read(ppu.rdata);
-						utils::prefetch_read(ppu.rdata + 64);
+						rx::prefetch_read(ppu.rdata);
+						rx::prefetch_read(ppu.rdata + 64);
 						ppu.last_faddr = addr;
 						ppu.last_ftime = res.load() & -128;
-						ppu.last_ftsc = utils::get_tsc();
+						ppu.last_ftsc = rx::get_tsc();
 						return false;
 					}
 					default:
@@ -3699,7 +3700,7 @@ static bool ppu_store_reservation(ppu_thread& ppu, u32 addr, u64 reg_value)
 
 				ppu.last_faddr = addr;
 				ppu.last_ftime = old_rtime & -128;
-				ppu.last_ftsc = utils::get_tsc();
+				ppu.last_ftsc = rx::get_tsc();
 				std::memcpy(&ppu.rdata[addr & 0x78], &old_data, 8);
 			}
 
@@ -3941,7 +3942,7 @@ namespace
 		fs::stat_t get_stat() override
 		{
 			fs::stat_t stat = m_file.get_stat();
-			stat.size = std::min<u64>(utils::sub_saturate<u64>(stat.size, m_off), m_max_size);
+			stat.size = std::min<u64>(rx::sub_saturate<u64>(stat.size, m_off), m_max_size);
 			stat.is_writable = false;
 			return stat;
 		}
@@ -3960,7 +3961,7 @@ namespace
 
 		u64 read_at(u64 offset, void* buffer, u64 size) override
 		{
-			return m_file.read_at(offset + m_off, buffer, std::min<u64>(size, utils::sub_saturate<u64>(m_max_size, offset)));
+			return m_file.read_at(offset + m_off, buffer, std::min<u64>(size, rx::sub_saturate<u64>(m_max_size, offset)));
 		}
 
 		u64 write(const void*, u64) override
@@ -3988,7 +3989,7 @@ namespace
 
 		u64 size() override
 		{
-			return std::min<u64>(utils::sub_saturate<u64>(m_file.size(), m_off), m_max_size);
+			return std::min<u64>(rx::sub_saturate<u64>(m_file.size(), m_off), m_max_size);
 		}
 	};
 } // namespace
@@ -5624,7 +5625,7 @@ bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_s
 	}
 
 	// Initialize compiler instance
-	while (jits.size() < utils::aligned_div<u64>(module_counter, c_moudles_per_jit) && is_being_used_in_emulation)
+	while (jits.size() < rx::aligned_div<u64>(module_counter, c_moudles_per_jit) && is_being_used_in_emulation)
 	{
 		jits.emplace_back(std::make_shared<jit_compiler>(s_link_table, g_cfg.core.llvm_cpu, 0, symbols_cement));
 
@@ -5652,7 +5653,7 @@ bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_s
 		const bool divide_by_twenty = !workload.empty();
 		const usz increment_link_count_at = (divide_by_twenty ? 20 : 1);
 
-		g_progr_ptotal += static_cast<u32>(utils::aligned_div<u64>(link_workload.size(), increment_link_count_at));
+		g_progr_ptotal += static_cast<u32>(rx::aligned_div<u64>(link_workload.size(), increment_link_count_at));
 
 		usz mod_index = umax;
 
@@ -5785,7 +5786,7 @@ bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_s
 
 bool ppu_initialize(const ppu_module<lv2_obj>& info, bool check_only, u64 file_size)
 {
-	concurent_memory_limit memory_limit(utils::aligned_div<u64>(utils::get_total_memory(), 2));
+	concurent_memory_limit memory_limit(rx::aligned_div<u64>(utils::get_total_memory(), 2));
 	return ppu_initialize(info, check_only, file_size, memory_limit);
 }
 

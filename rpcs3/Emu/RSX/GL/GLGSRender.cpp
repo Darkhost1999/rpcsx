@@ -12,6 +12,8 @@
 #include "Emu/RSX/Host/RSXDMAWriter.h"
 #include "Emu/RSX/NV47/HW/context_accessors.define.h"
 
+#include "rx/align.hpp"
+
 [[noreturn]] extern void report_fatal_error(std::string_view _text, bool is_html = false, bool include_help_text = true);
 
 namespace
@@ -895,7 +897,7 @@ void GLGSRender::load_program_env()
 		if (update_fragment_texture_env)
 			m_texture_parameters_buffer->reserve_storage_on_heap(256);
 		if (update_fragment_constants)
-			m_fragment_constants_buffer->reserve_storage_on_heap(utils::align(fragment_constants_size, 256));
+			m_fragment_constants_buffer->reserve_storage_on_heap(rx::alignUp(fragment_constants_size, 256));
 		if (update_transform_constants)
 			m_transform_constants_buffer->reserve_storage_on_heap(8192);
 		if (update_raster_env)

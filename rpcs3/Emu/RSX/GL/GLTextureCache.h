@@ -7,6 +7,8 @@
 
 #include "../Common/texture_cache.h"
 
+#include "rx/align.hpp"
+
 #include <memory>
 #include <vector>
 
@@ -49,7 +51,7 @@ namespace gl
 		void init_buffer(const gl::texture* src)
 		{
 			const u32 vram_size = src->pitch() * src->height();
-			const u32 buffer_size = utils::align(vram_size, 4096);
+			const u32 buffer_size = rx::alignUp(vram_size, 4096);
 
 			if (pbo)
 			{

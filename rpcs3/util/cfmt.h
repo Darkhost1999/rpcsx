@@ -3,7 +3,7 @@
 #include "util/types.hpp"
 #include <string>
 #include <algorithm>
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 /*
 C-style format parser. Appends formatted string to `out`, returns number of characters written.
@@ -59,7 +59,7 @@ usz cfmt_append(Dst& out, const Char* fmt, Src&& src)
 	{
 		if constexpr (sizeof(value) == 16)
 		{
-			out.resize(out.size() + std::max<u64>(min_num, 129 / 3 - (utils::clz128(value | 1) + 1) / 3), '0');
+			out.resize(out.size() + std::max<u64>(min_num, 129 / 3 - (rx::clz128(value | 1) + 1) / 3), '0');
 		}
 		else
 		{
@@ -77,7 +77,7 @@ usz cfmt_append(Dst& out, const Char* fmt, Src&& src)
 	{
 		if constexpr (sizeof(value) == 16)
 		{
-			out.resize(out.size() + std::max<u64>(min_num, 128 / 4 - utils::clz128(value | 1) / 4), '0');
+			out.resize(out.size() + std::max<u64>(min_num, 128 / 4 - rx::clz128(value | 1) / 4), '0');
 		}
 		else
 		{

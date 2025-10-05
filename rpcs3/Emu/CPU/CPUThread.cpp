@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "CPUThread.h"
 #include "CPUDisAsm.h"
 
@@ -14,7 +15,7 @@
 #include "Emu/RSX/RSXThread.h"
 #include "Emu/perf_meter.hpp"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include <thread>
 #include <unordered_map>
 #include <map>
@@ -64,7 +65,6 @@ void fmt_class_string<cpu_flag>::format(std::string& out, u64 arg)
 			case cpu_flag::dbg_global_pause: return "G-PAUSE";
 			case cpu_flag::dbg_pause: return "PAUSE";
 			case cpu_flag::dbg_step: return "STEP";
-			case cpu_flag::bitset_last: break;
 			}
 
 			return unknown;
@@ -124,7 +124,7 @@ void fmt_class_string<cpu_threads_emulation_info_dump_t>::format(std::string& ou
 
 				for (u32 i = 0; !rlock.try_lock() && i < 100; i++)
 				{
-					busy_wait();
+					rx::busy_wait();
 				}
 
 				if (rlock)
@@ -533,7 +533,7 @@ namespace cpu_counter
 			if (ok) [[likely]]
 			{
 				// Get actual slot number
-				id = utils::ctz128(~bits);
+				id = rx::ctz128(~bits);
 
 				// Register thread
 				if (s_cpu_list[id].compare_and_swap_test(nullptr, _this)) [[likely]]
@@ -552,7 +552,7 @@ namespace cpu_counter
 				return;
 			}
 
-			busy_wait(300);
+			rx::busy_wait(300);
 		}
 
 		s_tls_thread_slot = id;
@@ -599,7 +599,7 @@ namespace cpu_counter
 	{
 		for (u128 bits = copy; bits; bits &= bits - 1)
 		{
-			const u32 index = utils::ctz128(bits);
+			const u32 index = rx::ctz128(bits);
 
 			if (cpu_thread* cpu = s_cpu_list[index].load())
 			{
@@ -1062,7 +1062,7 @@ bool cpu_thread::check_state() noexcept
 					{
 						if (i < 20 || ctr & 1)
 						{
-							busy_wait(300);
+							rx::busy_wait(300);
 						}
 						else
 						{
@@ -1404,7 +1404,7 @@ bool cpu_thread::suspend_work::push(cpu_thread* _this) noexcept
 			{
 				if (cpu != _this)
 				{
-					utils::prefetch_write(&cpu->state);
+					rx::prefetch_write(&cpu->state);
 					return true;
 				}
 
@@ -1446,7 +1446,7 @@ bool cpu_thread::suspend_work::push(cpu_thread* _this) noexcept
 				break;
 			}
 
-			utils::pause();
+			rx::pause();
 		}
 
 		// Second increment: all threads paused
@@ -1480,13 +1480,13 @@ bool cpu_thread::suspend_work::push(cpu_thread* _this) noexcept
 		{
 			for (u32 i = 0; i < work->prf_size; i++)
 			{
-				utils::prefetch_write(work->prf_list[0]);
+				rx::prefetch_write(work->prf_list[0]);
 			}
 		}
 
 		cpu_counter::for_all_cpu(copy2, [&](cpu_thread* cpu)
 			{
-				utils::prefetch_write(&cpu->state);
+				rx::prefetch_write(&cpu->state);
 				return true;
 			});
 

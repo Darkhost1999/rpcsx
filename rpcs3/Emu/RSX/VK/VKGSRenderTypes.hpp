@@ -8,7 +8,7 @@
 #include "Emu/RSX/rsx_utils.h"
 #include "Emu/RSX/rsx_cache.h"
 #include "util/mutex.h"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 #include <optional>
 #include <thread>
@@ -289,7 +289,7 @@ namespace vk
 		{
 			while (num_waiters.load() != 0)
 			{
-				utils::pause();
+				rx::pause();
 			}
 		}
 

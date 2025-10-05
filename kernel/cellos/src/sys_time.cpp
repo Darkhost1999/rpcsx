@@ -5,8 +5,8 @@
 #include "Emu/Cell/ErrorCodes.h"
 #include "Emu/Cell/timers.hpp"
 #include "Emu/system_config.h"
+#include "rx/tsc.hpp"
 #include "sys_process.h"
-#include "util/tsc.hpp"
 
 #include "util/sysinfo.hpp"
 
@@ -14,7 +14,7 @@ u64 g_timebase_offs{};
 static u64 systemtime_offset;
 
 #ifndef __linux__
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #endif
 
 #ifdef _WIN32
@@ -151,7 +151,7 @@ u64 convert_to_timebased_time(u64 time) {
 
 u64 get_timebased_time() {
   if (u64 freq = utils::get_tsc_freq()) {
-    const u64 tsc = utils::get_tsc();
+    const u64 tsc = rx::get_tsc();
 
 #if _MSC_VER
     const u64 result =
@@ -218,7 +218,7 @@ void initialize_timebased_time(u64 timebased_init, bool reset) {
 // Returns some relative time in microseconds, don't change this fact
 u64 get_system_time() {
   if (u64 freq = utils::get_tsc_freq()) {
-    const u64 tsc = utils::get_tsc();
+    const u64 tsc = rx::get_tsc();
 
 #if _MSC_VER
     const u64 result = static_cast<u64>(u128_from_mul(tsc, 1000000ull) / freq);
@@ -358,7 +358,7 @@ error_code sys_time_get_current_time(vm::ptr<s64> sec, vm::ptr<s64> nsec) {
 
   // Get time difference in nanoseconds (using 128 bit accumulator)
   const u64 diff_sl = diff_base * 1000000000ull;
-  const u64 diff_sh = utils::umulh64(diff_base, 1000000000ull);
+  const u64 diff_sh = rx::umulh64(diff_base, 1000000000ull);
   const u64 diff = utils::udiv128(diff_sh, diff_sl, s_time_aux_info.perf_freq);
 
   // get time since Epoch in nanoseconds

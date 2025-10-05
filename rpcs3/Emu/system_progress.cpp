@@ -8,7 +8,7 @@
 #include "Emu/RSX/Overlays/overlay_compile_notification.h"
 #include "Emu/System.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_log, "SYS");
 
@@ -226,7 +226,7 @@ void progress_dialog_server::operator()()
 					if (pdone < ptotal && g_cfg.misc.show_ppu_compilation_hint)
 					{
 						const u64 passed_usec = (get_system_time() - start_time);
-						const u64 remaining_usec = pdone ? utils::rational_mul<u64>(passed_usec, static_cast<u64>(ptotal) - pdone, pdone) : (passed_usec * ptotal);
+						const u64 remaining_usec = pdone ? rx::rational_mul<u64>(passed_usec, static_cast<u64>(ptotal) - pdone, pdone) : (passed_usec * ptotal);
 
 						// Only show compile notification if we estimate at least 100ms
 						if (remaining_usec >= 100'000ULL)
@@ -260,7 +260,7 @@ void progress_dialog_server::operator()()
 				// Assume not all programs were found if files were not compiled (as it may contain more)
 				const bool use_bits = fknown_bits && ftotal_bits;
 				const u64 known_files = use_bits ? fknown_bits : ftotal;
-				const u64 total = utils::rational_mul<u64>(std::max<u64>(ptotal, 1), std::max<u64>(use_bits ? ftotal_bits : ftotal, 1), std::max<u64>(known_files, 1));
+				const u64 total = rx::rational_mul<u64>(std::max<u64>(ptotal, 1), std::max<u64>(use_bits ? ftotal_bits : ftotal, 1), std::max<u64>(known_files, 1));
 				const u64 done = pdone;
 				const u32 value = static_cast<u32>(done >= total ? 100 : done * 100 / total);
 
@@ -280,7 +280,7 @@ void progress_dialog_server::operator()()
 					if (of_1000 >= 2)
 					{
 						const u64 passed = (get_system_time() - start_time);
-						const u64 total = utils::rational_mul<u64>(passed, 1000, of_1000);
+						const u64 total = rx::rational_mul<u64>(passed, 1000, of_1000);
 						const u64 remaining = total - passed;
 
 						// Stabilize the result by using the maximum one from the recent history

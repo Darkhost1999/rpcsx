@@ -2,7 +2,7 @@
 
 #include "util/types.hpp"
 #include "util/logs.hpp"
-#include "util/tsc.hpp"
+#include "rx/tsc.hpp"
 #include "system_config.h"
 #include <array>
 #include <cmath>
@@ -146,7 +146,7 @@ public:
 		if constexpr (std::array<bool, sizeof...(SubEvents)>{(SubEvents == Event)...}[Index])
 		{
 			// Push actual timestamp into an array
-			m_timestamps[Index + 1] = utils::get_tsc();
+			m_timestamps[Index + 1] = rx::get_tsc();
 		}
 		else if constexpr (Index < sizeof...(SubEvents))
 		{
@@ -170,7 +170,7 @@ public:
 	// Re-initialize first timestamp
 	FORCE_INLINE SAFE_BUFFERS(void) restart() noexcept
 	{
-		m_timestamps[0] = utils::get_tsc();
+		m_timestamps[0] = rx::get_tsc();
 		std::memset(m_timestamps + 1, 0, sizeof(m_timestamps) - sizeof(u64));
 	}
 

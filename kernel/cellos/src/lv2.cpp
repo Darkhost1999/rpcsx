@@ -53,10 +53,10 @@
 #include "sys_usbd.h"
 #include "sys_vm.h"
 
+#include "rx/tsc.hpp"
 #include "util/atomic_bit_set.h"
 #include "util/init_mutex.hpp"
 #include "util/sysinfo.hpp"
-#include "util/tsc.hpp"
 #include <algorithm>
 #include <deque>
 #include <optional>
@@ -2138,7 +2138,7 @@ void lv2_obj::schedule_all(u64 current_time) {
   }
 
   if (const u64 freq = s_yield_frequency) {
-    const u64 tsc = utils::get_tsc();
+    const u64 tsc = rx::get_tsc();
     const u64 last_tsc = s_last_yield_tsc;
 
     if (tsc >= last_tsc && tsc <= s_max_allowed_yield_tsc &&
@@ -2297,7 +2297,7 @@ mwaitx_func static void __mwaitx(u32 cycles, u32 cstate) {
 // First bit indicates cstate, 0x0 for C.02 state (lower power) or 0x1 for C.01
 // state (higher power)
 waitpkg_func static void __tpause(u32 cycles, u32 cstate) {
-  const u64 tsc = utils::get_tsc() + cycles;
+  const u64 tsc = rx::get_tsc() + cycles;
   _tpause(cstate, tsc);
 }
 #endif

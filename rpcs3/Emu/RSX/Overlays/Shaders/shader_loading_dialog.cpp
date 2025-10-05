@@ -3,7 +3,7 @@
 #include "Emu/System.h"
 #include "rpcsx/fw/ps3/cellMsgDialog.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 namespace rsx
 {
@@ -36,7 +36,7 @@ namespace rsx
 
 		while (ref_cnt.load() && !Emu.IsStopped())
 		{
-			utils::pause();
+			rx::pause();
 		}
 	}
 
@@ -112,7 +112,7 @@ namespace rsx
 	{
 		while (ref_cnt.load() && !Emu.IsStopped())
 		{
-			utils::pause();
+			rx::pause();
 		}
 	}
 } // namespace rsx

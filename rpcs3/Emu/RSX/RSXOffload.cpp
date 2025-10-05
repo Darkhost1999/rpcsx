@@ -9,7 +9,7 @@
 #include "util/lockless.h"
 
 #include <thread>
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 namespace rsx
 {
@@ -181,13 +181,13 @@ namespace rsx
 			while (_thr.m_enqueued_count.load() > _thr.m_processed_count.load())
 			{
 				rsxthr->on_semaphore_acquire_wait();
-				utils::pause();
+				rx::pause();
 			}
 		}
 		else
 		{
 			while (_thr.m_enqueued_count.load() > _thr.m_processed_count.load())
-				utils::pause();
+				rx::pause();
 		}
 
 		return true;

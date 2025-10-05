@@ -11,7 +11,7 @@
 #include "Emu/Cell/SPUThread.h"
 #include "sys_process.h"
 
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(sys_event);
 
@@ -468,7 +468,7 @@ error_code sys_event_queue_receive(ppu_thread &ppu, u32 equeue_id,
     }
 
     for (usz i = 0; cpu_flag::signal - ppu.state && i < 50; i++) {
-      busy_wait(500);
+      rx::busy_wait(500);
     }
 
     if (ppu.state & cpu_flag::signal) {

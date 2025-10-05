@@ -847,7 +847,7 @@ Value* PPUTranslator::ReadMemory(Value* addr, Type* type, bool is_be, u32 align)
 
 		m_may_be_mmio = false;
 
-		if (auto ptr = m_info.get_ptr<instructions_to_test>(std::max<u32>(m_info.segs[0].addr, (m_reloc ? m_reloc->addr : 0) + utils::sub_saturate<u32>(::narrow<u32>(m_addr), sizeof(instructions_to_test) / 2))))
+		if (auto ptr = m_info.get_ptr<instructions_to_test>(std::max<u32>(m_info.segs[0].addr, (m_reloc ? m_reloc->addr : 0) + rx::sub_saturate<u32>(::narrow<u32>(m_addr), sizeof(instructions_to_test) / 2))))
 		{
 			if (ppu_test_address_may_be_mmio(std::span(ptr->insts)))
 			{
@@ -920,7 +920,7 @@ void PPUTranslator::WriteMemory(Value* addr, Value* value, bool is_be, u32 align
 			be_t<u32> insts[128];
 		};
 
-		if (auto ptr = m_info.get_ptr<instructions_to_test>(std::max<u32>(m_info.segs[0].addr, (m_reloc ? m_reloc->addr : 0) + utils::sub_saturate<u32>(::narrow<u32>(m_addr), sizeof(instructions_to_test) / 2))))
+		if (auto ptr = m_info.get_ptr<instructions_to_test>(std::max<u32>(m_info.segs[0].addr, (m_reloc ? m_reloc->addr : 0) + rx::sub_saturate<u32>(::narrow<u32>(m_addr), sizeof(instructions_to_test) / 2))))
 		{
 			if (ppu_test_address_may_be_mmio(std::span(ptr->insts)))
 			{

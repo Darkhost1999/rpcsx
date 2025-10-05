@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include "rx/align.hpp"
 #include "Emu/perf_meter.hpp"
 #include "Emu/Cell/PPUModule.h"
 #include "cellos/sys_sync.h"
@@ -9,7 +11,7 @@
 #include "cellAdec.h"
 
 #include "util/simd.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 
 LOG_CHANNEL(cellAdec);
 
@@ -415,7 +417,7 @@ void LpcmDecContext::exec(ppu_thread& ppu)
 			be_t<f32>* const _output = std::assume_aligned<0x80>(output.get_ptr());
 			s64 output_size = cmd.au_size;
 
-			s32 sample_num = static_cast<s32>(utils::align(+lpcm_param->audioPayloadSize, 0x10));
+			s32 sample_num = static_cast<s32>(rx::alignUp(+lpcm_param->audioPayloadSize, 0x10));
 			s32 channel_num = 0;
 
 			if (!dvd_packing)
@@ -860,11 +862,11 @@ error_code _CellAdecCoreOpGetMemSize_lpcm(vm::ptr<CellAdecAttr> attr)
 	cellAdec.notice("_CellAdecCoreOpGetMemSize_lpcm(attr=*0x%x)", attr);
 
 	constexpr u32 mem_size =
-		utils::align(static_cast<u32>(sizeof(LpcmDecContext)), 0x80) + utils::align(static_cast<u32>(sizeof(CellAdecParamLpcm)), 0x80) + 0x100 // Command data for Spurs task
-		+ LPCM_DEC_OUTPUT_BUFFER_SIZE + 0x2900                                                                                                 // sizeof(CellSpurs) + sizeof(CellSpursTaskset)
-		+ 0x3b400                                                                                                                              // Spurs context
-		+ 0x300                                                                                                                                // (sizeof(CellSpursQueue) + 0x80 + queue buffer) * 2
-		+ 0x855;                                                                                                                               // Unused
+		rx::alignUp(static_cast<u32>(sizeof(LpcmDecContext)), 0x80) + rx::alignUp(static_cast<u32>(sizeof(CellAdecParamLpcm)), 0x80) + 0x100 // Command data for Spurs task
+		+ LPCM_DEC_OUTPUT_BUFFER_SIZE + 0x2900                                                                                               // sizeof(CellSpurs) + sizeof(CellSpursTaskset)
+		+ 0x3b400                                                                                                                            // Spurs context
+		+ 0x300                                                                                                                              // (sizeof(CellSpursQueue) + 0x80 + queue buffer) * 2
+		+ 0x855;                                                                                                                             // Unused
 
 	static_assert(mem_size == 0x7ebd5);
 
@@ -883,7 +885,7 @@ error_code _CellAdecCoreOpOpenExt_lpcm(ppu_thread& ppu, vm::ptr<LpcmDecContext> 
 	ensure(handle.aligned(0x80));                                                                                                                                     // LLE doesn't check the alignment or aligns the address itself
 	ensure(!!notifyAuDone && !!notifyAuDoneArg && !!notifyPcmOut && !!notifyPcmOutArg && !!notifyError && !!notifyErrorArg && !!notifySeqDone && !!notifySeqDoneArg); // These should always be set
 
-	const u32 end_of_context_addr = handle.addr() + utils::align(static_cast<u32>(sizeof(LpcmDecContext)), 0x80);
+	const u32 end_of_context_addr = handle.addr() + rx::alignUp(static_cast<u32>(sizeof(LpcmDecContext)), 0x80);
 
 	handle->cmd_queue.front = 0;
 	handle->cmd_queue.back = 0;
@@ -1587,10 +1589,10 @@ error_code adecOpen(ppu_thread& ppu, vm::ptr<CellAdecType> type, vm::cptr<CellAd
 	const s32 pcm_handle_num = core_ops->getPcmHandleNum(ppu);
 	const u32 bitstream_info_size = core_ops->getBsiInfoSize(ppu);
 
-	const auto _this = vm::ptr<AdecContext>::make(utils::align(+res->startAddr, 0x80));
+	const auto _this = vm::ptr<AdecContext>::make(rx::alignUp(+res->startAddr, 0x80));
 	const auto frames = vm::ptr<AdecFrame>::make(_this.addr() + sizeof(AdecContext));
 	const u32 bitstream_infos_addr = frames.addr() + pcm_handle_num * sizeof(AdecFrame);
-	const auto core_handle = vm::ptr<void>::make(utils::align(bitstream_infos_addr + bitstream_info_size * pcm_handle_num, 0x80));
+	const auto core_handle = vm::ptr<void>::make(rx::alignUp(bitstream_infos_addr + bitstream_info_size * pcm_handle_num, 0x80));
 
 	if (type->audioCodecType == CELL_ADEC_TYPE_LPCM_DVD)
 	{

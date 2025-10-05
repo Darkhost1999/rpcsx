@@ -5,9 +5,10 @@
 #include "File.h"
 #include "util/logs.hpp"
 #include "util/vm.hpp"
-#include "util/asm.hpp"
+#include "rx/asm.hpp"
 #include "util/v128.hpp"
 #include "util/simd.hpp"
+#include "rx/align.hpp"
 
 #ifdef __linux__
 #include <unistd.h>
@@ -158,8 +159,8 @@ static u8* add_jit_memory(usz size, usz align)
 	// Simple allocation by incrementing pointer to the next free data
 	const u64 pos = Ctr.atomic_op([&](u64& ctr) -> u64
 		{
-			const u64 _pos = utils::align(ctr & 0xffff'ffff, align);
-			const u64 _new = utils::align(_pos + size, align);
+			const u64 _pos = rx::alignUp(ctr & 0xffff'ffff, align);
+			const u64 _new = rx::alignUp(_pos + size, align);
 
 			if (_new > 0x40000000) [[unlikely]]
 			{
@@ -175,7 +176,7 @@ static u8* add_jit_memory(usz size, usz align)
 			// Check the necessity to commit more memory
 			if (_new > olda) [[unlikely]]
 			{
-				newa = utils::align(_new, 0x200000);
+				newa = rx::alignUp(_new, 0x200000);
 			}
 
 			ctr += _new - (ctr & 0xffff'ffff);
@@ -237,9 +238,9 @@ void* jit_runtime_base::_add(asmjit::CodeHolder* code, usz align) noexcept
 
 		for (asmjit::Section* section : code->_sections)
 		{
-			if (section->offset() + section->bufferSize() > utils::align<usz>(codeSize, align))
+			if (section->offset() + section->bufferSize() > rx::alignUp<usz>(codeSize, align))
 			{
-				fmt::throw_exception("CodeHolder section exceeds range: Section->offset: 0x%x, Section->bufferSize: 0x%x, alloted-memory=0x%x", section->offset(), section->bufferSize(), utils::align<usz>(codeSize, align));
+				fmt::throw_exception("CodeHolder section exceeds range: Section->offset: 0x%x, Section->bufferSize: 0x%x, alloted-memory=0x%x", section->offset(), section->bufferSize(), rx::alignUp<usz>(codeSize, align));
 			}
 
 			std::memcpy(p + section->offset(), section->data(), section->bufferSize());
@@ -365,7 +366,7 @@ jit_runtime_base& asmjit::get_global_runtime()
 		{
 			return m_pos.atomic_op([&](uchar*& pos) -> uchar*
 				{
-					const auto r = reinterpret_cast<uchar*>(utils::align(uptr(pos), align));
+					const auto r = reinterpret_cast<uchar*>(rx::alignUp(uptr(pos), align));
 
 					if (r >= pos && r + size > pos && r + size <= m_max)
 					{
