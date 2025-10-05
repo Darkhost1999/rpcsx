@@ -46,6 +46,7 @@ protected:
 
 public:
   constexpr shared_cv() = default;
+  shared_cv(const shared_cv &) = delete;
 
   std::errc
   wait(std::unique_lock<shared_mutex> &lock,

@@ -27,6 +27,7 @@ class shared_mutex final {
 
 public:
   constexpr shared_mutex() = default;
+  shared_mutex(const shared_mutex &) = delete;
 
   bool try_lock_shared() {
     // Conditional increment
