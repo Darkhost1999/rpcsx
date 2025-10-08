@@ -502,18 +502,25 @@ std::string CFG::genTest() {
   for (auto node : getPreorderNodes()) {
     auto name = ns.getNameOf(node->getLabel());
     if (node->getSuccessorCount() == 1) {
-      result += "  createBranch(_" +
+      result += "  createBranch(_" + name + ", _" +
                 ns.getNameOf((*node->getSuccessors().begin())->getLabel()) +
                 ");\n";
     } else if (node->getSuccessorCount() == 2) {
       auto firstIt = node->getSuccessors().begin();
       auto secondIt = std::next(firstIt);
-      result += "  createConditionalBranch(_" +
+      result += "  createConditionalBranch(_" + name + ", _" +
                 ns.getNameOf((*firstIt)->getLabel()) + ", _" +
                 ns.getNameOf((*secondIt)->getLabel()) + ");\n";
 
     } else if (node->getSuccessorCount() == 0) {
       result += "  createReturn(_" + name + ");\n";
+    } else {
+      result += "  createSwitch(_" + name;
+      for (auto succ : node->getSuccessors()) {
+        result += ", _" + ns.getNameOf(succ->getLabel());
+      }
+
+      result += ");\n";
     }
   }
 
