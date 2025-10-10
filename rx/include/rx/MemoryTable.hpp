@@ -1,10 +1,15 @@
 #pragma once
 
 #include "rx/AddressRange.hpp"
+#include "rx/Rc.hpp"
+#include <bit>
 #include <cassert>
+#include <concepts>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <set>
+#include <utility>
 
 namespace rx {
 struct AreaInfo {
@@ -203,35 +208,283 @@ public:
   }
 };
 
+template <typename T> class Payload {
+  enum class Kind { O, X, XO };
+  Kind kind;
+
+  union Storage {
+    T data;
+    Storage() {}
+    ~Storage() {}
+  } storage;
+
+  template <typename... Args>
+    requires std::constructible_from<T, Args &&...>
+  Payload(Kind kind, Args &&...args) noexcept(
+      std::is_nothrow_constructible_v<T, Args &&...>)
+      : kind(kind) {
+    std::construct_at(&storage.data, std::forward<Args>(args)...);
+  }
+
+public:
+  ~Payload() noexcept(std::is_nothrow_destructible_v<T>) {
+    if (kind != Kind::X) {
+      storage.data.~T();
+    }
+  }
+
+  Payload(Payload &&other) noexcept(std::is_nothrow_move_constructible_v<T>)
+      : kind(other.kind) {
+    if (!isClose()) {
+      std::construct_at(&storage.data, std::move(other.storage.data));
+    }
+  }
+
+  Payload &
+  operator=(Payload &&other) noexcept(std::is_nothrow_move_constructible_v<T> &&
+                                      std::is_nothrow_move_assignable_v<T>) {
+    if (this == &other) {
+      return *this;
+    }
+
+    if (other.isClose()) {
+      if (!isClose()) {
+        storage.data.~T();
+        kind = other.kind;
+      }
+
+      return *this;
+    }
+
+    if (!isClose()) {
+      storage.data = std::move(other.storage.data);
+    } else {
+      std::construct_at(&storage.data, std::move(other.storage.data));
+    }
+
+    kind = other.kind;
+    return *this;
+  }
+
+  T &get() {
+    assert(kind != Kind::X);
+    return storage.data;
+  }
+  const T &get() const {
+    assert(kind != Kind::X);
+    return storage.data;
+  }
+
+  T exchange(T data) {
+    assert(kind != Kind::X);
+    return std::exchange(storage.data, data);
+  }
+
+  template <typename... Args>
+    requires std::constructible_from<T, Args...>
+  [[nodiscard]] static Payload createOpen(Args &&...args) {
+    return Payload(Kind::O, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+    requires std::constructible_from<T, Args...>
+  [[nodiscard]] static Payload createClose(Args &&...args) {
+    return Payload(Kind::X, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+    requires std::constructible_from<T, Args...>
+  [[nodiscard]] static Payload createCloseOpen(Args &&...args) {
+    return Payload(Kind::XO, std::forward<Args>(args)...);
+  }
+
+  [[nodiscard]] bool isOpen() const { return kind == Kind::O; }
+  [[nodiscard]] bool isClose() const { return kind == Kind::X; }
+  [[nodiscard]] bool isCloseOpen() const { return kind == Kind::XO; }
+
+  void setCloseOpen() {
+    assert(kind != Kind::X);
+    kind = Kind::XO;
+  }
+  void setOpen() {
+    assert(kind != Kind::X);
+    kind = Kind::O;
+  }
+};
+
+template <typename T> class Payload<T *> {
+  static constexpr std::uintptr_t
+      kCloseOpenBit = alignof(T) > 1 ? 1
+                                     : (1ull << (sizeof(std::uintptr_t) * 8 - 1));
+  static constexpr std::uintptr_t kClose = 0;
+  std::uintptr_t value = kClose;
+
+public:
+  T *get() const {
+    assert(!isClose());
+    return std::bit_cast<T *>(value & ~kCloseOpenBit);
+  }
+
+  T *exchange(T *data) {
+    assert(!isClose());
+    auto result = get();
+    value = std::bit_cast<std::uintptr_t>(data) | (value & kCloseOpenBit);
+    return result;
+  }
+
+  [[nodiscard]] static Payload createOpen(T *ptr) {
+    Payload result;
+    result.value = std::bit_cast<std::uintptr_t>(ptr);
+    return result;
+  }
+
+  template <typename... Args> [[nodiscard]] static Payload createClose() {
+    return Payload();
+  }
+
+  [[nodiscard]] static Payload createCloseOpen(T *ptr) {
+    Payload result;
+    result.value = std::bit_cast<std::uintptr_t>(ptr) | kCloseOpenBit;
+    return result;
+  }
+
+  [[nodiscard]] bool isOpen() const {
+    return value != kClose && (value & kCloseOpenBit) == 0;
+  }
+  [[nodiscard]] bool isClose() const { return value == kClose; }
+  [[nodiscard]] bool isCloseOpen() const {
+    return (value & kCloseOpenBit) != 0;
+  }
+
+  void setCloseOpen() {
+    assert(!isClose());
+    value |= kCloseOpenBit;
+  }
+
+  void setOpen() {
+    assert(!isClose());
+    value &= ~kCloseOpenBit;
+  }
+};
+
+template <typename T> class Payload<Ref<T>> {
+  static constexpr std::uintptr_t
+      kCloseOpenBit = alignof(T) > 1 ? 1
+                                     : (1ull << (sizeof(std::uintptr_t) * 8 - 1));
+  static constexpr std::uintptr_t kClose = 0;
+  std::uintptr_t value = kClose;
+
+public:
+  ~Payload() noexcept(std::is_nothrow_destructible_v<T>) {
+    if (!isClose()) {
+      get()->decRef();
+    }
+  }
+
+  Payload(Payload &&other) noexcept(std::is_nothrow_destructible_v<T>) {
+    if (!isClose()) {
+      get()->decRef();
+    }
+
+    value = other.value;
+    other.value = kClose;
+  }
+
+  Payload &
+  operator=(Payload &&other) noexcept(std::is_nothrow_destructible_v<T>) {
+    if (this == &other) {
+      return *this;
+    }
+
+    if (!isClose()) {
+      get()->decRef();
+    }
+
+    value = other.value;
+    other.value = kClose;
+    return *this;
+  }
+
+  T *get() const {
+    assert(!isClose());
+    return std::bit_cast<T *>(value & ~kCloseOpenBit);
+  }
+
+  T *exchange(T *data) {
+    assert(!isClose());
+    auto result = get();
+    value = std::bit_cast<std::uintptr_t>(data) | (value & kCloseOpenBit);
+    result->decRef();
+    return result;
+  }
+
+  [[nodiscard]] static Payload createOpen(T *ptr) {
+    Payload result;
+    result.value = std::bit_cast<std::uintptr_t>(ptr);
+    ptr->incRef();
+    return result;
+  }
+
+  template <typename... Args> [[nodiscard]] static Payload createClose() {
+    return Payload();
+  }
+
+  [[nodiscard]] static Payload createCloseOpen(T *ptr) {
+    Payload result;
+    result.value = std::bit_cast<std::uintptr_t>(ptr) | kCloseOpenBit;
+    ptr->incRef();
+    return result;
+  }
+
+  [[nodiscard]] bool isOpen() const {
+    return value != kClose && (value & kCloseOpenBit) == 0;
+  }
+  [[nodiscard]] bool isClose() const { return value == kClose; }
+  [[nodiscard]] bool isCloseOpen() const {
+    return (value & kCloseOpenBit) != 0;
+  }
+
+  void setCloseOpen() {
+    assert(!isClose());
+    value |= kCloseOpenBit;
+  }
+
+  void setOpen() {
+    assert(!isClose());
+    value &= ~kCloseOpenBit;
+  }
+};
+
 template <typename PayloadT,
           template <typename> typename Allocator = std::allocator>
 class MemoryTableWithPayload {
-  enum class Kind { O, X, XO };
-  std::map<std::uint64_t, std::pair<Kind, PayloadT>, std::less<>,
-           Allocator<std::pair<const std::uint64_t, std::pair<Kind, PayloadT>>>>
+  using payload_type = Payload<PayloadT>;
+  std::map<std::uint64_t, payload_type, std::less<>,
+           Allocator<std::pair<const std::uint64_t, payload_type>>>
       mAreas;
 
 public:
-  struct AreaInfo {
-    std::uint64_t beginAddress;
-    std::uint64_t endAddress;
+  class AreaInfo : public rx::AddressRange {
     PayloadT &payload;
 
-    std::size_t size() const { return endAddress - beginAddress; }
+  public:
+    AreaInfo(PayloadT &payload, rx::AddressRange range)
+        : payload(payload), AddressRange(range) {}
+
+    PayloadT *operator->() { return &payload; }
+    PayloadT &get() { return payload; }
   };
 
   class iterator {
     using map_iterator =
-        typename std::map<std::uint64_t, std::pair<Kind, PayloadT>>::iterator;
+        typename std::map<std::uint64_t, payload_type>::iterator;
     map_iterator it;
 
   public:
     iterator() = default;
     iterator(map_iterator it) : it(it) {}
 
-    AreaInfo operator*() const {
-      return {it->first, std::next(it)->first, it->second.second};
-    }
+    AreaInfo operator*() const { return {it->second.get(), range()}; }
 
     rx::AddressRange range() const {
       return rx::AddressRange::fromBeginEnd(beginAddress(), endAddress());
@@ -241,12 +494,12 @@ public:
     std::uint64_t endAddress() const { return std::next(it)->first; }
     std::uint64_t size() const { return endAddress() - beginAddress(); }
 
-    PayloadT &get() const { return it->second.second; }
-    PayloadT *operator->() const { return &it->second.second; }
+    PayloadT &get() const { return it->second.get(); }
+    PayloadT *operator->() const { return &it->second.get(); }
     iterator &operator++() {
       ++it;
 
-      if (it->second.first != Kind::XO) {
+      if (!it->second.isCloseOpen()) {
         ++it;
       }
 
@@ -258,6 +511,12 @@ public:
 
     friend MemoryTableWithPayload;
   };
+
+  MemoryTableWithPayload() = default;
+  MemoryTableWithPayload(MemoryTableWithPayload &&) = default;
+  MemoryTableWithPayload &operator=(MemoryTableWithPayload &&) = default;
+  MemoryTableWithPayload(const MemoryTableWithPayload &) = delete;
+  MemoryTableWithPayload &operator=(const MemoryTableWithPayload &) = delete;
 
   iterator begin() { return iterator(mAreas.begin()); }
   iterator end() { return iterator(mAreas.end()); }
@@ -272,11 +531,11 @@ public:
     }
 
     if (it->first == address) {
-      if (it->second.first == Kind::X) {
+      if (it->second.isClose()) {
         ++it;
       }
     } else {
-      if (it->second.first != Kind::O) {
+      if (!it->second.isOpen()) {
         --it;
       }
     }
@@ -294,13 +553,13 @@ public:
     std::uint64_t endAddress = 0;
 
     if (it->first == address) {
-      if (it->second.first == Kind::X) {
+      if (it->second.isClose()) {
         return mAreas.end();
       }
 
       endAddress = std::next(it)->first;
     } else {
-      if (it->second.first == Kind::O) {
+      if (it->second.isOpen()) {
         return mAreas.end();
       }
 
@@ -315,9 +574,9 @@ public:
                PayloadT payload, bool merge = true, bool noOverride = false) {
     assert(beginAddress < endAddress);
     auto [beginIt, beginInserted] =
-        mAreas.emplace(beginAddress, std::pair{Kind::O, payload});
+        mAreas.emplace(beginAddress, payload_type::createOpen(payload));
     auto [endIt, endInserted] =
-        mAreas.emplace(endAddress, std::pair{Kind::X, PayloadT{}});
+        mAreas.emplace(endAddress, payload_type::createClose());
 
     bool seenOpen = false;
     bool endCollision = false;
@@ -330,20 +589,18 @@ public:
 
     if (!beginInserted || !endInserted) {
       if (!beginInserted) {
-        if (beginIt->second.first == Kind::X) {
-          beginIt->second.first = Kind::XO;
+        if (beginIt->second.isClose()) {
+          beginIt->second = payload_type::createCloseOpen(payload);
         } else {
           seenOpen = true;
           lastRemovedIsOpen = true;
-          lastRemovedOpenPayload = std::move(beginIt->second.second);
+          lastRemovedOpenPayload = beginIt->second.exchange(std::move(payload));
         }
-
-        beginIt->second.second = std::move(payload);
       }
 
       if (!endInserted) {
-        if (endIt->second.first == Kind::O) {
-          endIt->second.first = Kind::XO;
+        if (endIt->second.isOpen()) {
+          endIt->second.setCloseOpen();
         } else {
           endCollision = true;
         }
@@ -353,56 +610,56 @@ public:
     } else if (beginIt != mAreas.begin()) {
       auto prev = std::prev(beginIt);
 
-      if (prev->second.first != Kind::X) {
-        beginIt->second.first = Kind::XO;
+      if (!prev->second.isClose()) {
+        beginIt->second.setCloseOpen();
         seenOpen = true;
         lastRemovedIsOpen = true;
-        lastRemovedOpenPayload = prev->second.second;
+        lastRemovedOpenPayload = prev->second.get();
       }
     }
 
     auto origBegin = beginIt;
     ++beginIt;
     while (beginIt != endIt) {
-      if (beginIt->second.first == Kind::X) {
+      if (beginIt->second.isClose()) {
         lastRemovedIsOpen = false;
         if (!seenOpen) {
-          origBegin->second.first = Kind::XO;
+          origBegin->second.setCloseOpen();
         }
       } else {
-        if (!seenOpen && beginIt->second.first == Kind::XO) {
-          origBegin->second.first = Kind::XO;
+        if (!seenOpen && beginIt->second.isCloseOpen()) {
+          origBegin->second.setCloseOpen();
         }
 
         seenOpen = true;
         lastRemovedIsOpen = true;
-        lastRemovedOpenPayload = std::move(beginIt->second.second);
+        lastRemovedOpenPayload = std::move(beginIt->second.get());
       }
       beginIt = mAreas.erase(beginIt);
     }
 
     if (endCollision && !seenOpen) {
-      origBegin->second.first = Kind::XO;
+      origBegin->second.setCloseOpen();
     } else if (lastRemovedIsOpen && !endCollision) {
-      endIt->second.first = Kind::XO;
-      endIt->second.second = std::move(lastRemovedOpenPayload);
+      endIt->second =
+          payload_type::createCloseOpen(std::move(lastRemovedOpenPayload));
     }
 
     if (!merge) {
       return origBegin;
     }
 
-    if (origBegin->second.first == Kind::XO) {
+    if (origBegin->second.isCloseOpen()) {
       auto prevBegin = std::prev(origBegin);
 
-      if (prevBegin->second.second == origBegin->second.second) {
+      if (prevBegin->second.get() == origBegin->second.get()) {
         mAreas.erase(origBegin);
         origBegin = prevBegin;
       }
     }
 
-    if (endIt->second.first == Kind::XO) {
-      if (endIt->second.second == origBegin->second.second) {
+    if (endIt->second.isCloseOpen()) {
+      if (endIt->second.get() == origBegin->second.get()) {
         mAreas.erase(endIt);
       }
     }
@@ -415,15 +672,14 @@ public:
     auto closeIt = openIt;
     ++closeIt;
 
-    if (openIt->second.first == Kind::XO) {
-      openIt->second.first = Kind::X;
-      openIt->second.second = {};
+    if (openIt->second.isCloseOpen()) {
+      openIt->second = payload_type::createClose();
     } else {
       mAreas.erase(openIt);
     }
 
-    if (closeIt->second.first == Kind::XO) {
-      closeIt->second.first = Kind::O;
+    if (closeIt->second.isCloseOpen()) {
+      closeIt->second.setOpen();
     } else {
       mAreas.erase(closeIt);
     }

@@ -3,6 +3,7 @@
 #include "amdgpu/tiler.hpp"
 #include "gnm/vulkan.hpp"
 #include "rx/Config.hpp"
+#include "rx/Rc.hpp"
 #include "rx/hexdump.hpp"
 #include "rx/mem.hpp"
 #include "rx/print.hpp"
@@ -375,19 +376,18 @@ void Cache::ShaderResources::buildMemoryTable(MemoryTable &memoryTable) {
   memoryTable.count = 0;
 
   for (auto p : bufferMemoryTable) {
-    auto range = rx::AddressRange::fromBeginEnd(p.beginAddress, p.endAddress);
-    auto buffer = cacheTag->getBuffer(range, p.payload);
+    auto buffer = cacheTag->getBuffer(p, p.get());
 
     auto memoryTableSlot = memoryTable.count;
     memoryTable.slots[memoryTable.count++] = {
-        .address = p.beginAddress,
-        .size = range.size(),
-        .flags = static_cast<uint8_t>(p.payload),
+        .address = p.beginAddress(),
+        .size = p.size(),
+        .flags = static_cast<uint8_t>(p.get()),
         .deviceAddress = buffer.deviceAddress,
     };
 
     for (auto [slot, address] : resourceSlotToAddress) {
-      if (address >= p.beginAddress && address < p.endAddress) {
+      if (p.contains(address)) {
         slotResources[slot] = memoryTableSlot;
       }
     }
@@ -397,19 +397,18 @@ void Cache::ShaderResources::buildImageMemoryTable(MemoryTable &memoryTable) {
   memoryTable.count = 0;
 
   for (auto p : imageMemoryTable) {
-    auto range = rx::AddressRange::fromBeginEnd(p.beginAddress, p.endAddress);
-    auto buffer = cacheTag->getImageBuffer(p.payload.first, p.payload.second);
+    auto buffer = cacheTag->getImageBuffer(p->first, p->second);
 
     auto memoryTableSlot = memoryTable.count;
     memoryTable.slots[memoryTable.count++] = {
-        .address = p.beginAddress,
-        .size = range.size(),
-        .flags = static_cast<uint8_t>(p.payload.second),
+        .address = p.beginAddress(),
+        .size = p.size(),
+        .flags = static_cast<uint8_t>(p->second),
         .deviceAddress = buffer.deviceAddress,
     };
 
     for (auto [slot, address] : resourceSlotToAddress) {
-      if (address >= p.beginAddress && address < p.endAddress) {
+      if (p.contains(address)) {
         slotResources[slot] = memoryTableSlot;
       }
     }
@@ -614,7 +613,7 @@ transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image,
                        nullptr, 0, nullptr, 1, &barrier);
 }
 
-struct Cache::Entry {
+struct Cache::Entry : rx::RcBase {
   virtual ~Entry() = default;
 
   Cache::TagStorage *acquiredTag = nullptr;

@@ -582,29 +582,29 @@ void Device::mapProcess(std::uint32_t pid, int vmId) {
     std::abort();
   }
 
-  for (auto [startAddress, endAddress, slot] : process.vmTable) {
-    auto gpuProt = slot.prot >> 4;
+  for (auto slot : process.vmTable) {
+    auto gpuProt = slot->prot >> 4;
     if (gpuProt == 0) {
       continue;
     }
 
-    auto devOffset = slot.offset + startAddress - slot.baseAddress;
+    auto devOffset = slot->offset + slot.beginAddress() - slot->baseAddress;
     int mapFd = memoryFd;
 
-    if (slot.memoryType >= 0) {
-      mapFd = dmemFd[slot.memoryType];
+    if (slot->memoryType >= 0) {
+      mapFd = dmemFd[slot->memoryType];
     }
 
     auto mmapResult =
-        ::mmap(memory.getPointer(startAddress), endAddress - startAddress,
-               gpuProt, MAP_FIXED | MAP_SHARED, mapFd, devOffset);
+        ::mmap(memory.getPointer(slot.beginAddress()), slot.size(), gpuProt,
+               MAP_FIXED | MAP_SHARED, mapFd, devOffset);
 
     if (mmapResult == MAP_FAILED) {
       std::println(
           stderr,
           "failed to map process {} memory, address {}-{}, type {:x}, vmId {}",
-          (int)pid, memory.getPointer(startAddress),
-          memory.getPointer(endAddress), slot.memoryType, vmId);
+          (int)pid, memory.getPointer(slot.beginAddress()),
+          memory.getPointer(slot.endAddress()), slot->memoryType, vmId);
       std::abort();
     }
 
@@ -639,7 +639,7 @@ void Device::protectMemory(std::uint32_t pid, std::uint64_t address,
     return;
   }
 
-  auto vmSlot = (*vmSlotIt).payload;
+  auto vmSlot = vmSlotIt.get();
 
   process.vmTable.map(address, address + size,
                       VmMapSlot{
@@ -893,14 +893,14 @@ bool Device::flip(std::uint32_t pid, int bufferIndex, std::uint64_t arg,
     vkQueueSubmit2(vk::context->presentQueue, 1, &submitInfo, VK_NULL_HANDLE);
   }
 
-  scheduler.then([=, this, cacheTag = std::move(cacheTag)] {
-    flipBuffer[process.vmId] = bufferIndex;
-    flipArg[process.vmId] = arg;
-    flipCount[process.vmId] = flipCount[process.vmId] + 1;
+  scheduler.then([=, this, vmId = process.vmId,
+                  cacheTag = std::move(cacheTag)] {
+    flipBuffer[vmId] = bufferIndex;
+    flipArg[vmId] = arg;
+    flipCount[vmId] = flipCount[vmId] + 1;
 
-    auto mem = RemoteMemory{process.vmId};
-    auto bufferInUse =
-        mem.getPointer<std::uint64_t>(bufferInUseAddress[process.vmId]);
+    auto mem = RemoteMemory{vmId};
+    auto bufferInUse = mem.getPointer<std::uint64_t>(bufferInUseAddress[vmId]);
     if (bufferInUse != nullptr) {
       bufferInUse[bufferIndex] = 0;
     }
