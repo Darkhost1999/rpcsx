@@ -7,6 +7,7 @@ add_library(obj.orbis-kernel OBJECT
   src/event.cpp
   src/evf.cpp
   src/ipmi.cpp
+  src/KernelAllocator.cpp
   src/KernelContext.cpp
   src/umtx.cpp
   src/sys/sys_acct.cpp

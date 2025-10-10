@@ -56,7 +56,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
   switch (request) {
   case 0xc008811b: // get submit done flag ptr?
     if (device->submitArea == nullptr) {
-      auto dmem = orbis::g_context.dmemDevice.staticCast<DmemDevice>();
+      auto dmem = orbis::g_context->dmemDevice.staticCast<DmemDevice>();
       std::uint64_t start = 0;
       auto err = dmem->allocate(&start, ~0, vm::kPageSize, 0, 0);
       if (err != orbis::ErrorCode{}) {
@@ -78,7 +78,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
     break;
 
   case 0xc004812e: {
-    if (orbis::g_context.fwType != orbis::FwType::Ps5) {
+    if (orbis::g_context->fwType != orbis::FwType::Ps5) {
       return orbis::ErrorCode::INVAL;
     }
 
@@ -94,7 +94,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
   }
 
   case 0xc0488131: {
-    if (orbis::g_context.fwType != orbis::FwType::Ps5) {
+    if (orbis::g_context->fwType != orbis::FwType::Ps5) {
       return orbis::ErrorCode::INVAL;
     }
 
@@ -123,7 +123,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
 
     // thread->where();
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       if (args->contextControl[0]) {
         gpu.submitGfxCommand(gcFile->gfxPipe,
                              orbis::g_currentThread->tproc->vmId,
@@ -155,7 +155,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
   }
 
   case 0xc0188132: {
-    if (orbis::g_context.fwType != orbis::FwType::Ps5) {
+    if (orbis::g_context->fwType != orbis::FwType::Ps5) {
       return orbis::ErrorCode::INVAL;
     }
 
@@ -186,7 +186,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
     //                   args->submits[i].unk1);
     // }
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       for (unsigned i = 0; i < args->count / 2; ++i) {
         auto addressLo = static_cast<std::uint32_t>(args->submits[i].address);
         auto addressHi =
@@ -215,7 +215,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
     };
 
     auto args = reinterpret_cast<Args *>(argp);
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       for (unsigned i = 0; i < args->count; ++i) {
         gpu.submitGfxCommand(gcFile->gfxPipe,
                              orbis::g_currentThread->tproc->vmId,
@@ -236,7 +236,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
     };
 
     auto args = reinterpret_cast<Args *>(argp);
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.waitForIdle();
       gpu.submitSwitchBuffer(orbis::g_currentThread->tproc->gfxRing);
     } else {
@@ -258,7 +258,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
 
     auto args = reinterpret_cast<Args *>(argp);
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       for (unsigned i = 0; i < args->count; ++i) {
         gpu.submitGfxCommand(gcFile->gfxPipe,
                              orbis::g_currentThread->tproc->vmId,
@@ -277,7 +277,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
   }
 
   case 0xc0048116: { // submit done?
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       // gpu.waitForIdle();
     } else {
       return orbis::ErrorCode::BUSY;
@@ -285,7 +285,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
   }
 
   case 0xc0048117:
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.waitForIdle();
     } else {
       return orbis::ErrorCode::BUSY;
@@ -354,7 +354,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
                     args->queueId, args->vqueueId, args->ringBaseAddress,
                     args->readPtrAddress, args->doorbell, args->ringSize);
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.mapComputeQueue(thread->tproc->vmId, args->meId, args->pipeId,
                           args->queueId, args->vqueueId, args->ringBaseAddress,
                           args->readPtrAddress, args->doorbell,
@@ -379,7 +379,7 @@ static orbis::ErrorCode gc_ioctl(orbis::File *file, std::uint64_t request,
     ORBIS_LOG_ERROR("gc ioctl ding dong for workload", args->meId, args->pipeId,
                     args->queueId, args->nextStartOffsetInDw);
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.submitComputeQueue(args->meId, args->pipeId, args->queueId,
                              args->nextStartOffsetInDw);
       gpu.waitForIdle();
@@ -471,7 +471,7 @@ orbis::ErrorCode GcDevice::open(rx::Ref<orbis::File> *file, const char *path,
 }
 
 void GcDevice::addClient(orbis::Process *process) {
-  auto dce = orbis::g_context.dceDevice.rawStaticCast<DceDevice>();
+  auto dce = orbis::g_context->dceDevice.rawStaticCast<DceDevice>();
   dce->initializeProcess(process);
 
   std::lock_guard lock(mtx);

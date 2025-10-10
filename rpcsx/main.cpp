@@ -26,8 +26,10 @@
 
 #include <elf.h>
 #include <linux/prctl.h>
-#include <orbis/GlobalKernelObject.hpp>
+
+#include <orbis/KernelAllocator.hpp>
 #include <orbis/KernelContext.hpp>
+#include <orbis/KernelObject.hpp>
 #include <orbis/module.hpp>
 #include <orbis/module/Module.hpp>
 #include <orbis/sys/sysentry.hpp>
@@ -80,7 +82,7 @@ handle_signal(int sig, siginfo_t *info, void *ucontext) {
       prot |= PROT_EXEC;
     }
 
-    auto gpuDevice = amdgpu::DeviceCtl{orbis::g_context.gpuDevice};
+    auto gpuDevice = amdgpu::DeviceCtl{orbis::g_context->gpuDevice};
 
     if (gpuDevice && (prot & (isWrite ? PROT_WRITE : PROT_READ)) != 0) {
       auto &gpuContext = gpuDevice.getContext();
@@ -357,10 +359,10 @@ static void onSysExit(orbis::Thread *thread, int id, uint64_t *args,
 
 static void guestInitDev() {
   auto dmem1 = createDmemCharacterDevice(1);
-  orbis::g_context.dmemDevice = dmem1;
+  orbis::g_context->dmemDevice = dmem1;
 
   auto dce = createDceCharacterDevice();
-  orbis::g_context.dceDevice = dce;
+  orbis::g_context->dceDevice = dce;
 
   auto ttyFd = ::open("tty.txt", O_CREAT | O_TRUNC | O_WRONLY, 0666);
   auto consoleDev = createConsoleCharacterDevice(STDIN_FILENO, ttyFd);
@@ -464,7 +466,7 @@ static void guestInitDev() {
   vfs::addDevice("cayman/reg", createCaymanRegCharacterDevice());
   vfs::addDevice("hctrl", createHidCharacterDevice());
 
-  if (orbis::g_context.fwType == orbis::FwType::Ps5) {
+  if (orbis::g_context->fwType == orbis::FwType::Ps5) {
     vfs::addDevice("iccnvs4", createIccPowerCharacterDevice());
     vfs::addDevice("ajmi", createAjmCharacterDevice());
     vfs::addDevice("ssd0", createHddCharacterDevice(0x100000000));
@@ -515,8 +517,8 @@ static void guestInitDev() {
   });
 
   auto shm = createShmDevice();
-  orbis::g_context.shmDevice = shm;
-  orbis::g_context.blockpoolDevice = createBlockPoolDevice();
+  orbis::g_context->shmDevice = shm;
+  orbis::g_context->blockpoolDevice = createBlockPoolDevice();
 }
 
 static void guestInitFd(orbis::Thread *mainThread) {
@@ -533,8 +535,8 @@ static void guestInitFd(orbis::Thread *mainThread) {
 }
 
 static orbis::Process *createGuestProcess() {
-  auto pid = orbis::g_context.allocatePid() * 10000 + 1;
-  return orbis::g_context.createProcess(pid);
+  auto pid = orbis::g_context->allocatePid() * 10000 + 1;
+  return orbis::g_context->createProcess(pid);
 }
 
 static orbis::Thread *createGuestThread() {
@@ -590,7 +592,7 @@ int guestExec(orbis::Thread *mainThread, ExecEnv execEnv,
     mainThread->tproc->type = orbis::ProcessType::Ps5;
     mainThread->tproc->sysent = &orbis::ps5_sysvec;
   } else {
-    if (orbis::g_context.fwType == orbis::FwType::Ps4) {
+    if (orbis::g_context->fwType == orbis::FwType::Ps4) {
       mainThread->tproc->sysent = &orbis::ps4_sysvec;
     } else {
       mainThread->tproc->sysent = &orbis::ps5_sysvec;
@@ -670,11 +672,11 @@ ExecEnv guestCreateExecEnv(orbis::Thread *mainThread,
     mainThread->tproc->sdkVersion = processParam->sdkVersion;
   }
 
-  if (orbis::g_context.sdkVersion == 0 && mainThread->tproc->sdkVersion != 0) {
-    orbis::g_context.sdkVersion = mainThread->tproc->sdkVersion;
+  if (orbis::g_context->sdkVersion == 0 && mainThread->tproc->sdkVersion != 0) {
+    orbis::g_context->sdkVersion = mainThread->tproc->sdkVersion;
   }
   if (mainThread->tproc->sdkVersion == 0) {
-    mainThread->tproc->sdkVersion = orbis::g_context.sdkVersion;
+    mainThread->tproc->sdkVersion = orbis::g_context->sdkVersion;
   }
 
   if (executableModule->dynType == orbis::DynType::None) {
@@ -713,7 +715,7 @@ ExecEnv guestCreateExecEnv(orbis::Thread *mainThread,
     std::abort();
   }
 
-  if (orbis::g_context.fwType == orbis::FwType::Ps4) {
+  if (orbis::g_context->fwType == orbis::FwType::Ps4) {
     for (auto sym : libkernel->symbols) {
       if (sym.id == 0xd2f4e7e480cc53d0) {
         auto address = (uint64_t)libkernel->base + sym.address;
@@ -736,20 +738,20 @@ ExecEnv guestCreateExecEnv(orbis::Thread *mainThread,
     }
   }
 
-  if (orbis::g_context.fwSdkVersion == 0) {
+  if (orbis::g_context->fwSdkVersion == 0) {
     auto moduleParam = reinterpret_cast<std::byte *>(libkernel->moduleParam);
     auto fwSdkVersion = moduleParam         //
                         + sizeof(uint64_t)  // size
                         + sizeof(uint64_t); // magic
-    orbis::g_context.fwSdkVersion = *(uint32_t *)fwSdkVersion;
-    std::printf("fw sdk version: %x\n", orbis::g_context.fwSdkVersion);
+    orbis::g_context->fwSdkVersion = *(uint32_t *)fwSdkVersion;
+    std::printf("fw sdk version: %x\n", orbis::g_context->fwSdkVersion);
   }
 
-  if (orbis::g_context.fwType == orbis::FwType::Unknown) {
+  if (orbis::g_context->fwType == orbis::FwType::Unknown) {
     if (libkernel->dynType == orbis::DynType::Ps4) {
-      orbis::g_context.fwType = orbis::FwType::Ps4;
+      orbis::g_context->fwType = orbis::FwType::Ps4;
     } else {
-      orbis::g_context.fwType = orbis::FwType::Ps5;
+      orbis::g_context->fwType = orbis::FwType::Ps5;
     }
   }
 
@@ -787,7 +789,7 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
                                      std::vector<std::string> argv,
                                      std::vector<std::string> envv,
                                      orbis::AppInfoEx appInfo) {
-  auto childPid = orbis::g_context.allocatePid() * 10000 + 1;
+  auto childPid = orbis::g_context->allocatePid() * 10000 + 1;
   auto flag = orbis::knew<std::atomic<bool>>();
   *flag = false;
 
@@ -803,7 +805,7 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
     return {};
   }
 
-  auto process = orbis::g_context.createProcess(childPid);
+  auto process = orbis::g_context->createProcess(childPid);
   auto logFd = ::open(("log-" + std::to_string(childPid) + ".txt").c_str(),
                       O_CREAT | O_TRUNC | O_WRONLY, 0666);
 
@@ -918,14 +920,14 @@ int main(int argc, const char *argv[]) {
     return 1;
   }
 
-  orbis::g_context.deviceEventEmitter = orbis::knew<orbis::EventEmitter>();
-
   bool enableAudioIpmi = false;
   bool asRoot = false;
   bool isSystem = false;
   bool isSafeMode = false;
 
   int argIndex = 1;
+  orbis::initializeAllocator();
+
   while (argIndex < argc) {
     if (argv[argIndex] == std::string_view("--mount") ||
         argv[argIndex] == std::string_view("-m")) {
@@ -1041,9 +1043,10 @@ int main(int argc, const char *argv[]) {
   }
 
   setupSigHandlers();
+  orbis::constructAllGlobals();
+  orbis::g_context->deviceEventEmitter = orbis::knew<orbis::EventEmitter>();
 
   rx::startWatchdog();
-
   rx::createGpuDevice();
   vfs::initialize();
 
@@ -1057,8 +1060,8 @@ int main(int argc, const char *argv[]) {
   rx::thread::initialize();
 
   // vm::printHostStats();
-  orbis::g_context.allocatePid();
-  auto initProcess = orbis::g_context.createProcess(asRoot ? 1 : 10);
+  orbis::g_context->allocatePid();
+  auto initProcess = orbis::g_context->createProcess(asRoot ? 1 : 10);
   // pthread_setname_np(pthread_self(), "10.MAINTHREAD");
 
   int status = 0;
@@ -1149,20 +1152,20 @@ int main(int argc, const char *argv[]) {
 
   vm::initialize(initProcess->pid);
 
-  auto bigAppBudget = orbis::g_context.createProcessTypeBudget(
+  auto bigAppBudget = orbis::g_context->createProcessTypeBudget(
       orbis::Budget::ProcessType::BigApp, "big app budget", bigAppBudgetInfo);
 
   // FIXME: define following budgets
-  orbis::g_context.createProcessTypeBudget(orbis::Budget::ProcessType::MiniApp,
-                                           "mini-app budget", bigAppBudgetInfo);
-  orbis::g_context.createProcessTypeBudget(orbis::Budget::ProcessType::System,
-                                           "system budget", bigAppBudgetInfo);
-  orbis::g_context.createProcessTypeBudget(
+  orbis::g_context->createProcessTypeBudget(
+      orbis::Budget::ProcessType::MiniApp, "mini-app budget", bigAppBudgetInfo);
+  orbis::g_context->createProcessTypeBudget(orbis::Budget::ProcessType::System,
+                                            "system budget", bigAppBudgetInfo);
+  orbis::g_context->createProcessTypeBudget(
       orbis::Budget::ProcessType::NonGameMiniApp, "non-game mini-app budget",
       bigAppBudgetInfo);
 
   if (isSystem) {
-    orbis::g_context.safeMode = isSafeMode ? 1 : 0;
+    orbis::g_context->safeMode = isSafeMode ? 1 : 0;
     initProcess->authInfo = {.unk0 = 0x380000000000000f,
                              .caps =
                                  {
@@ -1209,7 +1212,7 @@ int main(int argc, const char *argv[]) {
     };
 
     initProcess->budgetProcessType = orbis::Budget::ProcessType::BigApp;
-    initProcess->budgetId = orbis::g_context.budgets.insert(bigAppBudget);
+    initProcess->budgetId = orbis::g_context->budgets.insert(bigAppBudget);
     initProcess->isInSandbox = true;
   }
 
@@ -1259,55 +1262,53 @@ int main(int argc, const char *argv[]) {
   auto execEnv = guestCreateExecEnv(mainThread, executableModule, isSystem);
 
   if (isSystem && executableModule->dynType == orbis::DynType::None) {
-    orbis::g_context.fwType = orbis::FwType::Ps5;
+    orbis::g_context->fwType = orbis::FwType::Ps5;
     executableModule->dynType = orbis::DynType::Ps5;
   }
 
   guestInitDev();
   guestInitFd(mainThread);
 
-  orbis::constructAllGlobals();
-
   // data transfer mode
   // 0 - normal
   // 1 - source
   // 2 - ?
-  orbis::g_context.regMgrInt[0x2110000] = 0;
+  orbis::g_context->regMgrInt[0x2110000] = 0;
 
-  orbis::g_context.regMgrInt[0x20b0000] = 1; // prefer X
-  orbis::g_context.regMgrInt[0x2020000] = 1; // region
+  orbis::g_context->regMgrInt[0x20b0000] = 1; // prefer X
+  orbis::g_context->regMgrInt[0x2020000] = 1; // region
 
-  // orbis::g_context.regMgrInt[0x2130000] = 0x1601;
-  orbis::g_context.regMgrInt[0x2130000] = 0;
-  orbis::g_context.regMgrInt[0x73800200] = 1;
-  orbis::g_context.regMgrInt[0x73800300] = 0;
-  orbis::g_context.regMgrInt[0x73800400] = 0;
-  orbis::g_context.regMgrInt[0x73800500] = 0; // enable log
+  // orbis::g_context->regMgrInt[0x2130000] = 0x1601;
+  orbis::g_context->regMgrInt[0x2130000] = 0;
+  orbis::g_context->regMgrInt[0x73800200] = 1;
+  orbis::g_context->regMgrInt[0x73800300] = 0;
+  orbis::g_context->regMgrInt[0x73800400] = 0;
+  orbis::g_context->regMgrInt[0x73800500] = 0; // enable log
 
   // user settings
-  orbis::g_context.regMgrInt[0x7800100] = 0;
-  orbis::g_context.regMgrInt[0x7810100] = 0;
-  orbis::g_context.regMgrInt[0x7820100] = 0;
-  orbis::g_context.regMgrInt[0x7830100] = 0;
-  orbis::g_context.regMgrInt[0x7840100] = 0;
-  orbis::g_context.regMgrInt[0x7850100] = 0;
-  orbis::g_context.regMgrInt[0x7860100] = 0;
-  orbis::g_context.regMgrInt[0x7870100] = 0;
-  orbis::g_context.regMgrInt[0x7880100] = 0;
-  orbis::g_context.regMgrInt[0x7890100] = 0;
-  orbis::g_context.regMgrInt[0x78a0100] = 0;
-  orbis::g_context.regMgrInt[0x78b0100] = 0;
-  orbis::g_context.regMgrInt[0x78c0100] = 0;
-  orbis::g_context.regMgrInt[0x78d0100] = 0;
-  orbis::g_context.regMgrInt[0x78e0100] = 0;
-  orbis::g_context.regMgrInt[0x78f0100] = 0;
+  orbis::g_context->regMgrInt[0x7800100] = 0;
+  orbis::g_context->regMgrInt[0x7810100] = 0;
+  orbis::g_context->regMgrInt[0x7820100] = 0;
+  orbis::g_context->regMgrInt[0x7830100] = 0;
+  orbis::g_context->regMgrInt[0x7840100] = 0;
+  orbis::g_context->regMgrInt[0x7850100] = 0;
+  orbis::g_context->regMgrInt[0x7860100] = 0;
+  orbis::g_context->regMgrInt[0x7870100] = 0;
+  orbis::g_context->regMgrInt[0x7880100] = 0;
+  orbis::g_context->regMgrInt[0x7890100] = 0;
+  orbis::g_context->regMgrInt[0x78a0100] = 0;
+  orbis::g_context->regMgrInt[0x78b0100] = 0;
+  orbis::g_context->regMgrInt[0x78c0100] = 0;
+  orbis::g_context->regMgrInt[0x78d0100] = 0;
+  orbis::g_context->regMgrInt[0x78e0100] = 0;
+  orbis::g_context->regMgrInt[0x78f0100] = 0;
 
-  orbis::g_context.regMgrInt[0x2040000] = 0; // do not require initial setup
-  orbis::g_context.regMgrInt[0x2800600] = 0; // IDU version
-  orbis::g_context.regMgrInt[0x2860100] = 0; // IDU mode
-  orbis::g_context.regMgrInt[0x2860300] = 0; // Arcade mode
-  orbis::g_context.regMgrInt[0x7010000] = 0; // auto login
-  orbis::g_context.regMgrInt[0x9010000] = 0; // video out color effect
+  orbis::g_context->regMgrInt[0x2040000] = 0; // do not require initial setup
+  orbis::g_context->regMgrInt[0x2800600] = 0; // IDU version
+  orbis::g_context->regMgrInt[0x2860100] = 0; // IDU mode
+  orbis::g_context->regMgrInt[0x2860300] = 0; // Arcade mode
+  orbis::g_context->regMgrInt[0x7010000] = 0; // auto login
+  orbis::g_context->regMgrInt[0x9010000] = 0; // video out color effect
 
   if (!isSystem) {
     ipmi::createMiniSysCoreObjects(initProcess);
@@ -1342,8 +1343,8 @@ int main(int argc, const char *argv[]) {
                    }});
       // confirmed to work and known method of initialization since 5.05
       // version
-      if (orbis::g_context.fwType != orbis::FwType::Ps5 &&
-          orbis::g_context.fwSdkVersion >= 0x5050000) {
+      if (orbis::g_context->fwType != orbis::FwType::Ps5 &&
+          orbis::g_context->fwSdkVersion >= 0x5050000) {
         auto fakeIpmiThread = createGuestThread();
         ipmi::audioIpmiClient =
             ipmi::createIpmiClient(fakeIpmiThread, "SceSysAudioSystemIpc");
@@ -1370,7 +1371,7 @@ int main(int argc, const char *argv[]) {
           int32_t unk8 = 0x2;
           char unk9[24]{0};
         } data2;
-        std::uint32_t method = orbis::g_context.fwSdkVersion >= 0x8000000
+        std::uint32_t method = orbis::g_context->fwSdkVersion >= 0x8000000
                                    ? 0x1234002c
                                    : 0x1234002b;
         ipmi::audioIpmiClient.sendSyncMessage(method, data1, data2);
@@ -1378,7 +1379,7 @@ int main(int argc, const char *argv[]) {
     }
   }
 
-  if (orbis::g_context.fwType == orbis::FwType::Ps5 && !isSystem) {
+  if (orbis::g_context->fwType == orbis::FwType::Ps5 && !isSystem) {
     ipmi::createIpmiServer(initProcess, "SceShareLibIpmiService");
     ipmi::createIpmiServer(initProcess, "SceSysAvControlIpc");
     ipmi::createShm("SceAvControl", 0xa02, 0x1a4, 4096);

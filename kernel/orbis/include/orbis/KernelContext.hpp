@@ -1,7 +1,7 @@
 #pragma once
 #include "AppInfo.hpp"
 #include "Budget.hpp"
-#include "KernelAllocator.hpp"
+#include "KernelObject.hpp"
 #include "evf.hpp"
 #include "ipmi.hpp"
 #include "orbis/note.hpp"
@@ -50,12 +50,7 @@ public:
 
   long getTscFreq();
 
-  void *kalloc(std::size_t size,
-               std::size_t align = __STDCPP_DEFAULT_NEW_ALIGNMENT__);
-  void kfree(void *ptr, std::size_t size);
-
-  std::pair<EventFlag *, bool> createEventFlag(utils::kstring name,
-                                               std::int32_t flags,
+  std::pair<EventFlag *, bool> createEventFlag(kstring name, std::int32_t flags,
                                                std::uint64_t initPattern) {
     std::lock_guard lock(m_evf_mtx);
 
@@ -78,7 +73,7 @@ public:
     return {};
   }
 
-  std::pair<Semaphore *, bool> createSemaphore(utils::kstring name,
+  std::pair<Semaphore *, bool> createSemaphore(kstring name,
                                                std::uint32_t attrs,
                                                std::int32_t initCount,
                                                std::int32_t maxCount) {
@@ -100,8 +95,7 @@ public:
     return {};
   }
 
-  std::pair<rx::Ref<IpmiServer>, ErrorCode>
-  createIpmiServer(utils::kstring name) {
+  std::pair<rx::Ref<IpmiServer>, ErrorCode> createIpmiServer(kstring name) {
     std::lock_guard lock(m_sem_mtx);
     auto [it, inserted] = mIpmiServers.try_emplace(std::move(name), nullptr);
 
@@ -128,15 +122,14 @@ public:
     return {};
   }
 
-  std::tuple<utils::kmap<utils::kstring, char[128]> &,
-             std::unique_lock<rx::shared_mutex>>
+  std::tuple<kmap<kstring, char[128]> &, std::unique_lock<rx::shared_mutex>>
   getKernelEnv() {
     std::unique_lock lock(m_kenv_mtx);
     return {m_kenv, std::move(lock)};
   }
 
   void setKernelEnv(std::string_view key, std::string_view value) {
-    auto &kenvValue = m_kenv[utils::kstring(key)];
+    auto &kenvValue = m_kenv[kstring(key)];
     auto len = std::min(sizeof(kenvValue) - 1, value.size());
     std::memcpy(kenvValue, value.data(), len);
     kenvValue[len] = '0';
@@ -177,14 +170,10 @@ public:
     return processTypeBudgets[static_cast<int>(processType)];
   }
 
+  void serialize(rx::Serializer &) const {}
+  void deserialize(rx::Deserializer &) {}
+
 private:
-  rx::shared_mutex m_heap_mtx;
-  rx::shared_mutex m_heap_map_mtx;
-  void *m_heap_next = this + 1;
-
-  utils::kmultimap<std::size_t, void *> m_free_heap;
-  utils::kmultimap<std::size_t, void *> m_used_node;
-
   std::atomic<long> m_tsc_freq{0};
 
   rx::shared_mutex m_thread_id_mtx;
@@ -193,17 +182,17 @@ private:
   rx::LinkedNode<Process> *m_processes = nullptr;
 
   rx::shared_mutex m_evf_mtx;
-  utils::kmap<utils::kstring, rx::Ref<EventFlag>> m_event_flags;
+  kmap<kstring, rx::Ref<EventFlag>> m_event_flags;
 
   rx::shared_mutex m_sem_mtx;
-  utils::kmap<utils::kstring, rx::Ref<Semaphore>> m_semaphores;
+  kmap<kstring, rx::Ref<Semaphore>> m_semaphores;
 
   rx::shared_mutex mIpmiServerMtx;
-  utils::kmap<utils::kstring, rx::Ref<IpmiServer>> mIpmiServers;
+  kmap<kstring, rx::Ref<IpmiServer>> mIpmiServers;
 
   rx::shared_mutex m_kenv_mtx;
-  utils::kmap<utils::kstring, char[128]> m_kenv; // max size: 127 + '\0'
+  kmap<kstring, char[128]> m_kenv; // max size: 127 + '\0'
 };
 
-extern KernelContext &g_context;
+extern GlobalObjectRef<KernelContext> g_context;
 } // namespace orbis

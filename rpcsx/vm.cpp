@@ -970,8 +970,8 @@ void *vm::map(void *addr, std::uint64_t len, std::int32_t prot,
   }
 
   if (auto thr = orbis::g_currentThread) {
-    std::lock_guard lock(orbis::g_context.gpuDeviceMtx);
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    std::lock_guard lock(orbis::g_context->gpuDeviceMtx);
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.submitMapMemory(thr->tproc->pid, address, len, -1, -1, prot,
                           address - kMinAddress);
     }
@@ -1027,7 +1027,7 @@ bool vm::unmap(void *addr, std::uint64_t size) {
   gBlocks[(address >> kBlockShift) - kFirstBlock].removeFlags(
       (address & kBlockMask) >> kPageShift, pages, ~0);
   if (auto thr = orbis::g_currentThread) {
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.submitUnmapMemory(thr->tproc->pid, address, size);
     }
   } else {
@@ -1072,7 +1072,7 @@ bool vm::protect(void *addr, std::uint64_t size, std::int32_t prot) {
 
   if (auto thr = orbis::g_currentThread) {
     std::println("memory prot: {:x}", prot);
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       gpu.submitProtectMemory(thr->tproc->pid, address, size, prot);
     }
   } else if (prot >> 4) {

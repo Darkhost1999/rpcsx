@@ -31,7 +31,7 @@ static orbis::ErrorCode blockpool_ioctl(orbis::File *file,
     ORBIS_LOG_TODO("blockpool expand", args->len, args->searchStart,
                    args->searchEnd, args->flags);
 
-    auto dmem = orbis::g_context.dmemDevice.rawStaticCast<DmemDevice>();
+    auto dmem = orbis::g_context->dmemDevice.rawStaticCast<DmemDevice>();
     std::lock_guard lock(dmem->mtx);
     std::uint64_t start = args->searchStart;
     ORBIS_RET_ON_ERROR(
@@ -64,7 +64,7 @@ static orbis::ErrorCode blockpool_mmap(orbis::File *file, void **address,
     return orbis::ErrorCode::NOMEM;
   }
 
-  auto dmem = orbis::g_context.dmemDevice.rawStaticCast<DmemDevice>();
+  auto dmem = orbis::g_context->dmemDevice.rawStaticCast<DmemDevice>();
   auto mapped = reinterpret_cast<std::byte *>(vm::map(
       *address, size, prot, flags, vm::kMapInternalReserveOnly, blockPool));
 

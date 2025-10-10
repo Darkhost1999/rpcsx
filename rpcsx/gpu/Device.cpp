@@ -344,7 +344,7 @@ void Device::start() {
   }
 
   std::jthread vblankThread([](const std::stop_token &stopToken) {
-    orbis::g_context.deviceEventEmitter->emit(
+    orbis::g_context->deviceEventEmitter->emit(
         orbis::kEvFiltDisplay,
         [=](orbis::KNote *note) -> std::optional<orbis::intptr_t> {
           if (DisplayEvent(note->event.ident >> 48) ==
@@ -362,7 +362,7 @@ void Device::start() {
           std::chrono::duration_cast<std::chrono::nanoseconds>(period);
       std::this_thread::sleep_until(prevVBlank);
 
-      orbis::g_context.deviceEventEmitter->emit(
+      orbis::g_context->deviceEventEmitter->emit(
           orbis::kEvFiltDisplay,
           [=](orbis::KNote *note) -> std::optional<orbis::intptr_t> {
             if (DisplayEvent(note->event.ident >> 48) == DisplayEvent::VBlank) {
@@ -941,7 +941,7 @@ void Device::flip(std::uint32_t pid, int bufferIndex, std::uint64_t arg) {
       flip(pid, bufferIndex, arg, vk::context->swapchainImages[imageIndex],
            vk::context->swapchainImageViews[imageIndex]);
 
-  orbis::g_context.deviceEventEmitter->emit(
+  orbis::g_context->deviceEventEmitter->emit(
       orbis::kEvFiltDisplay,
       [=](orbis::KNote *note) -> std::optional<orbis::intptr_t> {
         if (DisplayEvent(note->event.ident >> 48) == DisplayEvent::Flip) {

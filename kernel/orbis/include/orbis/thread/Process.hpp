@@ -93,13 +93,13 @@ struct Process final {
 
   // Named objects for debugging
   rx::shared_mutex namedObjMutex;
-  utils::kmap<void *, utils::kstring> namedObjNames;
+  kmap<void *, kstring> namedObjNames;
   rx::OwningIdMap<NamedObjInfo, uint, 65535, 1> namedObjIds;
 
-  utils::kmap<std::int32_t, SigAction> sigActions;
+  kmap<std::int32_t, SigAction> sigActions;
 
   // Named memory ranges for debugging
   rx::shared_mutex namedMemMutex;
-  utils::kmap<NamedMemoryRange, utils::kstring> namedMem;
+  kmap<NamedMemoryRange, kstring> namedMem;
 };
 } // namespace orbis

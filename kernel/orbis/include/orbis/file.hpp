@@ -82,7 +82,7 @@ struct File : rx::RcBase {
   int flags = 0;
   int mode = 0;
   int hostFd = -1;
-  utils::kvector<Dirent> dirEntries;
+  kvector<Dirent> dirEntries;
 
   bool noBlock() const { return (flags & 4) != 0; }
 };

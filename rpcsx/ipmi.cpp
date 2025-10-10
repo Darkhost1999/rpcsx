@@ -162,7 +162,7 @@ orbis::Semaphore *ipmi::createSemaphore(std::string_view name, uint32_t attrs,
                                         uint64_t initCount, uint64_t maxCount) {
   auto result =
       orbis::g_context
-          .createSemaphore(orbis::kstring(name), attrs, initCount, maxCount)
+          ->createSemaphore(orbis::kstring(name), attrs, initCount, maxCount)
           .first;
   std::memcpy(result->name, name.data(), name.size());
   result->name[name.size()] = 0;
@@ -172,14 +172,14 @@ orbis::Semaphore *ipmi::createSemaphore(std::string_view name, uint32_t attrs,
 orbis::EventFlag *ipmi::createEventFlag(std::string_view name, uint32_t attrs,
                                         uint64_t initPattern) {
   return orbis::g_context
-      .createEventFlag(orbis::kstring(name), attrs, initPattern)
+      ->createEventFlag(orbis::kstring(name), attrs, initPattern)
       .first;
 }
 
 void ipmi::createShm(const char *name, uint32_t flags, uint32_t mode,
                      uint64_t size) {
   rx::Ref<orbis::File> shm;
-  auto shmDevice = orbis::g_context.shmDevice.staticCast<IoDevice>();
+  auto shmDevice = orbis::g_context->shmDevice.staticCast<IoDevice>();
   shmDevice->open(&shm, name, flags, mode, nullptr);
   shm->ops->truncate(shm.get(), size, nullptr);
 }
@@ -357,11 +357,11 @@ ipmi::IpmiServer &ipmi::createIpmiServer(orbis::Process *process,
       if ((packet.info.type & ~0x8010) == 0x41) {
         auto msgHeader = std::bit_cast<orbis::IpmiSyncMessageHeader *>(
             packet.message.data());
-        auto process = orbis::g_context.findProcessById(msgHeader->pid);
+        auto process = orbis::g_context->findProcessById(msgHeader->pid);
         if (process == nullptr) {
           continue;
         }
-        auto client = orbis::g_context.ipmiMap.get(packet.info.clientKid)
+        auto client = orbis::g_context->ipmiMap.get(packet.info.clientKid)
                           .cast<orbis::IpmiClient>();
         if (client == nullptr) {
           continue;
@@ -378,11 +378,11 @@ ipmi::IpmiServer &ipmi::createIpmiServer(orbis::Process *process,
 
       if ((packet.info.type & ~0x10) == 0x43) {
         auto msgHeader = (orbis::IpmiAsyncMessageHeader *)packet.message.data();
-        auto process = orbis::g_context.findProcessById(msgHeader->pid);
+        auto process = orbis::g_context->findProcessById(msgHeader->pid);
         if (process == nullptr) {
           continue;
         }
-        auto client = orbis::g_context.ipmiMap.get(packet.info.clientKid)
+        auto client = orbis::g_context->ipmiMap.get(packet.info.clientKid)
                           .cast<orbis::IpmiClient>();
         if (client == nullptr) {
           continue;
@@ -448,7 +448,7 @@ void ipmi::createAudioSystemObjects(orbis::Process *process) {
             std::snprintf(buffer, sizeof(buffer), "sceAudioOutMix%x",
                           args.threadId);
             auto [eventFlag, inserted] =
-                orbis::g_context.createEventFlag(buffer, 0x100, 0);
+                orbis::g_context->createEventFlag(buffer, 0x100, 0);
 
             if (!inserted) {
               return 17; // FIXME: verify
@@ -571,10 +571,10 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
   createIpmiServer(process, "SceLoginMgrServer");
   int lnsStatusServer;
 
-  if (orbis::g_context.fwType == orbis::FwType::Ps5) {
+  if (orbis::g_context->fwType == orbis::FwType::Ps5) {
     lnsStatusServer = 0x30010;
   } else {
-    if (orbis::g_context.fwSdkVersion > 0x6000000) {
+    if (orbis::g_context->fwSdkVersion > 0x6000000) {
       lnsStatusServer = 0x30013;
     } else {
       lnsStatusServer = 0x30010;
@@ -603,12 +603,12 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
                        return 0;
                      })
       .addSyncMethodStub(
-          orbis::g_context.fwSdkVersion > 0x6000000 ? 0x30033 : 0x3002e,
+          orbis::g_context->fwSdkVersion > 0x6000000 ? 0x30033 : 0x3002e,
           []() -> std::int32_t {
-            auto commonDialog = std::get<0>(orbis::g_context.dialogs.front());
+            auto commonDialog = std::get<0>(orbis::g_context->dialogs.front());
             auto currentDialogId =
                 *reinterpret_cast<std::int16_t *>(commonDialog + 4);
-            auto currentDialog = std::get<0>(orbis::g_context.dialogs.back());
+            auto currentDialog = std::get<0>(orbis::g_context->dialogs.back());
             if (currentDialogId == 5) {
               std::int32_t titleSize = 8192;
               std::int32_t buttonNameSize = 64;
@@ -640,7 +640,7 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
             return 0;
           })
       .addSyncMethod(
-          orbis::g_context.fwSdkVersion > 0x6000000 ? 0x30044 : 0x3003f,
+          orbis::g_context->fwSdkVersion > 0x6000000 ? 0x30044 : 0x3003f,
           [=](std::vector<std::vector<std::byte>>,
               const std::vector<std::span<std::byte>> &inData) -> std::int32_t {
             struct InitDialogArgs {
@@ -673,23 +673,23 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
               perror("mmap");
               std::abort();
             }
-            orbis::g_context.dialogs.emplace_back(shmAddress,
-                                                  controlStat.st_size);
+            orbis::g_context->dialogs.emplace_back(shmAddress,
+                                                   controlStat.st_size);
             return 0;
           })
       .addSyncMethod(
-          orbis::g_context.fwSdkVersion > 0x6000000 ? 0x30045 : 0x30040,
+          orbis::g_context->fwSdkVersion > 0x6000000 ? 0x30045 : 0x30040,
           [=](std::vector<std::vector<std::byte>>,
               const std::vector<std::span<std::byte>> &inData) -> std::int32_t {
-            if (!orbis::g_context.dialogs.empty()) {
+            if (!orbis::g_context->dialogs.empty()) {
               auto currentDialogAddr =
-                  std::get<0>(orbis::g_context.dialogs.back());
+                  std::get<0>(orbis::g_context->dialogs.back());
               auto currentDialogSize =
-                  std::get<1>(orbis::g_context.dialogs.back());
+                  std::get<1>(orbis::g_context->dialogs.back());
               ORBIS_LOG_TODO("Unmap shm after unlinking", currentDialogAddr,
                              currentDialogSize);
               rx::mem::unmap(currentDialogAddr, currentDialogSize);
-              orbis::g_context.dialogs.pop_back();
+              orbis::g_context->dialogs.pop_back();
             }
             return 0;
           });
@@ -706,7 +706,7 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
             }
             std::strncpy((char *)out, result.data(), result.size() + 1);
             size = result.size() + 1;
-            orbis::g_context.createEventFlag(orbis::kstring(result), 0x200, 0);
+            orbis::g_context->createEventFlag(orbis::kstring(result), 0x200, 0);
             return 0;
           })
       .addSyncMethodStub(0xd);
@@ -977,8 +977,8 @@ void ipmi::createShellCoreObjects(orbis::Process *process) {
               std::strncpy((char *)outData[0].data(), result.data(),
                            result.size() + 1);
               outData[0].resize(result.size() + 1);
-              orbis::g_context.createEventFlag(orbis::kstring(result), 0x200,
-                                               0);
+              orbis::g_context->createEventFlag(orbis::kstring(result), 0x200,
+                                                0);
 
               outData[1] = toBytes<orbis::uint64_t>(0);
               return 0;

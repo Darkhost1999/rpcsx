@@ -92,7 +92,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     // 4.17.0.0.3.0
     if (name[0] == net && name[1] == 17 && name[2] == 0 && name[3] == 0 &&
         name[4] == 3 && name[5] == 0) {
-      if (g_context.fwSdkVersion == 0) {
+      if (g_context->fwSdkVersion == 0) {
         // proto fw
         return {};
       }
@@ -197,7 +197,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
         return ErrorCode::INVAL;
       }
 
-      auto budget = g_context.budgets.get(thread->tproc->budgetId);
+      auto budget = g_context->budgets.get(thread->tproc->budgetId);
       auto fmem = budget->get(BudgetResource::Fmem);
       *(uint64_t *)old = fmem.total;
       return {};
@@ -208,7 +208,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
         return ErrorCode::INVAL;
       }
 
-      auto budget = g_context.budgets.get(thread->tproc->budgetId);
+      auto budget = g_context->budgets.get(thread->tproc->budgetId);
       auto fmem = budget->get(BudgetResource::Fmem);
 
       auto result = (uint64_t *)old;
@@ -225,7 +225,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
       ORBIS_LOG_ERROR("KERN_PROC_PROC 2");
 
       if (namelen >= 4) {
-        auto process = g_context.findProcessById(name[3]);
+        auto process = g_context->findProcessById(name[3]);
         if (process == nullptr || process->exitStatus.has_value()) {
           return ErrorCode::SRCH;
         }
@@ -245,7 +245,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     }
 
     if (name[0] == kern && name[1] == proc && name[2] == 55) {
-      if (g_context.fwType != FwType::Ps5) {
+      if (g_context->fwType != FwType::Ps5) {
         return orbis::ErrorCode::INVAL;
       }
 
@@ -259,7 +259,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     if (name[0] == kern && name[1] == proc && name[2] == 36) {
       Process *process = thread->tproc;
       if (process->pid != name[3]) {
-        process = g_context.findProcessById(name[3]);
+        process = g_context->findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("get sdk version by pid: process not found", name[3],
                           thread->tproc->pid);
@@ -276,7 +276,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
 
       auto sdkVersion = process->sdkVersion;
       if (sdkVersion == 0) {
-        sdkVersion = g_context.fwSdkVersion;
+        sdkVersion = g_context->fwSdkVersion;
       }
 
       ORBIS_RET_ON_ERROR(uwrite(ptr<uint32_t>(old), sdkVersion));
@@ -290,7 +290,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
       // 1 - 14 - 35 - pid
       Process *process = thread->tproc;
       if (process->pid != name[3] && name[3] != -1) {
-        process = g_context.findProcessById(name[3]);
+        process = g_context->findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("appinfo process not found", name[3],
                           thread->tproc->pid);
@@ -384,7 +384,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     }
 
     if (name[0] == kern && name[1] == proc && name[2] == 64) {
-      auto appInfo = g_context.appInfos.get(name[3]);
+      auto appInfo = g_context->appInfos.get(name[3]);
       if (appInfo == nullptr) {
         return ErrorCode::SRCH; // ?
       }
@@ -418,7 +418,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     if (name[0] == 1 && name[1] == proc && name[2] == 65) {
       // AppInfo by appId get/set
       // 1 - 14 - 65 - appId
-      auto appInfo = g_context.appInfos.get(name[3]);
+      auto appInfo = g_context->appInfos.get(name[3]);
       if (appInfo == nullptr) {
         ORBIS_LOG_ERROR("appinfo appId not found", name[3], thread->tproc->pid);
         return ErrorCode::SRCH;
@@ -461,7 +461,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     if (name[0] == kern && name[1] == proc && name[2] == 68) {
       Process *process = thread->tproc;
       if (process->pid != name[3]) {
-        process = g_context.findProcessById(name[3]);
+        process = g_context->findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("get ps5 sdk version by pid: process not found",
                           name[3], thread->tproc->pid);
@@ -478,7 +478,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
 
       auto sdkVersion = process->sdkVersion;
       if (sdkVersion == 0) {
-        sdkVersion = g_context.fwSdkVersion;
+        sdkVersion = g_context->fwSdkVersion;
       }
 
       ORBIS_RET_ON_ERROR(uwrite(ptr<uint32_t>(old), sdkVersion));
@@ -699,7 +699,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
           dest[count++] = budgets;
           dest[count++] = mlock_avail;
         } else if (searchName == "hw.sce_main_socid") {
-          if (g_context.fwType != FwType::Ps5) {
+          if (g_context->fwType != FwType::Ps5) {
             return ErrorCode::INVAL;
           }
 
@@ -844,7 +844,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
             return ErrorCode::INVAL;
           }
 
-          *(std::uint32_t *)old = g_context.safeMode;
+          *(std::uint32_t *)old = g_context->safeMode;
         }
         if (new_ != nullptr && newlen == 4) {
           ORBIS_LOG_ERROR("sysctl: set kern.init_safe_mode",
@@ -902,7 +902,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
         return {};
 
       case sysctl_hw::sce_main_socid:
-        if (g_context.fwType != FwType::Ps5) {
+        if (g_context->fwType != FwType::Ps5) {
           return ErrorCode::INVAL;
         }
         if (*oldlenp != 4 || new_ != nullptr || newlen != 0) {
@@ -933,13 +933,13 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
           return ErrorCode::INVAL;
         }
 
-        if (g_context.fwType != FwType::Ps5 &&
+        if (g_context->fwType != FwType::Ps5 &&
             std::string_view((char *)thread->tproc->appInfo.titleId) ==
                 "NPXS20973") {
           ORBIS_LOG_ERROR("get tsc freq: returning patched value");
           *(uint64_t *)old = 1000000;
         } else {
-          *(uint64_t *)old = g_context.getTscFreq();
+          *(uint64_t *)old = g_context->getTscFreq();
         }
         return {};
       }

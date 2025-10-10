@@ -89,7 +89,7 @@ static SysResult keventChange(KQueue *kq, KEvent &change, Thread *thread) {
       nodeIt = kq->notes.begin();
 
       if (change.filter == kEvFiltProc) {
-        auto process = g_context.findProcessById(change.ident);
+        auto process = g_context->findProcessById(change.ident);
         if (process == nullptr) {
           return ErrorCode::SRCH;
         }
@@ -124,7 +124,7 @@ static SysResult keventChange(KQueue *kq, KEvent &change, Thread *thread) {
         }
       } else if (change.filter == kEvFiltGraphicsCore ||
                  change.filter == kEvFiltDisplay) {
-        g_context.deviceEventEmitter->subscribe(&*nodeIt);
+        g_context->deviceEventEmitter->subscribe(&*nodeIt);
       }
     }
   }
@@ -185,7 +185,7 @@ static SysResult keventChange(KQueue *kq, KEvent &change, Thread *thread) {
     nodeIt->event.data |= 1000ull << 16; // clock
 
     kq->cv.notify_all(kq->mtx);
-  } else if (g_context.fwType == FwType::Ps5 &&
+  } else if (g_context->fwType == FwType::Ps5 &&
              change.filter == kEvFiltGraphicsCore && change.ident == 0) {
     nodeIt->triggered = true;
     kq->cv.notify_all(kq->mtx);

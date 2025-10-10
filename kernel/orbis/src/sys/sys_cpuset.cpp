@@ -97,7 +97,7 @@ orbis::SysResult orbis::sys_cpuset_getaffinity(Thread *thread, cpulevel_t level,
       if (id == ~id_t(0) || id == thread->tproc->pid) {
         whichProcess = thread->tproc;
       } else {
-        whichProcess = g_context.findProcessById(id);
+        whichProcess = g_context->findProcessById(id);
 
         if (whichProcess == nullptr) {
           return ErrorCode::SRCH;
@@ -163,7 +163,7 @@ orbis::SysResult orbis::sys_cpuset_setaffinity(Thread *thread, cpulevel_t level,
       } else {
         ORBIS_LOG_ERROR(__FUNCTION__, "process not found", level, which, id,
                         cpusetsize);
-        whichProcess = g_context.findProcessById(id);
+        whichProcess = g_context->findProcessById(id);
 
         if (whichProcess == nullptr) {
           return ErrorCode::SRCH;

@@ -80,7 +80,7 @@ orbis::SysResult orbis::sys_regmgr_call(Thread *thread, uint32_t op,
   // ORBIS_LOG_ERROR(__FUNCTION__, op, id, len);
   // thread->where();
 
-  std::lock_guard lock(orbis::g_context.regMgrMtx);
+  std::lock_guard lock(orbis::g_context->regMgrMtx);
 
   if (op == 1) {
     // set int
@@ -89,7 +89,7 @@ orbis::SysResult orbis::sys_regmgr_call(Thread *thread, uint32_t op,
     }
 
     ORBIS_LOG_ERROR(__FUNCTION__, op, id, *(std::uint32_t *)value);
-    g_context.regMgrInt[id] = *(std::uint32_t *)value;
+    g_context->regMgrInt[id] = *(std::uint32_t *)value;
     return {};
   }
   if (op == 2) {
@@ -98,8 +98,8 @@ orbis::SysResult orbis::sys_regmgr_call(Thread *thread, uint32_t op,
       return ErrorCode::INVAL;
     }
 
-    auto intValIt = g_context.regMgrInt.find(id);
-    if (intValIt == g_context.regMgrInt.end()) {
+    auto intValIt = g_context->regMgrInt.find(id);
+    if (intValIt == g_context->regMgrInt.end()) {
       ORBIS_LOG_ERROR("registry int entry not exists", op, id, len);
       thread->where();
       // return ErrorCode::NOENT;
@@ -774,7 +774,7 @@ orbis::SysResult orbis::sys_budget_create(Thread *thread, ptr<char> name,
   BudgetInfo _resources[kMaxBudgets];
   ORBIS_RET_ON_ERROR(uread(_resources, resources, count));
 
-  auto processTypeBudget = g_context.getProcessTypeBudget(processType);
+  auto processTypeBudget = g_context->getProcessTypeBudget(processType);
   int invalidResourceCount = 0;
 
   for (auto &resource : std::span(_resources, count)) {
@@ -804,7 +804,7 @@ orbis::SysResult orbis::sys_budget_create(Thread *thread, ptr<char> name,
 
   rx::Ref budget =
       orbis::knew<Budget>(_name, processType, std::span(_resources, count));
-  auto id = g_context.budgets.insert(budget);
+  auto id = g_context->budgets.insert(budget);
   thread->retval[0] = id;
   return {};
 }
@@ -845,9 +845,9 @@ orbis::SysResult orbis::sys_budget_get(Thread *thread, sint id,
     }
 
     budget =
-        g_context.getProcessTypeBudget(static_cast<Budget::ProcessType>(id));
+        g_context->getProcessTypeBudget(static_cast<Budget::ProcessType>(id));
   } else {
-    budget = g_context.budgets.get(id);
+    budget = g_context->budgets.get(id);
 
     if (!budget) {
       return ErrorCode::SRCH;
@@ -873,7 +873,7 @@ orbis::SysResult orbis::sys_budget_set(Thread *thread, sint budgetId) {
     return ErrorCode::NOSYS;
   }
 
-  auto budget = g_context.budgets.get(budgetId);
+  auto budget = g_context->budgets.get(budgetId);
   if (!budget) {
     return ErrorCode::SRCH;
   }
@@ -940,7 +940,7 @@ orbis::SysResult orbis::sys_dmem_container(Thread *thread, uint id) {
 orbis::SysResult orbis::sys_get_authinfo(Thread *thread, pid_t pid,
                                          ptr<AuthInfo> info) {
 
-  auto process = pid > 0 ? g_context.findProcessById(pid) : thread->tproc;
+  auto process = pid > 0 ? g_context->findProcessById(pid) : thread->tproc;
   if (process == nullptr) {
     return ErrorCode::SRCH;
   }
@@ -1188,7 +1188,7 @@ orbis::SysResult orbis::sys_randomized_path(Thread *thread, sint type,
 }
 orbis::SysResult orbis::sys_rdup(Thread *thread, sint pid, sint fd) {
   ORBIS_LOG_TODO(__FUNCTION__, pid, fd);
-  for (auto it = g_context.getProcessList(); it != nullptr; it = it->next) {
+  for (auto it = g_context->getProcessList(); it != nullptr; it = it->next) {
     auto &p = it->object;
     if (p.pid != pid) {
       continue;
@@ -1297,7 +1297,7 @@ orbis::SysResult orbis::sys_budget_get_ptype(Thread *thread, sint pid) {
   if (pid < 0 || pid == thread->tproc->pid) {
     process = thread->tproc;
   } else {
-    process = g_context.findProcessById(pid);
+    process = g_context->findProcessById(pid);
 
     if (!process) {
       return ErrorCode::SRCH;
@@ -1344,7 +1344,7 @@ orbis::SysResult orbis::sys_thr_get_name(Thread *thread, lwpid_t lwpid,
     searchThread = thread->tproc->threadsMap.get(lwpid - thread->tproc->pid);
 
     if (searchThread == nullptr) {
-      if (auto process = g_context.findProcessById(lwpid)) {
+      if (auto process = g_context->findProcessById(lwpid)) {
         searchThread = process->threadsMap.get(lwpid - process->pid);
       }
     }
@@ -1446,7 +1446,7 @@ orbis::SysResult orbis::sys_ipmimgr_call(Thread *thread, uint op, uint kid,
     return sysIpmiSessionSetEventFlag(thread, result, kid, params, paramsSz);
   }
 
-  if (auto ipmi = g_context.ipmiMap.get(kid)) {
+  if (auto ipmi = g_context->ipmiMap.get(kid)) {
     if (auto client = ipmi.cast<IpmiClient>()) {
       ORBIS_LOG_TODO(__FUNCTION__, thread->tid, op, client->name, result,
                      params, paramsSz);
@@ -1652,7 +1652,7 @@ orbis::sys_get_kernel_mem_statistics(Thread *thread /* TODO */) {
 orbis::SysResult orbis::sys_get_sdk_compiled_version(Thread *thread,
                                                      ptr<const char> path) {
   ORBIS_LOG_ERROR(__FUNCTION__, path);
-  thread->retval[0] = g_context.sdkVersion;
+  thread->retval[0] = g_context->sdkVersion;
   return {};
 }
 orbis::SysResult orbis::sys_app_state_change(Thread *thread, sint state) {
@@ -1680,7 +1680,7 @@ orbis::SysResult orbis::sys_budget_get_ptype_of_budget(Thread *thread,
     return ErrorCode::NOSYS;
   }
 
-  rx::Ref<Budget> budget = g_context.budgets.get(budgetId);
+  rx::Ref<Budget> budget = g_context->budgets.get(budgetId);
 
   if (!budget) {
     return ErrorCode::SRCH;
@@ -1877,10 +1877,10 @@ orbis::SysResult orbis::sys_begin_app_mount(Thread *thread,
   rx::Ref appInfo = orbis::knew<RcAppInfo>();
 
   AppInfoEx *appInfoData = appInfo.get();
-  auto handle = g_context.appInfos.insert(appInfo);
+  auto handle = g_context->appInfos.insert(appInfo);
   ORBIS_LOG_TODO(__FUNCTION__, handle);
   thread->where();
-  if (handle == decltype(g_context.appInfos)::npos) {
+  if (handle == decltype(g_context->appInfos)::npos) {
     return ErrorCode::DOOFUS;
   }
 

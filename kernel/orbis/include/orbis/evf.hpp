@@ -57,7 +57,7 @@ struct EventFlag final {
   };
 
   rx::shared_mutex queueMtx;
-  utils::kvector<WaitingThread> waitingThreads;
+  kvector<WaitingThread> waitingThreads;
 
   enum class NotifyType { Set, Cancel, Destroy };
 

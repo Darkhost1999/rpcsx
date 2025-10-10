@@ -1,5 +1,5 @@
 #include "orbis/umtx.hpp"
-#include "GlobalKernelObject.hpp"
+#include "KernelObject.hpp"
 #include "error.hpp"
 #include "orbis-config.hpp"
 #include "orbis/thread.hpp"
@@ -25,7 +25,7 @@ struct UmtxCond {
 
 struct UmtxChain {
   rx::shared_mutex mtx;
-  using queue_type = utils::kmultimap<UmtxKey, UmtxCond>;
+  using queue_type = kmultimap<UmtxKey, UmtxCond>;
   queue_type sleep_queue;
   queue_type spare_queue;
 

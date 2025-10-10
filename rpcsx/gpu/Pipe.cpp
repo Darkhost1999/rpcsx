@@ -345,7 +345,7 @@ bool ComputePipe::releaseMem(Ring &ring) {
   }
 
   if (intSel) {
-    orbis::g_context.deviceEventEmitter->emit(
+    orbis::g_context->deviceEventEmitter->emit(
         orbis::kEvFiltGraphicsCore,
         [=, this](orbis::KNote *note) -> std::optional<std::int64_t> {
           if (note->event.ident == kGcEventCompute0RelMem + index) {
@@ -1375,7 +1375,7 @@ bool GraphicsPipe::eventWriteEop(Ring &ring) {
   }
 
   if (intSel != 0) {
-    orbis::g_context.deviceEventEmitter->emit(
+    orbis::g_context->deviceEventEmitter->emit(
         orbis::kEvFiltGraphicsCore,
         [=](orbis::KNote *note) -> std::optional<std::int64_t> {
           if (note->event.ident == kGcEventGfxEop) {

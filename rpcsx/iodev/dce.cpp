@@ -148,7 +148,7 @@ static void runBridge(int vmId) {
   std::thread{[=] {
     pthread_setname_np(pthread_self(), "Bridge");
 
-    auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice};
+    auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice};
     auto &gpuCtx = gpu.getContext();
     std::vector<std::uint64_t> fetchedCommands;
     fetchedCommands.reserve(std::size(gpuCtx.cpuCacheCommands));
@@ -247,7 +247,7 @@ static void initDceMemory(DceDevice *device) {
     return;
   }
 
-  auto dmem = orbis::g_context.dmemDevice.cast<DmemDevice>();
+  auto dmem = orbis::g_context->dmemDevice.cast<DmemDevice>();
   std::uint64_t start = 0;
   if (dmem->allocate(&start, ~0ull, kDceControlMemorySize, 0x100000, 1) !=
       orbis::ErrorCode{}) {
@@ -278,12 +278,12 @@ static orbis::ErrorCode dce_ioctl(orbis::File *file, std::uint64_t request,
                                   void *argp, orbis::Thread *thread) {
   auto device = static_cast<DceDevice *>(file->device.get());
 
-  auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice};
+  auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice};
   auto &gpuCtx = gpu.getContext();
 
   // std::this_thread::sleep_for(std::chrono::seconds(5));
 
-  if (orbis::g_context.fwType == orbis::FwType::Ps5) {
+  if (orbis::g_context->fwType == orbis::FwType::Ps5) {
     if (request == 0x80308217) {
       auto args = reinterpret_cast<FlipControlArgs *>(argp);
 
@@ -489,7 +489,7 @@ static orbis::ErrorCode dce_ioctl(orbis::File *file, std::uint64_t request,
     } else if (args->id == 1) {
 
       // Mode set
-      orbis::g_context.deviceEventEmitter->emit(
+      orbis::g_context->deviceEventEmitter->emit(
           orbis::kEvFiltDisplay,
           [](orbis::KNote *note) -> std::optional<orbis::intptr_t> {
             if ((note->event.ident >> 48) == 0x64) {
@@ -603,7 +603,7 @@ static orbis::ErrorCode dce_mmap(orbis::File *file, void **address,
   ORBIS_LOG_FATAL("dce mmap", address, size, offset);
   auto dce = file->device.cast<DceDevice>();
   initDceMemory(dce.get());
-  auto dmem = orbis::g_context.dmemDevice.cast<DmemDevice>();
+  auto dmem = orbis::g_context->dmemDevice.cast<DmemDevice>();
   return dmem->mmap(address, size, prot, flags, dce->dmemOffset + offset);
 }
 
@@ -614,15 +614,15 @@ static const orbis::FileOps ops = {
 
 static void createGpu() {
   {
-    std::lock_guard lock(orbis::g_context.gpuDeviceMtx);
-    if (orbis::g_context.gpuDevice != nullptr) {
+    std::lock_guard lock(orbis::g_context->gpuDeviceMtx);
+    if (orbis::g_context->gpuDevice != nullptr) {
       return;
     }
 
     rx::createGpuDevice();
   }
 
-  while (orbis::g_context.gpuDevice == nullptr) {
+  while (orbis::g_context->gpuDevice == nullptr) {
   }
 }
 
@@ -642,9 +642,9 @@ void DceDevice::initializeProcess(orbis::Process *process) {
     createGpu();
     auto vmId = allocateVmId();
 
-    std::lock_guard lock(orbis::g_context.gpuDeviceMtx);
+    std::lock_guard lock(orbis::g_context->gpuDeviceMtx);
     {
-      auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice};
+      auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice};
       gpu.submitMapProcess(process->pid, vmId);
       process->vmId = vmId;
     }

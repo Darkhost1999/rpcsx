@@ -40,7 +40,7 @@ struct HostFile : orbis::File {
 };
 
 struct SocketFile : orbis::File {
-  orbis::utils::kstring name;
+  orbis::kstring name;
   int dom = -1;
   int type = -1;
   int prot = -1;
@@ -846,7 +846,7 @@ orbis::ErrorCode HostFsDevice::open(rx::Ref<orbis::File> *file,
   }
 
   // Assume the file is a directory and try to read direntries
-  orbis::utils::kvector<orbis::Dirent> dirEntries;
+  orbis::kvector<orbis::Dirent> dirEntries;
   char hostEntryBuffer[sizeof(dirent64) * 4];
   while (true) {
     auto r = getdents64(hostFd, hostEntryBuffer, sizeof(hostEntryBuffer));

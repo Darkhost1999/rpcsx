@@ -114,7 +114,7 @@ orbis::SysResult orbis::sys_kill(Thread *thread, sint pid, sint signum) {
 
   int hostPid = pid;
   if (pid > 0) {
-    auto process = g_context.findProcessById(pid);
+    auto process = g_context->findProcessById(pid);
     if (process == nullptr) {
       return ErrorCode::SRCH;
     }

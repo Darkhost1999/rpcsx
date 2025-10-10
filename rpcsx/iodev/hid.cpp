@@ -35,7 +35,7 @@ static orbis::ErrorCode hid_ioctl(orbis::File *file, std::uint64_t request,
     return {};
 
   case 0x8004486e:
-    if (orbis::g_context.fwType != orbis::FwType::Ps5) {
+    if (orbis::g_context->fwType != orbis::FwType::Ps5) {
       return orbis::ErrorCode::INVAL;
     }
 
@@ -48,7 +48,7 @@ static orbis::ErrorCode hid_ioctl(orbis::File *file, std::uint64_t request,
     return {};
 
   case 0xc0484851: {
-    if (orbis::g_context.fwType != orbis::FwType::Ps5) {
+    if (orbis::g_context->fwType != orbis::FwType::Ps5) {
       return orbis::ErrorCode::INVAL;
     }
 
@@ -78,7 +78,7 @@ static orbis::ErrorCode hid_ioctl(orbis::File *file, std::uint64_t request,
     thread->where();
 
     if (args->op == 6) {
-      if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+      if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
         *args->result = 1;
         *args->status = 1;
 
@@ -106,7 +106,7 @@ static orbis::ErrorCode hid_ioctl(orbis::File *file, std::uint64_t request,
     // ORBIS_LOG_ERROR("hid read state", args.hidId, args.unk0, args.state,
     //                 args.unk2, args.connected, args.unk4, args.unk5);
 
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       *args.state = gpu.getContext().kbPadState;
       *args.connected = 1;
       *args.unk4 = 1; // is wireless?
@@ -130,7 +130,7 @@ static orbis::ErrorCode hid_ioctl(orbis::File *file, std::uint64_t request,
       orbis::uint padding;
       orbis::ptr<orbis::uint> unk5;
     };
-    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context.gpuDevice}) {
+    if (auto gpu = amdgpu::DeviceCtl{orbis::g_context->gpuDevice}) {
       auto args = *reinterpret_cast<MiniReadStateArgs *>(argp);
       *args.state = gpu.getContext().kbPadState;
       thread->retval[0] = 1;

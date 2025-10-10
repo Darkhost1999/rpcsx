@@ -214,7 +214,7 @@ orbis::SysResult dmem_mmap(orbis::Thread *thread, orbis::caddr_t addr,
                            orbis::size_t len, orbis::sint memoryType,
                            orbis::sint prot, sint flags,
                            orbis::off_t directMemoryStart) {
-  auto dmem = static_cast<DmemDevice *>(orbis::g_context.dmemDevice.get());
+  auto dmem = static_cast<DmemDevice *>(orbis::g_context->dmemDevice.get());
   void *address = addr;
   auto result = dmem->mmap(&address, len, prot, flags, directMemoryStart);
   if (result != ErrorCode{}) {
@@ -303,7 +303,7 @@ orbis::SysResult open(orbis::Thread *thread, orbis::ptr<const char> path,
 orbis::SysResult shm_open(orbis::Thread *thread, const char *path,
                           orbis::sint flags, orbis::sint mode,
                           rx::Ref<orbis::File> *file) {
-  auto dev = static_cast<IoDevice *>(orbis::g_context.shmDevice.get());
+  auto dev = static_cast<IoDevice *>(orbis::g_context->shmDevice.get());
   return dev->open(file, path, flags, mode, thread);
 }
 orbis::SysResult unlink(orbis::Thread *thread, orbis::ptr<const char> path) {
@@ -326,7 +326,7 @@ orbis::SysResult rename(Thread *thread, ptr<const char> from,
 
 orbis::SysResult blockpool_open(orbis::Thread *thread,
                                 rx::Ref<orbis::File> *file) {
-  auto dev = static_cast<IoDevice *>(orbis::g_context.blockpoolDevice.get());
+  auto dev = static_cast<IoDevice *>(orbis::g_context->blockpoolDevice.get());
   return dev->open(file, nullptr, 0, 0, thread);
 }
 
@@ -334,7 +334,7 @@ orbis::SysResult blockpool_map(orbis::Thread *thread, orbis::caddr_t addr,
                                orbis::size_t len, orbis::sint prot,
                                orbis::sint flags) {
   auto blockpool =
-      static_cast<BlockPoolDevice *>(orbis::g_context.blockpoolDevice.get());
+      static_cast<BlockPoolDevice *>(orbis::g_context->blockpoolDevice.get());
   void *address = addr;
   auto result = blockpool->map(&address, len, prot, flags, thread);
   if (result != ErrorCode{}) {
@@ -347,7 +347,7 @@ orbis::SysResult blockpool_map(orbis::Thread *thread, orbis::caddr_t addr,
 orbis::SysResult blockpool_unmap(orbis::Thread *thread, orbis::caddr_t addr,
                                  orbis::size_t len) {
   auto blockpool =
-      static_cast<BlockPoolDevice *>(orbis::g_context.blockpoolDevice.get());
+      static_cast<BlockPoolDevice *>(orbis::g_context->blockpoolDevice.get());
   return blockpool->unmap(addr, len, thread);
 }
 
@@ -379,7 +379,7 @@ orbis::SysResult socketPair(orbis::Thread *thread, orbis::sint domain,
 }
 
 orbis::SysResult shm_unlink(orbis::Thread *thread, const char *path) {
-  auto dev = static_cast<IoDevice *>(orbis::g_context.shmDevice.get());
+  auto dev = static_cast<IoDevice *>(orbis::g_context->shmDevice.get());
   return dev->unlink(path, false, thread);
 }
 
@@ -760,7 +760,7 @@ SysResult processNeeded(Thread *thread) {
 }
 
 SysResult fork(Thread *thread, slong flags) {
-  auto childPid = g_context.allocatePid() * 10000 + 1;
+  auto childPid = g_context->allocatePid() * 10000 + 1;
   ORBIS_LOG_TODO(__FUNCTION__, flags, childPid, thread->tid);
   thread->where();
   auto flag = knew<std::atomic<bool>>();
@@ -783,7 +783,7 @@ SysResult fork(Thread *thread, slong flags) {
     return {};
   }
 
-  auto process = g_context.createProcess(childPid);
+  auto process = g_context->createProcess(childPid);
   process->hostPid = ::getpid();
   process->sysent = thread->tproc->sysent;
   process->onSysEnter = thread->tproc->onSysEnter;

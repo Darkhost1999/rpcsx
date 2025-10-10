@@ -21,7 +21,7 @@ enum class DynType : std::uint8_t {
 };
 
 struct ModuleNeeded {
-  utils::kstring name;
+  kstring name;
   std::uint16_t version;
   std::uint64_t attr;
   bool isExport;
@@ -67,7 +67,7 @@ struct Relocation {
 
 struct Module final {
   Process *proc{};
-  utils::kstring vfsPath;
+  kstring vfsPath;
   char moduleName[256]{};
   char soName[256]{};
   ModuleHandle id{};
@@ -110,15 +110,15 @@ struct Module final {
 
   bool isTlsDone = false;
 
-  utils::kstring interp;
-  utils::kvector<Symbol> symbols;
-  utils::kvector<Relocation> pltRelocations;
-  utils::kvector<Relocation> nonPltRelocations;
-  utils::kvector<ModuleNeeded> neededModules;
-  utils::kvector<ModuleNeeded> neededLibraries;
-  utils::kvector<rx::Ref<Module>> importedModules;
-  utils::kvector<rx::Ref<Module>> namespaceModules;
-  utils::kvector<utils::kstring> needed;
+  kstring interp;
+  kvector<Symbol> symbols;
+  kvector<Relocation> pltRelocations;
+  kvector<Relocation> nonPltRelocations;
+  kvector<ModuleNeeded> neededModules;
+  kvector<ModuleNeeded> neededLibraries;
+  kvector<rx::Ref<Module>> importedModules;
+  kvector<rx::Ref<Module>> namespaceModules;
+  kvector<kstring> needed;
 
   std::atomic<unsigned> references{0};
 

@@ -32,7 +32,7 @@ enum class MessageId {
 };
 
 static void runGPU() {
-  if (g_gpuPid != 0 || orbis::g_context.gpuDevice != nullptr) {
+  if (g_gpuPid != 0 || orbis::g_context->gpuDevice != nullptr) {
     return;
   }
 
@@ -54,8 +54,8 @@ static void runGPU() {
   amdgpu::DeviceCtl gpu;
   {
     pthread_setname_np(pthread_self(), "rpcsx-gpu");
-    std::lock_guard lock(orbis::g_context.gpuDeviceMtx);
-    if (orbis::g_context.gpuDevice != nullptr) {
+    std::lock_guard lock(orbis::g_context->gpuDeviceMtx);
+    if (orbis::g_context->gpuDevice != nullptr) {
       std::exit(0);
     }
 
@@ -66,7 +66,7 @@ static void runGPU() {
     ::close(logFd);
 
     gpu = amdgpu::DeviceCtl::createDevice();
-    orbis::g_context.gpuDevice = gpu.getOpaque();
+    orbis::g_context->gpuDevice = gpu.getOpaque();
   }
 
   gpu.start();
