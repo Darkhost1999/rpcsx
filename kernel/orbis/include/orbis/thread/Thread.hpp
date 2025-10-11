@@ -1,6 +1,5 @@
 #pragma once
 
-#include "KernelObject.hpp"
 #include "ThreadState.hpp"
 #include "cpuset.hpp"
 #include "orbis-config.hpp"
@@ -8,6 +7,7 @@
 #include "types.hpp"
 
 #include "../KernelAllocator.hpp"
+#include "../KernelObject.hpp"
 #include "../ucontext.hpp"
 #include "rx/SharedAtomic.hpp"
 #include "rx/SharedCV.hpp"

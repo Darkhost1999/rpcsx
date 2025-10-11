@@ -1,9 +1,8 @@
 #pragma once
-#include "KernelAllocator.hpp"
-#include "KernelObject.hpp"
-#include "kernel/KernelObject.hpp"
 #include "orbis-config.hpp"
 
+#include "../KernelAllocator.hpp"
+#include "../KernelObject.hpp"
 #include "../event.hpp"
 #include "../evf.hpp"
 #include "../ipmi.hpp"
