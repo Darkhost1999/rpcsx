@@ -5,16 +5,19 @@
 #include "rx/Rc.hpp"
 #include <filesystem>
 
+namespace orbis {
 struct IoDevice;
+}
 
 namespace vfs {
 void fork();
 void initialize();
 void deinitialize();
-void addDevice(std::string name, IoDevice *device);
-std::pair<rx::Ref<IoDevice>, std::string>
+void addDevice(std::string name, orbis::IoDevice *device);
+std::pair<rx::Ref<orbis::IoDevice>, std::string>
 get(const std::filesystem::path &guestPath);
-orbis::SysResult mount(const std::filesystem::path &guestPath, IoDevice *dev);
+orbis::SysResult mount(const std::filesystem::path &guestPath,
+                       orbis::IoDevice *dev);
 orbis::SysResult open(std::string_view path, int flags, int mode,
                       rx::Ref<orbis::File> *file, orbis::Thread *thread);
 bool exists(std::string_view path, orbis::Thread *thread);

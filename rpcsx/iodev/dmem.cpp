@@ -86,7 +86,7 @@ orbis::ErrorCode DmemDevice::mmap(void **address, std::uint64_t len,
 
 static orbis::ErrorCode dmem_ioctl(orbis::File *file, std::uint64_t request,
                                    void *argp, orbis::Thread *thread) {
-  auto device = static_cast<DmemDevice *>(file->device.get());
+  auto device = file->device.rawStaticCast<DmemDevice>();
 
   std::lock_guard lock(device->mtx);
   switch (request) {
@@ -250,7 +250,7 @@ static orbis::ErrorCode dmem_mmap(orbis::File *file, void **address,
                                   std::uint64_t size, std::int32_t prot,
                                   std::int32_t flags, std::int64_t offset,
                                   orbis::Thread *thread) {
-  auto device = static_cast<DmemDevice *>(file->device.get());
+  auto device = file->device.rawStaticCast<DmemDevice>();
   return device->mmap(address, size, prot, flags, offset);
 }
 
@@ -395,7 +395,7 @@ orbis::ErrorCode DmemDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createDmemCharacterDevice(int index) {
+orbis::IoDevice *createDmemCharacterDevice(int index) {
   auto *newDevice = orbis::knew<DmemDevice>();
   newDevice->index = index;
   newDevice->dmemTotalSize = dmemSize;

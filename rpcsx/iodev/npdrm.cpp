@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
@@ -16,7 +16,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = npdrm_ioctl,
 };
 
-struct NpdrmDevice : IoDevice {
+struct NpdrmDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -29,4 +29,6 @@ struct NpdrmDevice : IoDevice {
   }
 };
 
-IoDevice *createNpdrmCharacterDevice() { return orbis::knew<NpdrmDevice>(); }
+orbis::IoDevice *createNpdrmCharacterDevice() {
+  return orbis::knew<NpdrmDevice>();
+}

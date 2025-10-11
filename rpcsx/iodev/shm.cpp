@@ -1,4 +1,5 @@
 #include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
@@ -9,7 +10,7 @@
 #include <filesystem>
 #include <sys/mman.h>
 
-struct ShmDevice : IoDevice {
+struct ShmDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -56,4 +57,4 @@ orbis::ErrorCode ShmDevice::unlink(const char *path, bool recursive,
   return convertErrorCode(ec);
 }
 
-IoDevice *createShmDevice() { return orbis::knew<ShmDevice>(); }
+orbis::IoDevice *createShmDevice() { return orbis::knew<ShmDevice>(); }

@@ -1,10 +1,9 @@
 #include "../io-devices.hpp"
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
 #include "vfs.hpp"
-#include <chrono>
 #include <thread>
 
 struct NsidCtlFile : orbis::File {};
@@ -34,7 +33,7 @@ static const orbis::FileOps fileOps = {
     .read = nsid_ctl_read,
 };
 
-struct NsidCtlDevice : IoDevice {
+struct NsidCtlDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -47,6 +46,6 @@ struct NsidCtlDevice : IoDevice {
   }
 };
 
-IoDevice *createNsidCtlCharacterDevice() {
+orbis::IoDevice *createNsidCtlCharacterDevice() {
   return orbis::knew<NsidCtlDevice>();
 }

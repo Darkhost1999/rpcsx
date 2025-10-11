@@ -1,5 +1,4 @@
 #include "mbus.hpp"
-#include "io-device.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/uio.hpp"
@@ -65,4 +64,6 @@ orbis::ErrorCode MBusDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createMBusCharacterDevice() { return orbis::knew<MBusDevice>(); }
+orbis::IoDevice *createMBusCharacterDevice() {
+  return orbis::knew<MBusDevice>();
+}

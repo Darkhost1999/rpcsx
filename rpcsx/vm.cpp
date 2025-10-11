@@ -649,7 +649,7 @@ struct Block {
 static Block gBlocks[kBlockCount];
 
 struct MapInfo {
-  rx::Ref<IoDevice> device;
+  rx::Ref<orbis::IoDevice> device;
   std::uint64_t offset;
   std::uint32_t flags;
   char name[32];
@@ -776,7 +776,7 @@ constexpr auto kMainDirectMemorySize =
     kPhysicalMemorySize - kFlexibleMemorySize;
 
 void *vm::map(void *addr, std::uint64_t len, std::int32_t prot,
-              std::int32_t flags, std::int32_t internalFlags, IoDevice *device,
+              std::int32_t flags, std::int32_t internalFlags, orbis::IoDevice *device,
               std::uint64_t offset) {
   std::println(stderr, "vm::map(addr = {}, len = {}, prot = {}, flags = {})",
                addr, len, mapProtToString(prot), mapFlagsToString(flags));

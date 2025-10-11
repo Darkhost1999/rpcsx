@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
@@ -9,7 +9,7 @@
 
 struct HddFile : orbis::File {};
 
-struct HddDevice : IoDevice {
+struct HddDevice : orbis::IoDevice {
   std::uint64_t size;
   HddDevice(std::uint64_t size) : size(size) {}
 
@@ -146,6 +146,6 @@ orbis::ErrorCode HddDevice::open(rx::Ref<orbis::File> *fs, const char *path,
   return {};
 }
 
-IoDevice *createHddCharacterDevice(std::uint64_t size) {
+orbis::IoDevice *createHddCharacterDevice(std::uint64_t size) {
   return orbis::knew<HddDevice>(size);
 }

@@ -1,5 +1,4 @@
 #include "mbus_av.hpp"
-#include "io-device.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/note.hpp"
@@ -65,4 +64,6 @@ void MBusAVDevice::emitEvent(const MBusEvent &event) {
   eventEmitter->emit(orbis::kEvFiltRead);
 }
 
-IoDevice *createMBusAVCharacterDevice() { return orbis::knew<MBusAVDevice>(); }
+orbis::IoDevice *createMBusAVCharacterDevice() {
+  return orbis::knew<MBusAVDevice>();
+}

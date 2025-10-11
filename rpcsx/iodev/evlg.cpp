@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 struct EvlgFile : orbis::File {};
-struct EvlgDevice : IoDevice {
+struct EvlgDevice : orbis::IoDevice {
   int outputFd;
 
   EvlgDevice(int outputFd) : outputFd(outputFd) {}
@@ -53,6 +53,6 @@ orbis::ErrorCode EvlgDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createEvlgCharacterDevice(int outputFd) {
+orbis::IoDevice *createEvlgCharacterDevice(int outputFd) {
   return orbis::knew<EvlgDevice>(outputFd);
 }

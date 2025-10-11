@@ -869,7 +869,7 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
 
   {
     rx::Ref<orbis::File> file;
-    auto result = vfs::open(path, kOpenFlagReadOnly, 0, &file, thread);
+    auto result = vfs::open(path, orbis::kOpenFlagReadOnly, 0, &file, thread);
     if (result.isError()) {
       return result;
     }

@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 struct ConsoleFile : orbis::File {};
-struct ConsoleDevice : IoDevice {
+struct ConsoleDevice : orbis::IoDevice {
   int inputFd;
   int outputFd;
 
@@ -76,6 +76,6 @@ orbis::ErrorCode ConsoleDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createConsoleCharacterDevice(int inputFd, int outputFd) {
+orbis::IoDevice *createConsoleCharacterDevice(int inputFd, int outputFd) {
   return orbis::knew<ConsoleDevice>(inputFd, outputFd);
 }

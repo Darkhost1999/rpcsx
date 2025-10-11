@@ -1,8 +1,7 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
-#include <chrono>
 #include <thread>
 
 struct MetaDbgFile : orbis::File {};
@@ -26,7 +25,7 @@ static const orbis::FileOps fileOps = {
     .read = metadbg_read,
 };
 
-struct MetaDbgDevice : IoDevice {
+struct MetaDbgDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -39,6 +38,6 @@ struct MetaDbgDevice : IoDevice {
   }
 };
 
-IoDevice *createMetaDbgCharacterDevice() {
+orbis::IoDevice *createMetaDbgCharacterDevice() {
   return orbis::knew<MetaDbgDevice>();
 }

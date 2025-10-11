@@ -974,7 +974,8 @@ rx::Ref<orbis::Module> rx::linker::loadModule(std::span<std::byte> image,
 static rx::Ref<orbis::Module> loadModuleFileImpl(std::string_view path,
                                                  orbis::Thread *thread) {
   rx::Ref<orbis::File> instance;
-  if (vfs::open(path, kOpenFlagReadOnly, 0, &instance, thread).isError()) {
+  if (vfs::open(path, orbis::kOpenFlagReadOnly, 0, &instance, thread)
+          .isError()) {
     return {};
   }
 

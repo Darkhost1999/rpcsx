@@ -34,7 +34,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = av_control_ioctl,
 };
 
-struct AVControlDevice : IoDevice {
+struct AVControlDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -47,6 +47,6 @@ struct AVControlDevice : IoDevice {
   }
 };
 
-IoDevice *createAVControlCharacterDevice() {
+orbis::IoDevice *createAVControlCharacterDevice() {
   return orbis::knew<AVControlDevice>();
 }

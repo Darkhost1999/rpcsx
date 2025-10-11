@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
 #include "rx/MemoryTable.hpp"
@@ -8,7 +8,7 @@
 #include "rx/SharedMutex.hpp"
 #include <cstdint>
 
-struct BlockPoolDevice : public IoDevice {
+struct BlockPoolDevice : public orbis::IoDevice {
   rx::shared_mutex mtx;
   rx::MemoryAreaTable<> pool;
 

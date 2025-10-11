@@ -5,6 +5,7 @@
 #include "note.hpp"
 #include "rx/Rc.hpp"
 #include "rx/SharedMutex.hpp"
+#include "IoDevice.hpp"
 #include "stat.hpp"
 #include <cstdint>
 
@@ -77,7 +78,7 @@ struct File : rx::RcBase {
   rx::shared_mutex mtx;
   rx::Ref<EventEmitter> event;
   const FileOps *ops = nullptr;
-  rx::Ref<RcBase> device;
+  rx::Ref<IoDevice> device;
   std::uint64_t nextOff = 0;
   int flags = 0;
   int mode = 0;

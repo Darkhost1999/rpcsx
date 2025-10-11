@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
@@ -16,7 +16,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = uvd_ioctl,
 };
 
-struct UVDDevice : IoDevice {
+struct UVDDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -29,4 +29,4 @@ struct UVDDevice : IoDevice {
   }
 };
 
-IoDevice *createUVDCharacterDevice() { return orbis::knew<UVDDevice>(); }
+orbis::IoDevice *createUVDCharacterDevice() { return orbis::knew<UVDDevice>(); }

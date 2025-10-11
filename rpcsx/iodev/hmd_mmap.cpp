@@ -1,9 +1,10 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
+#include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
 #include "vm.hpp"
 
-struct HmdMmapDevice : public IoDevice {
+struct HmdMmapDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -49,6 +50,6 @@ orbis::ErrorCode HmdMmapDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createHmdMmapCharacterDevice() {
+orbis::IoDevice *createHmdMmapCharacterDevice() {
   return orbis::knew<HmdMmapDevice>();
 }

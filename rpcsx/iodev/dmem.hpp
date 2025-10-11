@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
@@ -10,7 +10,7 @@
 #include <rx/MemoryTable.hpp>
 #include <unistd.h>
 
-struct DmemDevice : public IoDevice {
+struct DmemDevice : public orbis::IoDevice {
   rx::shared_mutex mtx;
   int index;
   int shmFd = -1;

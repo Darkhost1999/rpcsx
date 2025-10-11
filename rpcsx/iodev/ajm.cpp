@@ -40,7 +40,7 @@ enum {
   AJM_RESULT_CODEC_ERROR = 0x40000000,
 };
 
-struct AjmDevice : IoDevice {
+struct AjmDevice : orbis::IoDevice {
   rx::shared_mutex mtx;
   orbis::uint32_t batchId = 1; // temp
 
@@ -789,4 +789,4 @@ orbis::ErrorCode AjmDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createAjmCharacterDevice() { return orbis::knew<AjmDevice>(); }
+orbis::IoDevice *createAjmCharacterDevice() { return orbis::knew<AjmDevice>(); }

@@ -4,7 +4,7 @@
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
 
-struct CaymanRegDevice : IoDevice {
+struct CaymanRegDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -34,6 +34,6 @@ orbis::ErrorCode CaymanRegDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createCaymanRegCharacterDevice() {
+orbis::IoDevice *createCaymanRegCharacterDevice() {
   return orbis::knew<CaymanRegDevice>();
 }

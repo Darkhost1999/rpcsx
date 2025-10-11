@@ -1,13 +1,12 @@
 #include "gpu/DeviceCtl.hpp"
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/KernelContext.hpp"
 #include "orbis/file.hpp"
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
-#include <chrono>
 
-struct HidDevice : public IoDevice {
+struct HidDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -165,4 +164,4 @@ orbis::ErrorCode HidDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createHidCharacterDevice() { return orbis::knew<HidDevice>(); }
+orbis::IoDevice *createHidCharacterDevice() { return orbis::knew<HidDevice>(); }

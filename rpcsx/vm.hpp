@@ -1,6 +1,5 @@
 #pragma once
-#include "io-device.hpp"
-#include <cstddef>
+#include "orbis/IoDevice.hpp"
 #include <cstdint>
 #include <string>
 
@@ -72,7 +71,7 @@ void reset();
 void initialize(std::uint64_t pid);
 void deinitialize();
 void *map(void *addr, std::uint64_t len, std::int32_t prot, std::int32_t flags,
-          std::int32_t internalFlags = 0, IoDevice *device = nullptr,
+          std::int32_t internalFlags = 0, orbis::IoDevice *device = nullptr,
           std::uint64_t offset = 0);
 bool unmap(void *addr, std::uint64_t size);
 bool protect(void *addr, std::uint64_t size, std::int32_t prot);

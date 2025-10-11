@@ -10,7 +10,7 @@
 
 static constexpr auto kVmIdCount = 6;
 
-struct DceDevice : IoDevice {
+struct DceDevice : orbis::IoDevice {
   rx::shared_mutex mtx;
   std::uint32_t eopCount = 0;
   std::uint32_t freeVmIds = (1 << (kVmIdCount + 1)) - 1;

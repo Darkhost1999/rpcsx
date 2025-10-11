@@ -48,7 +48,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = devact_ioctl,
 };
 
-struct DevActDevice : IoDevice {
+struct DevActDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -61,4 +61,6 @@ struct DevActDevice : IoDevice {
   }
 };
 
-IoDevice *createDevActCharacterDevice() { return orbis::knew<DevActDevice>(); }
+orbis::IoDevice *createDevActCharacterDevice() {
+  return orbis::knew<DevActDevice>();
+}

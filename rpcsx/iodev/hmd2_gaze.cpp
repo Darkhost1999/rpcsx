@@ -1,8 +1,9 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
+#include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
 
-struct Hmd2GazeDevice : public IoDevice {
+struct Hmd2GazeDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -31,6 +32,6 @@ orbis::ErrorCode Hmd2GazeDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createHmd2GazeCharacterDevice() {
+orbis::IoDevice *createHmd2GazeCharacterDevice() {
   return orbis::knew<Hmd2GazeDevice>();
 }

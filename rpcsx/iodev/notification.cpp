@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/thread/Thread.hpp"
@@ -12,7 +12,7 @@
 #include <thread>
 
 struct NotificationFile : orbis::File {};
-struct NotificationDevice : IoDevice {
+struct NotificationDevice : orbis::IoDevice {
   int index;
   rx::shared_mutex mutex;
   orbis::kvector<std::byte> data;
@@ -104,6 +104,6 @@ orbis::ErrorCode NotificationDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createNotificationCharacterDevice(int index) {
+orbis::IoDevice *createNotificationCharacterDevice(int index) {
   return orbis::knew<NotificationDevice>(index);
 }

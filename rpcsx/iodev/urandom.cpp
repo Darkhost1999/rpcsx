@@ -1,10 +1,11 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
+#include "orbis/file.hpp"
 #include "orbis/uio.hpp"
 #include <cstring>
 #include <span>
 
-struct UrandomDevice : public IoDevice {
+struct UrandomDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -36,6 +37,6 @@ orbis::ErrorCode UrandomDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createUrandomCharacterDevice() {
+orbis::IoDevice *createUrandomCharacterDevice() {
   return orbis::knew<UrandomDevice>();
 }

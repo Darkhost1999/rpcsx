@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/error/ErrorCode.hpp"
 #include "orbis/file.hpp"
@@ -9,7 +9,7 @@
 
 struct SblSrvFile : public orbis::File {};
 
-struct SblSrvDevice : IoDevice {
+struct SblSrvDevice : orbis::IoDevice {
   rx::shared_mutex mtx;
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
@@ -53,4 +53,6 @@ orbis::ErrorCode SblSrvDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createSblSrvCharacterDevice() { return orbis::knew<SblSrvDevice>(); }
+orbis::IoDevice *createSblSrvCharacterDevice() {
+  return orbis::knew<SblSrvDevice>();
+}

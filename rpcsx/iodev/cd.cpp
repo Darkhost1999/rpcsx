@@ -23,7 +23,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = cd_ioctl,
 };
 
-struct CdDevice : IoDevice {
+struct CdDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -36,4 +36,4 @@ struct CdDevice : IoDevice {
   }
 };
 
-IoDevice *createCdCharacterDevice() { return orbis::knew<CdDevice>(); }
+orbis::IoDevice *createCdCharacterDevice() { return orbis::knew<CdDevice>(); }

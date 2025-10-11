@@ -1,6 +1,6 @@
 #include "blockpool.hpp"
 #include "dmem.hpp"
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/KernelContext.hpp"
 #include "orbis/file.hpp"
@@ -139,4 +139,6 @@ orbis::ErrorCode BlockPoolDevice::unmap(void *address, std::uint64_t len,
   }
   return orbis::ErrorCode::INVAL;
 }
-IoDevice *createBlockPoolDevice() { return orbis::knew<BlockPoolDevice>(); }
+orbis::IoDevice *createBlockPoolDevice() {
+  return orbis::knew<BlockPoolDevice>();
+}

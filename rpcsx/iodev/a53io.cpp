@@ -1,8 +1,8 @@
 #include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
-#include <chrono>
 #include <thread>
 
 struct A53IoFile : orbis::File {};
@@ -26,7 +26,7 @@ static const orbis::FileOps fileOps = {
     .read = a53io_read,
 };
 
-struct A53IoDevice : IoDevice {
+struct A53IoDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -39,4 +39,6 @@ struct A53IoDevice : IoDevice {
   }
 };
 
-IoDevice *createA53IoCharacterDevice() { return orbis::knew<A53IoDevice>(); }
+orbis::IoDevice *createA53IoCharacterDevice() {
+  return orbis::knew<A53IoDevice>();
+}

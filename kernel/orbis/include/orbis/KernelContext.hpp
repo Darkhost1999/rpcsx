@@ -1,6 +1,7 @@
 #pragma once
 #include "AppInfo.hpp"
 #include "Budget.hpp"
+#include "IoDevice.hpp"
 #include "KernelObject.hpp"
 #include "evf.hpp"
 #include "ipmi.hpp"
@@ -136,11 +137,11 @@ public:
   }
 
   rx::Ref<EventEmitter> deviceEventEmitter;
-  rx::Ref<rx::RcBase> shmDevice;
-  rx::Ref<rx::RcBase> dmemDevice;
-  rx::Ref<rx::RcBase> blockpoolDevice;
+  rx::Ref<IoDevice> shmDevice;
+  rx::Ref<IoDevice> dmemDevice;
+  rx::Ref<IoDevice> blockpoolDevice;
   rx::Ref<rx::RcBase> gpuDevice;
-  rx::Ref<rx::RcBase> dceDevice;
+  rx::Ref<IoDevice> dceDevice;
   rx::shared_mutex gpuDeviceMtx;
   uint sdkVersion{};
   uint fwSdkVersion{};

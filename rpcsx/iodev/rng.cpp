@@ -1,9 +1,10 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
+#include "orbis/file.hpp"
 #include "orbis/utils/Logs.hpp"
 #include "vm.hpp"
 
-struct RngDevice : public IoDevice {
+struct RngDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override;
@@ -48,4 +49,4 @@ orbis::ErrorCode RngDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createRngCharacterDevice() { return orbis::knew<RngDevice>(); }
+orbis::IoDevice *createRngCharacterDevice() { return orbis::knew<RngDevice>(); }

@@ -653,4 +653,4 @@ void DceDevice::initializeProcess(orbis::Process *process) {
   }
 }
 
-IoDevice *createDceCharacterDevice() { return orbis::knew<DceDevice>(); }
+orbis::IoDevice *createDceCharacterDevice() { return orbis::knew<DceDevice>(); }

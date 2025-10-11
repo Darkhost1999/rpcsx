@@ -1,11 +1,13 @@
 #pragma once
 
-#include "io-device.hpp"
 #include "iodev/MBusEvent.hpp"
+#include "orbis/IoDevice.hpp"
+#include "orbis/KernelAllocator.hpp"
+#include "orbis/note.hpp"
 #include "rx/SharedCV.hpp"
 #include "rx/SharedMutex.hpp"
 
-struct MBusDevice : IoDevice {
+struct MBusDevice : orbis::IoDevice {
   rx::shared_mutex mtx;
   rx::shared_cv cv;
   orbis::kdeque<MBusEvent> events;

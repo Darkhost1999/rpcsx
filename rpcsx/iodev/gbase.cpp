@@ -1,4 +1,4 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/thread/Thread.hpp"
@@ -36,7 +36,7 @@ static const orbis::FileOps fileOps = {
     .ioctl = gbase_ioctl,
 };
 
-struct GbaseDevice : IoDevice {
+struct GbaseDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -49,4 +49,6 @@ struct GbaseDevice : IoDevice {
   }
 };
 
-IoDevice *createGbaseCharacterDevice() { return orbis::knew<GbaseDevice>(); }
+orbis::IoDevice *createGbaseCharacterDevice() {
+  return orbis::knew<GbaseDevice>();
+}

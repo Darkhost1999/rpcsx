@@ -49,7 +49,7 @@ static const orbis::FileOps fileOps = {
     .write = camera_write,
 };
 
-struct CameraDevice : IoDevice {
+struct CameraDevice : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -62,4 +62,6 @@ struct CameraDevice : IoDevice {
   }
 };
 
-IoDevice *createCameraCharacterDevice() { return orbis::knew<CameraDevice>(); }
+orbis::IoDevice *createCameraCharacterDevice() {
+  return orbis::knew<CameraDevice>();
+}

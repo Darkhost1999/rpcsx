@@ -27,7 +27,7 @@
 
 struct AoutFile : orbis::File {};
 
-struct AoutDevice : public IoDevice {
+struct AoutDevice : public orbis::IoDevice {
   std::int8_t id;
   rx::Ref<AudioDevice> audioDevice;
 
@@ -205,6 +205,7 @@ orbis::ErrorCode AoutDevice::open(rx::Ref<orbis::File> *file, const char *path,
   return {};
 }
 
-IoDevice *createAoutCharacterDevice(std::int8_t id, AudioDevice *device) {
+orbis::IoDevice *createAoutCharacterDevice(std::int8_t id,
+                                           AudioDevice *device) {
   return orbis::knew<AoutDevice>(id, device);
 }

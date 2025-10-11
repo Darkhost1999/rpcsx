@@ -339,9 +339,8 @@ static orbis::ErrorCode host_mmap(orbis::File *file, void **address,
   if (!hostFile->dirEntries.empty())
     return orbis::ErrorCode::ISDIR;
 
-  auto result =
-      vm::map(*address, size, prot, flags, vm::kMapInternalReserveOnly,
-              hostFile->device.cast<IoDevice>().get(), offset);
+  auto result = vm::map(*address, size, prot, flags,
+                        vm::kMapInternalReserveOnly, hostFile->device.get(), offset);
 
   if (result == (void *)-1) {
     return orbis::ErrorCode::NOMEM;
@@ -695,8 +694,8 @@ static const orbis::FileOps socketOps = {
     .getsockopt = socket_getsockopt,
 };
 
-IoDevice *createHostIoDevice(orbis::kstring hostPath,
-                             orbis::kstring virtualPath) {
+orbis::IoDevice *createHostIoDevice(orbis::kstring hostPath,
+                                    orbis::kstring virtualPath) {
   while (hostPath.size() > 0 && hostPath.ends_with("/")) {
     hostPath.resize(hostPath.size() - 1);
   }
@@ -778,44 +777,44 @@ orbis::ErrorCode HostFsDevice::open(rx::Ref<orbis::File> *file,
   int realFlags = flags & O_ACCMODE;
   flags &= ~O_ACCMODE;
 
-  if ((flags & kOpenFlagAppend) != 0) {
+  if ((flags & orbis::kOpenFlagAppend) != 0) {
     realFlags |= O_APPEND;
-    flags &= ~kOpenFlagAppend;
+    flags &= ~orbis::kOpenFlagAppend;
   }
 
-  if ((flags & kOpenFlagNonBlock) != 0) {
+  if ((flags & orbis::kOpenFlagNonBlock) != 0) {
     realFlags |= O_NONBLOCK;
-    flags &= ~kOpenFlagNonBlock;
+    flags &= ~orbis::kOpenFlagNonBlock;
   }
 
-  if ((flags & kOpenFlagFsync) != 0) {
+  if ((flags & orbis::kOpenFlagFsync) != 0) {
     realFlags |= O_FSYNC;
-    flags &= ~kOpenFlagFsync;
+    flags &= ~orbis::kOpenFlagFsync;
   }
 
-  if ((flags & kOpenFlagAsync) != 0) {
+  if ((flags & orbis::kOpenFlagAsync) != 0) {
     realFlags |= O_ASYNC;
-    flags &= ~kOpenFlagAsync;
+    flags &= ~orbis::kOpenFlagAsync;
   }
 
-  if ((flags & kOpenFlagTrunc) != 0) {
+  if ((flags & orbis::kOpenFlagTrunc) != 0) {
     realFlags |= O_TRUNC;
-    flags &= ~kOpenFlagTrunc;
+    flags &= ~orbis::kOpenFlagTrunc;
   }
 
-  if ((flags & kOpenFlagCreat) != 0) {
+  if ((flags & orbis::kOpenFlagCreat) != 0) {
     realFlags |= O_CREAT;
-    flags &= ~kOpenFlagCreat;
+    flags &= ~orbis::kOpenFlagCreat;
   }
 
-  if ((flags & kOpenFlagExcl) != 0) {
+  if ((flags & orbis::kOpenFlagExcl) != 0) {
     realFlags |= O_EXCL;
-    flags &= ~kOpenFlagExcl;
+    flags &= ~orbis::kOpenFlagExcl;
   }
 
-  if ((flags & kOpenFlagDirectory) != 0) {
+  if ((flags & orbis::kOpenFlagDirectory) != 0) {
     realFlags |= O_DIRECTORY;
-    flags &= ~kOpenFlagDirectory;
+    flags &= ~orbis::kOpenFlagDirectory;
   }
 
   if (flags != 0) {
@@ -937,7 +936,7 @@ orbis::ErrorCode HostFsDevice::rename(const char *from, const char *to,
   return convertErrorCode(ec);
 }
 
-orbis::File *createHostFile(int hostFd, rx::Ref<IoDevice> device,
+orbis::File *createHostFile(int hostFd, rx::Ref<orbis::IoDevice> device,
                             bool alignTruncate) {
   auto newFile = orbis::knew<HostFile>();
   newFile->hostFd = hostFd;
@@ -947,7 +946,7 @@ orbis::File *createHostFile(int hostFd, rx::Ref<IoDevice> device,
   return newFile;
 }
 
-struct FdWrapDevice : public IoDevice {
+struct FdWrapDevice : public orbis::IoDevice {
   int fd;
 
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
@@ -959,7 +958,7 @@ struct FdWrapDevice : public IoDevice {
   }
 };
 
-IoDevice *createFdWrapDevice(int fd) {
+orbis::IoDevice *createFdWrapDevice(int fd) {
   auto result = orbis::knew<FdWrapDevice>();
   result->fd = fd;
   return result;

@@ -18,7 +18,7 @@ static orbis::FileOps devfs_ops = {
     .stat = devfs_stat,
 };
 
-struct DevFs : IoDevice {
+struct DevFs : orbis::IoDevice {
   std::map<std::string, rx::Ref<IoDevice>, std::less<>> devices;
 
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
@@ -50,7 +50,7 @@ struct DevFs : IoDevice {
   }
 };
 
-struct ProcFs : IoDevice {
+struct ProcFs : orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -60,7 +60,8 @@ struct ProcFs : IoDevice {
 };
 
 static rx::shared_mutex gMountMtx;
-static std::map<std::string, rx::Ref<IoDevice>, std::greater<>> gMountsMap;
+static std::map<std::string, rx::Ref<orbis::IoDevice>, std::greater<>>
+    gMountsMap;
 static rx::Ref<DevFs> gDevFs;
 
 void vfs::fork() {
@@ -93,16 +94,16 @@ void vfs::deinitialize() {
   gMountsMap.clear();
 }
 
-void vfs::addDevice(std::string name, IoDevice *device) {
+void vfs::addDevice(std::string name, orbis::IoDevice *device) {
   std::lock_guard lock(gMountMtx);
   gDevFs->devices[std::move(name)] = device;
 }
 
-std::pair<rx::Ref<IoDevice>, std::string>
+std::pair<rx::Ref<orbis::IoDevice>, std::string>
 vfs::get(const std::filesystem::path &guestPath) {
   std::string normalPath = std::filesystem::path(guestPath).lexically_normal();
   std::string_view path = normalPath;
-  rx::Ref<IoDevice> device;
+  rx::Ref<orbis::IoDevice> device;
 
   std::lock_guard lock(gMountMtx);
 
@@ -141,7 +142,7 @@ vfs::get(const std::filesystem::path &guestPath) {
 }
 
 orbis::SysResult vfs::mount(const std::filesystem::path &guestPath,
-                            IoDevice *dev) {
+                            orbis::IoDevice *dev) {
   auto mp = guestPath.lexically_normal().string();
   if (!mp.ends_with("/")) {
     mp += "/";

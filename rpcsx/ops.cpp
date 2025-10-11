@@ -303,7 +303,7 @@ orbis::SysResult open(orbis::Thread *thread, orbis::ptr<const char> path,
 orbis::SysResult shm_open(orbis::Thread *thread, const char *path,
                           orbis::sint flags, orbis::sint mode,
                           rx::Ref<orbis::File> *file) {
-  auto dev = static_cast<IoDevice *>(orbis::g_context->shmDevice.get());
+  auto dev = orbis::g_context->shmDevice;
   return dev->open(file, path, flags, mode, thread);
 }
 orbis::SysResult unlink(orbis::Thread *thread, orbis::ptr<const char> path) {

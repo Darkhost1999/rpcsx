@@ -60,7 +60,7 @@ static const orbis::FileOps ops = {
     .ioctl = dipsw_ioctl,
 };
 
-struct DipswDevice : public IoDevice {
+struct DipswDevice : public orbis::IoDevice {
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
                         std::uint32_t flags, std::uint32_t mode,
                         orbis::Thread *thread) override {
@@ -72,4 +72,6 @@ struct DipswDevice : public IoDevice {
   }
 };
 
-IoDevice *createDipswCharacterDevice() { return orbis::knew<DipswDevice>(); }
+orbis::IoDevice *createDipswCharacterDevice() {
+  return orbis::knew<DipswDevice>();
+}

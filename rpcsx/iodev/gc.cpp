@@ -1,7 +1,7 @@
 #include "gpu/DeviceCtl.hpp"
-#include "io-device.hpp"
 #include "iodev/dce.hpp"
 #include "iodev/dmem.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/KernelContext.hpp"
 #include "orbis/file.hpp"
@@ -24,7 +24,7 @@ struct ComputeQueue {
   std::uint64_t len{};
 };
 
-struct GcDevice : public IoDevice {
+struct GcDevice : public orbis::IoDevice {
   rx::shared_mutex mtx;
   orbis::kmap<orbis::pid_t, int> clients;
   orbis::kmap<std::uint64_t, ComputeQueue> computeQueues;
@@ -490,4 +490,4 @@ void GcDevice::removeClient(orbis::Process *process) {
   }
 }
 
-IoDevice *createGcCharacterDevice() { return orbis::knew<GcDevice>(); }
+orbis::IoDevice *createGcCharacterDevice() { return orbis::knew<GcDevice>(); }

@@ -1,10 +1,10 @@
-#include "io-device.hpp"
+#include "orbis/IoDevice.hpp"
 #include "orbis/KernelAllocator.hpp"
 #include "orbis/file.hpp"
 #include "orbis/thread/Thread.hpp"
 #include "orbis/utils/Logs.hpp"
 
-struct IccPowerDevice : IoDevice {
+struct IccPowerDevice : orbis::IoDevice {
   std::uint8_t bootphase = 0;
 
   orbis::ErrorCode open(rx::Ref<orbis::File> *file, const char *path,
@@ -69,6 +69,6 @@ orbis::ErrorCode IccPowerDevice::open(rx::Ref<orbis::File> *file,
   return {};
 }
 
-IoDevice *createIccPowerCharacterDevice() {
+orbis::IoDevice *createIccPowerCharacterDevice() {
   return orbis::knew<IccPowerDevice>();
 }
