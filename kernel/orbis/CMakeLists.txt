@@ -6,6 +6,7 @@ add_library(obj.orbis-kernel OBJECT
   src/sysvec.cpp
   src/event.cpp
   src/evf.cpp
+  src/IoDevice.cpp
   src/ipmi.cpp
   src/KernelAllocator.cpp
   src/KernelContext.cpp

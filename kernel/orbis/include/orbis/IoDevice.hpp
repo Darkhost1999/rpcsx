@@ -1,7 +1,10 @@
 #pragma once
 
 #include "error/ErrorCode.hpp"
+#include "orbis-config.hpp"
 #include "rx/Rc.hpp"
+#include <bit>
+#include <type_traits>
 
 namespace orbis {
 enum OpenFlags {
@@ -49,6 +52,134 @@ struct IoDevice : rx::RcBase {
 
   virtual ErrorCode rename(const char *from, const char *to, Thread *thread) {
     return ErrorCode::NOTSUP;
+  }
+
+  virtual ErrorCode ioctl(std::uint64_t request, orbis::ptr<void> argp,
+                          Thread *thread);
+};
+
+namespace ioctl {
+inline constexpr std::uint32_t VoidBit = 0x20000000;
+inline constexpr std::uint32_t OutBit = 0x40000000;
+inline constexpr std::uint32_t InBit = 0x80000000;
+inline constexpr std::uint32_t DirMask = VoidBit | InBit | OutBit;
+
+constexpr bool isVoid(std::uint32_t cmd) { return (cmd & DirMask) == VoidBit; }
+constexpr bool isIn(std::uint32_t cmd) { return (cmd & DirMask) == InBit; }
+constexpr bool isOut(std::uint32_t cmd) { return (cmd & DirMask) == OutBit; }
+constexpr bool isInOut(std::uint32_t cmd) {
+  return (cmd & DirMask) == (OutBit | InBit);
+}
+constexpr std::uint32_t paramSize(std::uint32_t cmd) {
+  return (cmd >> 16) & ((1 << 13) - 1);
+}
+constexpr std::uint32_t group(std::uint32_t cmd) { return (cmd >> 8) & 0xff; }
+constexpr std::uint32_t id(std::uint32_t cmd) { return cmd & 0xff; }
+} // namespace ioctl
+
+struct IoctlHandlerEntry;
+
+using IoctlHandler = ErrorCode (*)(Thread *thread, orbis::ptr<void> arg,
+                                   IoDevice *device, void (*impl)());
+
+struct IoctlHandlerEntry {
+  IoctlHandler handler;
+  void (*impl)();
+  std::uint32_t cmd;
+};
+template <int Group> struct IoDeviceWithIoctl : IoDevice {
+  IoctlHandlerEntry ioctlTable[256]{};
+
+  template <std::uint32_t Cmd, typename InstanceT, typename T>
+    requires requires {
+      requires std::is_base_of_v<IoDeviceWithIoctl, InstanceT>;
+      requires ioctl::paramSize(Cmd) == sizeof(T);
+      requires ioctl::group(Cmd) == Group;
+      requires std::is_const_v<T> || ioctl::isInOut(Cmd);
+      requires !std::is_const_v<T> || ioctl::isIn(Cmd);
+    }
+  void addIoctl(ErrorCode (*handler)(Thread *thread, InstanceT *device,
+                                     T &arg)) {
+    constexpr auto id = ioctl::id(Cmd);
+    assert(ioctlTable[id].handler == unhandledIoctl);
+
+    IoctlHandlerEntry &entry = ioctlTable[id];
+
+    entry.handler = [](Thread *thread, orbis::ptr<void> arg, IoDevice *device,
+                       void (*opaqueImpl)()) -> ErrorCode {
+      auto impl = std::bit_cast<decltype(handler)>(opaqueImpl);
+
+      std::remove_cvref_t<T> _arg;
+      ORBIS_RET_ON_ERROR(orbis::uread(_arg, orbis::ptr<T>(arg)));
+      ORBIS_RET_ON_ERROR(impl(thread, static_cast<InstanceT *>(device), _arg));
+
+      if constexpr (ioctl::isInOut(Cmd)) {
+        return orbis::uwrite(orbis::ptr<T>(arg), _arg);
+      } else {
+        return {};
+      }
+    };
+    entry.impl = std::bit_cast<void (*)()>(handler);
+    entry.cmd = Cmd;
+  }
+
+  template <std::uint32_t Cmd, typename InstanceT>
+    requires requires {
+      requires std::is_base_of_v<IoDeviceWithIoctl, InstanceT>;
+      requires ioctl::group(Cmd) == Group;
+      requires ioctl::isVoid(Cmd);
+    }
+
+  void addIoctl(ErrorCode (*handler)(Thread *thread, InstanceT *device)) {
+    constexpr auto id = ioctl::id(Cmd);
+    assert(ioctlTable[id].handler == unhandledIoctl);
+
+    IoctlHandlerEntry &entry = ioctlTable[id];
+
+    entry.handler = [](Thread *thread, orbis::ptr<void>, IoDevice *device,
+                       void (*opaqueImpl)()) -> ErrorCode {
+      auto impl = std::bit_cast<decltype(handler)>(opaqueImpl);
+      return impl(thread, static_cast<InstanceT *>(device));
+    };
+
+    entry.impl = std::bit_cast<void (*)()>(handler);
+    entry.cmd = Cmd;
+  }
+
+  template <std::uint32_t Cmd, typename InstanceT, typename T>
+    requires requires {
+      requires std::is_base_of_v<IoDeviceWithIoctl, InstanceT>;
+      requires ioctl::paramSize(Cmd) == sizeof(T);
+      requires ioctl::group(Cmd) == Group;
+      requires ioctl::isOut(Cmd);
+    }
+  void addIoctl(std::pair<ErrorCode, T> (*handler)(Thread *thread,
+                                                   InstanceT *device)) {
+    constexpr auto id = ioctl::id(Cmd);
+    assert(ioctlTable[id].handler == unhandledIoctl);
+
+    IoctlHandlerEntry &entry = ioctlTable[id];
+
+    entry.handler = [](Thread *thread, orbis::ptr<void> arg, IoDevice *device,
+                       void (*opaqueImpl)()) -> ErrorCode {
+      auto impl = std::bit_cast<decltype(handler)>(opaqueImpl);
+      auto [errc, value] = impl(thread, static_cast<InstanceT *>(device));
+      ORBIS_RET_ON_ERROR(errc);
+      return orbis::uwrite(orbis::ptr<T>(arg), value);
+    };
+    entry.impl = std::bit_cast<void (*)()>(handler);
+    entry.cmd = Cmd;
+  }
+
+  ErrorCode ioctl(std::uint64_t request, orbis::ptr<void> argp,
+                  Thread *thread) override {
+    auto id = request & 0xff;
+
+    if (ioctlTable[id].handler == nullptr || ioctlTable[id].cmd != request) {
+      return IoDevice::ioctl(request, argp, thread);
+    }
+
+    return ioctlTable[id].handler(thread, argp, this, ioctlTable[id].impl);
   }
 };
 } // namespace orbis
