@@ -68,6 +68,7 @@ void callDeserializeFunction(Deserializer &s, T &value)
 }
 
 template <typename T>
+  requires(!std::is_array_v<T>)
 T callDeserializeFunction(Deserializer &s)
   requires requires(T &value) { deserialize<T>(s); }
 {
@@ -257,7 +258,19 @@ private:
   bool mFailure = false;
 };
 
-template <detail::TriviallyRelocatable T> struct TypeSerializer<T> {
+template <detail::TriviallyRelocatable T>
+  requires std::is_array_v<T>
+struct TypeSerializer<T> {
+  static void serialize(Serializer &s, const T &t) {
+    std::byte rawBytes[sizeof(T)];
+    std::memcpy(rawBytes, &t, sizeof(T));
+    s.write(rawBytes);
+  }
+};
+
+template <detail::TriviallyRelocatable T>
+  requires(!std::is_array_v<T>)
+struct TypeSerializer<T> {
   static void serialize(Serializer &s, const T &t) {
     std::byte rawBytes[sizeof(T)];
     std::memcpy(rawBytes, &t, sizeof(T));
