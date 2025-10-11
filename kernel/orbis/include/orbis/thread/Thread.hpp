@@ -1,8 +1,10 @@
 #pragma once
 
+#include "KernelObject.hpp"
 #include "ThreadState.hpp"
 #include "cpuset.hpp"
 #include "orbis-config.hpp"
+#include "rx/Serializer.hpp"
 #include "types.hpp"
 
 #include "../KernelAllocator.hpp"
@@ -16,9 +18,14 @@ namespace orbis {
 struct Process;
 
 static constexpr std::uint32_t kThreadSuspendFlag = 1 << 31;
-struct Thread {
+struct Thread final {
+  using Storage =
+      kernel::StaticKernelObjectStorage<OrbisNamespace,
+                                        kernel::detail::ThreadScope>;
+
   rx::shared_mutex mtx;
   Process *tproc = nullptr;
+  std::byte *storage = nullptr;
   uint64_t retval[2]{};
   void *context{};
   kvector<void *> altStack;
@@ -74,6 +81,25 @@ struct Thread {
   void sendSignal(int signo);
   void notifyUnblockedSignal(int signo);
   void setSigMask(SigSet newSigMask);
+
+  void allocate() {
+    if (auto size = Storage::GetSize()) {
+      storage = (std::byte *)kalloc(size, Storage::GetAlignment());
+    }
+  }
+
+  void deallocate() {
+    if (auto size = Storage::GetSize()) {
+      kfree(storage, size);
+      storage = nullptr;
+    }
+  }
+
+  template <rx::Serializable T>
+  T *get(kernel::StaticObjectRef<OrbisNamespace, kernel::detail::ThreadScope, T>
+             ref) {
+    return ref.get(storage);
+  }
 
   // FIXME: implement thread destruction
   void incRef() {}

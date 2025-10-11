@@ -32,7 +32,7 @@ struct RcAppInfo : rx::RcBase, AppInfoEx {
   orbis::uint32_t appState = 0;
 };
 
-class alignas(__STDCPP_DEFAULT_NEW_ALIGNMENT__) KernelContext final {
+class KernelContext final {
 public:
   KernelContext();
   ~KernelContext();

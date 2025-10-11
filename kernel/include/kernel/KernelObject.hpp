@@ -3,6 +3,7 @@
 #include "rx/Rc.hpp"
 #include "rx/Serializer.hpp"
 #include "rx/TypeId.hpp"
+#include <cstddef>
 #include <memory>
 #include <mutex>
 
@@ -75,8 +76,6 @@ struct ProcessScope;
 struct ThreadScope;
 } // namespace detail
 
-template <typename NamespaceT, typename ScopeT> std::byte *getScopeStorage();
-
 template <typename NamespaceT, typename ScopeT>
 struct StaticKernelObjectStorage {
   template <typename T> static std::uint32_t Allocate() {
@@ -91,41 +90,30 @@ struct StaticKernelObjectStorage {
     instance.m_size = offset + sizeof(T);
     instance.m_alignment =
         std::max<std::size_t>(alignof(T), instance.m_alignment);
-    // std::printf(
-    //     "%s::Allocate(%s, %zu, %zu) -> %zu\n",
-    //     rx::TypeId::get<StaticKernelObjectStorage<NamespaceT,
-    //     ScopeT>>().getName().data(), rx::TypeId::get<T>().getName().data(),
-    //     sizeof(T), alignof(T), offset);
     return offset;
   }
 
   static std::size_t GetSize() { return GetInstance().m_size; }
   static std::size_t GetAlignment() { return GetInstance().m_alignment; }
-  static std::byte *getScopeStorage() {
-    return kernel::getScopeStorage<NamespaceT, ScopeT>();
-  }
 
-  static void ConstructAll() {
+  static void ConstructAll(std::byte *storage) {
     auto &instance = GetInstance();
-    auto storage = getScopeStorage();
 
     for (auto objectCtl : instance.m_registry) {
       objectCtl.construct(storage + objectCtl.offset);
     }
   }
 
-  static void DestructAll() {
+  static void DestructAll(std::byte *storage) {
     auto &instance = GetInstance();
-    auto storage = getScopeStorage();
 
     for (auto objectCtl : instance.m_registry) {
       objectCtl.destruct(storage + objectCtl.offset);
     }
   }
 
-  static void SerializeAll(rx::Serializer &s) {
+  static void SerializeAll(std::byte *storage, rx::Serializer &s) {
     auto &instance = GetInstance();
-    auto storage = getScopeStorage();
 
     s.serialize(instance.m_size);
     s.serialize(instance.m_registry.size());
@@ -135,9 +123,8 @@ struct StaticKernelObjectStorage {
     }
   }
 
-  static void DeserializeAll(rx::Deserializer &s) {
+  static void DeserializeAll(std::byte *storage, rx::Deserializer &s) {
     auto &instance = GetInstance();
-    auto storage = getScopeStorage();
 
     auto size = s.deserialize<std::size_t>();
     auto registrySize = s.deserialize<std::size_t>();
@@ -163,18 +150,11 @@ private:
   std::size_t m_alignment = 1;
 };
 
-template <typename NamespaceT, typename ScopeT, rx::Serializable T>
-class StaticObjectRef {
-  std::uint32_t mOffset;
+template <typename Namespace, typename Scope, rx::Serializable T>
+struct StaticObjectRef {
+  std::uint32_t offset;
 
-public:
-  explicit StaticObjectRef(std::uint32_t offset) : mOffset(offset) {}
-
-  T *get() {
-    return reinterpret_cast<T *>(getScopeStorage<NamespaceT, ScopeT>() +
-                                 mOffset);
-  }
-
-  T *operator->() { return get(); }
+  T *get(std::byte *storage) { return reinterpret_cast<T *>(storage + offset); }
 };
+
 } // namespace kernel

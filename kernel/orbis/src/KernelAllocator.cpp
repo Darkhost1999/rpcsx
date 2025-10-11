@@ -39,7 +39,8 @@ struct KernelMemoryResource {
 };
 
 static KernelMemoryResource *sMemoryResource;
-static std::byte *sGlobalStorage;
+std::byte *g_globalStorage;
+
 using GlobalStorage =
     kernel::StaticKernelObjectStorage<OrbisNamespace,
                                       kernel::detail::GlobalScope>;
@@ -69,15 +70,15 @@ void initializeAllocator() {
   rx::print(stderr, "global: size {}, alignment {}\n", GlobalStorage::GetSize(),
             GlobalStorage::GetAlignment());
   // allocate whole global storage
-  sGlobalStorage = (std::byte *)sMemoryResource->kalloc(
+  g_globalStorage = (std::byte *)sMemoryResource->kalloc(
       GlobalStorage::GetSize(), GlobalStorage::GetAlignment());
 }
 
 void deinitializeAllocator() {
-  sMemoryResource->kfree(sGlobalStorage, GlobalStorage::GetSize());
+  sMemoryResource->kfree(g_globalStorage, GlobalStorage::GetSize());
   delete sMemoryResource;
   sMemoryResource = nullptr;
-  sGlobalStorage = nullptr;
+  g_globalStorage = nullptr;
 }
 
 void *KernelMemoryResource::kalloc(std::size_t size, std::size_t align) {
@@ -213,9 +214,3 @@ void *kalloc(std::size_t size, std::size_t align) {
   return sMemoryResource->kalloc(size, align);
 }
 } // namespace orbis
-
-template <>
-std::byte *
-kernel::getScopeStorage<orbis::OrbisNamespace, kernel::detail::GlobalScope>() {
-  return orbis::sGlobalStorage;
-}

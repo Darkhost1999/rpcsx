@@ -1,4 +1,7 @@
 #pragma once
+#include "KernelAllocator.hpp"
+#include "KernelObject.hpp"
+#include "kernel/KernelObject.hpp"
 #include "orbis-config.hpp"
 
 #include "../event.hpp"
@@ -15,6 +18,7 @@
 #include "orbis/file.hpp"
 #include "orbis/module/Module.hpp"
 #include "rx/IdMap.hpp"
+#include "rx/Serializer.hpp"
 #include "rx/SharedMutex.hpp"
 #include <optional>
 
@@ -52,7 +56,13 @@ enum class ProcessType : std::uint8_t {
 };
 
 struct Process final {
+  using Storage =
+      kernel::StaticKernelObjectStorage<OrbisNamespace,
+                                        kernel::detail::ProcessScope>;
+
   KernelContext *context = nullptr;
+  std::byte *storage = nullptr;
+
   pid_t pid = -1;
   int gfxRing = 0;
   std::uint64_t hostPid = -1;
@@ -101,5 +111,29 @@ struct Process final {
   // Named memory ranges for debugging
   rx::shared_mutex namedMemMutex;
   kmap<NamedMemoryRange, kstring> namedMem;
+
+  // FIXME: implement process destruction
+  void incRef() {}
+  void decRef() {}
+
+  void allocate() {
+    if (auto size = Storage::GetSize()) {
+      storage = (std::byte *)kalloc(size, Storage::GetAlignment());
+    }
+  }
+
+  void deallocate() {
+    if (auto size = Storage::GetSize()) {
+      kfree(storage, size);
+      storage = nullptr;
+    }
+  }
+
+  template <rx::Serializable T>
+  T *get(
+      kernel::StaticObjectRef<OrbisNamespace, kernel::detail::ProcessScope, T>
+          ref) {
+    return ref.get(storage);
+  }
 };
 } // namespace orbis
