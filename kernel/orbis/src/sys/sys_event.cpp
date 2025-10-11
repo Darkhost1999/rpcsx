@@ -89,7 +89,7 @@ static SysResult keventChange(KQueue *kq, KEvent &change, Thread *thread) {
       nodeIt = kq->notes.begin();
 
       if (change.filter == kEvFiltProc) {
-        auto process = g_context->findProcessById(change.ident);
+        auto process = findProcessById(change.ident);
         if (process == nullptr) {
           return ErrorCode::SRCH;
         }

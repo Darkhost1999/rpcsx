@@ -25,7 +25,7 @@ orbis::SysResult orbis::sys_wait4(Thread *thread, sint pid, ptr<sint> status,
 
   int hostPid = pid;
   if (pid > 0) {
-    auto process = g_context->findProcessById(pid);
+    auto process = findProcessById(pid);
     if (process == nullptr) {
       return ErrorCode::SRCH;
     }
@@ -42,7 +42,7 @@ orbis::SysResult orbis::sys_wait4(Thread *thread, sint pid, ptr<sint> status,
 
     ORBIS_LOG_ERROR(__FUNCTION__, pid, status, options, rusage, result, stat);
 
-    auto process = g_context->findProcessByHostId(result);
+    auto process = findProcessByHostId(result);
     if (process == nullptr) {
       ORBIS_LOG_ERROR("host process not found", result);
       continue;

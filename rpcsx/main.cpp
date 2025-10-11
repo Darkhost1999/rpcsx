@@ -534,20 +534,6 @@ static void guestInitFd(orbis::Thread *mainThread) {
   mainThread->tproc->fileDescriptors.insert(stderrFile);
 }
 
-static orbis::Process *createGuestProcess() {
-  auto pid = orbis::g_context->allocatePid() * 10000 + 1;
-  return orbis::g_context->createProcess(pid);
-}
-
-static orbis::Thread *createGuestThread() {
-  auto process = createGuestProcess();
-  auto [baseId, thread] = process->threadsMap.emplace();
-  thread->tproc = process;
-  thread->tid = process->pid + baseId;
-  thread->state = orbis::ThreadState::RUNNING;
-  return thread;
-}
-
 struct ExecEnv {
   std::uint64_t entryPoint;
   std::uint64_t interpBase;
@@ -789,7 +775,7 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
                                      std::vector<std::string> argv,
                                      std::vector<std::string> envv,
                                      orbis::AppInfoEx appInfo) {
-  auto childPid = orbis::g_context->allocatePid() * 10000 + 1;
+  auto childPid = orbis::allocatePid();
   auto flag = orbis::knew<std::atomic<bool>>();
   *flag = false;
 
@@ -805,7 +791,7 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
     return {};
   }
 
-  auto process = orbis::g_context->createProcess(childPid);
+  auto process = orbis::createProcess(thread->tproc, childPid);
   auto logFd = ::open(("log-" + std::to_string(childPid) + ".txt").c_str(),
                       O_CREAT | O_TRUNC | O_WRONLY, 0666);
 
@@ -817,7 +803,6 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
   process->onSysEnter = thread->tproc->onSysEnter;
   process->onSysExit = thread->tproc->onSysExit;
   process->ops = thread->tproc->ops;
-  process->parentProcess = thread->tproc;
   process->appInfo = appInfo;
 
   process->authInfo = {
@@ -845,10 +830,9 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
 
   *flag = true;
 
-  auto [baseId, newThread] = process->threadsMap.emplace();
-  newThread->tproc = process;
-  newThread->tid = process->pid + baseId;
-  newThread->state = orbis::ThreadState::RUNNING;
+  auto newThread = orbis::createThread(process, path);
+  newThread->hostTid = ::gettid();
+  newThread->nativeHandle = pthread_self();
   newThread->context = thread->context;
   newThread->fsBase = thread->fsBase;
 
@@ -1060,8 +1044,8 @@ int main(int argc, const char *argv[]) {
   rx::thread::initialize();
 
   // vm::printHostStats();
-  orbis::g_context->allocatePid();
-  auto initProcess = orbis::g_context->createProcess(asRoot ? 1 : 10);
+  orbis::allocatePid();
+  auto initProcess = orbis::createProcess(nullptr, asRoot ? 1 : 10);
   // pthread_setname_np(pthread_self(), "10.MAINTHREAD");
 
   int status = 0;
@@ -1216,10 +1200,9 @@ int main(int argc, const char *argv[]) {
     initProcess->isInSandbox = true;
   }
 
-  auto [baseId, mainThread] = initProcess->threadsMap.emplace();
-  mainThread->tproc = initProcess;
-  mainThread->tid = initProcess->pid + baseId;
-  mainThread->state = orbis::ThreadState::RUNNING;
+  auto mainThread = orbis::createThread(initProcess, "");
+  mainThread->hostTid = ::gettid();
+  mainThread->nativeHandle = pthread_self();
   orbis::g_currentThread = mainThread;
 
   if (!isSystem && !vfs::exists(guestArgv[0], mainThread) &&
@@ -1345,7 +1328,8 @@ int main(int argc, const char *argv[]) {
       // version
       if (orbis::g_context->fwType != orbis::FwType::Ps5 &&
           orbis::g_context->fwSdkVersion >= 0x5050000) {
-        auto fakeIpmiThread = createGuestThread();
+        auto fakeIpmiThread =
+            orbis::createThread(initProcess, "SceSysAudioSystemIpc");
         ipmi::audioIpmiClient =
             ipmi::createIpmiClient(fakeIpmiThread, "SceSysAudioSystemIpc");
         // HACK: here is a bug in audiod because we send this very early and

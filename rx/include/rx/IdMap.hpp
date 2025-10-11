@@ -3,6 +3,7 @@
 #include "BitSet.hpp"
 #include "Rc.hpp"
 #include "SharedMutex.hpp"
+#include "FunctionRef.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -324,8 +325,22 @@ struct OwningIdMap {
               std::construct_at(get(index), std::forward<ArgsT>(args)...)};
     }
 
+    template <typename... ArgsT>
+    T *emplace_new_at(std::size_t index, ArgsT &&...args) {
+      if (mask.test(index)) {
+        return {};
+      }
+
+      mask.set(index);
+      return std::construct_at(get(index), std::forward<ArgsT>(args)...);
+    }
+
     T *get(std::size_t index) {
       return reinterpret_cast<T *>(objects + sizeof(T) * index);
+    }
+
+    const T *get(std::size_t index) const {
+      return reinterpret_cast<const T *>(objects + sizeof(T) * index);
     }
 
     void destroy(std::size_t index) {
@@ -336,6 +351,25 @@ struct OwningIdMap {
 
   IdMapChunk chunks[ChunkCount]{};
   BitSet<ChunkCount> fullChunks;
+
+  template <typename... ArgsT>
+    requires(std::is_constructible_v<T, ArgsT...>)
+  T *emplace_at(IdT id, ArgsT &&...args) {
+    auto page = static_cast<std::uint64_t>(id) / ChunkSize;
+    if (page >= ChunkCount) {
+      return {};
+    }
+
+    auto newElem =
+        chunks[page].emplace_new_at(static_cast<std::uint64_t>(id) % ChunkSize,
+                                    std::forward<ArgsT>(args)...);
+
+    if (chunks[page].mask.full()) {
+      fullChunks.set(page);
+    }
+
+    return newElem;
+  }
 
   template <typename... ArgsT>
     requires(std::is_constructible_v<T, ArgsT...>)
@@ -390,13 +424,13 @@ struct OwningIdMap {
     return true;
   }
 
-  void walk(auto cb) {
+  void walk(FunctionRef<void(IdT, const T &)> cb) const {
     for (std::size_t chunk = 0; chunk < ChunkCount; ++chunk) {
       std::size_t index = chunks[chunk].mask.countr_zero();
 
       while (index < ChunkSize) {
         auto id = static_cast<IdT>(index + chunk * ChunkSize + MinId);
-        cb(id, chunks[chunk].get(id));
+        cb(id, *chunks[chunk].get(id));
 
         index = chunks[chunk].mask.countr_zero(index + 1);
       }

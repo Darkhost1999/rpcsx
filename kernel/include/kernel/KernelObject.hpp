@@ -2,6 +2,7 @@
 
 #include "rx/Rc.hpp"
 #include "rx/Serializer.hpp"
+#include "rx/SharedMutex.hpp"
 #include "rx/TypeId.hpp"
 #include <cstddef>
 #include <memory>
@@ -42,6 +43,28 @@ struct KernelObject : KernelObjectBase, StateT {
   virtual void deserialize(rx::Deserializer &s) {
     s.deserialize(static_cast<StateT &>(*this));
   }
+};
+
+template <rx::Serializable StateT>
+struct LockableKernelObject : KernelObjectBase, StateT {
+  mutable rx::shared_mutex mtx;
+
+  template <typename... Args>
+  LockableKernelObject(Args &&...args)
+      : KernelObjectBase(rx::TypeId::get<StateT>()),
+        StateT(std::forward<Args>(args)...) {}
+
+  virtual void serialize(rx::Serializer &s) const {
+    std::lock_guard lock(*this);
+    s.serialize(static_cast<const StateT &>(*this));
+  }
+
+  virtual void deserialize(rx::Deserializer &s) {
+    s.deserialize(static_cast<StateT &>(*this));
+  }
+
+  void lock() const { mtx.lock(); }
+  void unlock() const { mtx.unlock(); }
 };
 
 namespace detail {

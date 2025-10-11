@@ -8,9 +8,7 @@
 #include "orbis/note.hpp"
 #include "osem.hpp"
 #include "rx/IdMap.hpp"
-#include "rx/LinkedNode.hpp"
 #include "rx/SharedMutex.hpp"
-#include "thread/types.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -36,18 +34,6 @@ class KernelContext final {
 public:
   KernelContext();
   ~KernelContext();
-
-  Process *createProcess(pid_t pid);
-  void deleteProcess(Process *proc);
-  Process *findProcessById(pid_t pid) const;
-  Process *findProcessByHostId(std::uint64_t pid) const;
-
-  rx::LinkedNode<Process> *getProcessList() { return m_processes; }
-
-  long allocatePid() {
-    std::lock_guard lock(m_thread_id_mtx);
-    return m_thread_id_map.emplace(0).first;
-  }
 
   long getTscFreq();
 
@@ -123,17 +109,15 @@ public:
     return {};
   }
 
-  std::tuple<kmap<kstring, char[128]> &, std::unique_lock<rx::shared_mutex>>
+  std::tuple<kmap<kstring, rx::StaticString<128>> &, std::unique_lock<rx::shared_mutex>>
   getKernelEnv() {
     std::unique_lock lock(m_kenv_mtx);
     return {m_kenv, std::move(lock)};
   }
 
   void setKernelEnv(std::string_view key, std::string_view value) {
-    auto &kenvValue = m_kenv[kstring(key)];
-    auto len = std::min(sizeof(kenvValue) - 1, value.size());
-    std::memcpy(kenvValue, value.data(), len);
-    kenvValue[len] = '0';
+    std::unique_lock lock(m_kenv_mtx);
+    m_kenv[kstring(key)] = value;
   }
 
   rx::Ref<EventEmitter> deviceEventEmitter;
@@ -177,11 +161,6 @@ public:
 private:
   std::atomic<long> m_tsc_freq{0};
 
-  rx::shared_mutex m_thread_id_mtx;
-  rx::OwningIdMap<char, long, 256, 0> m_thread_id_map;
-  mutable rx::shared_mutex m_proc_mtx;
-  rx::LinkedNode<Process> *m_processes = nullptr;
-
   rx::shared_mutex m_evf_mtx;
   kmap<kstring, rx::Ref<EventFlag>> m_event_flags;
 
@@ -192,7 +171,7 @@ private:
   kmap<kstring, rx::Ref<IpmiServer>> mIpmiServers;
 
   rx::shared_mutex m_kenv_mtx;
-  kmap<kstring, char[128]> m_kenv; // max size: 127 + '\0'
+  kmap<kstring, rx::StaticString<128>> m_kenv; // max size: 127 + '\0'
 };
 
 extern GlobalObjectRef<KernelContext> g_context;

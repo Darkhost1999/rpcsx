@@ -15,6 +15,7 @@ public:
   explicit GlobalObjectRef(std::uint32_t offset) : mOffset(offset) {}
   T *get() { return reinterpret_cast<T *>(g_globalStorage + mOffset); }
   T *operator->() { return get(); }
+  T &operator*() { return *get(); }
 };
 
 template <rx::Serializable StateT>

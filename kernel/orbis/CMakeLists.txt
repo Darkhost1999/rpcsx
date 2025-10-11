@@ -65,6 +65,9 @@ add_library(obj.orbis-kernel OBJECT
   src/sys/sys_vm_mmap.cpp
   src/sys/sys_vm_unix.cpp
 
+  src/thread/Process.cpp
+  src/thread/Thread.cpp
+
   src/utils/Logs.cpp
 )
 

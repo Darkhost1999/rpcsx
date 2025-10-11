@@ -18,7 +18,7 @@ orbis::SysResult orbis::sys_kenv(Thread *thread, sint what,
       size_t entry = 0;
       // Entry: size of both full buffers, the '=' and the '\0' at the end
       if (value == nullptr || len == 0) {
-        entry = key.size() + 1 + strnlen(env_value, 128) + 1;
+        entry = key.size() + 1 + env_value.size() + 1;
       } else {
         char buf[128 * 2 + 2];
 
@@ -28,9 +28,8 @@ orbis::SysResult orbis::sys_kenv(Thread *thread, sint what,
 
         *_buf++ = '=';
 
-        const size_t value_size = strnlen(env_value, 128);
-        std::strncpy(_buf, env_value, value_size);
-        _buf += value_size;
+        std::strncpy(_buf, env_value.data(), env_value.size());
+        _buf += env_value.size();
 
         *_buf++ = '\0';
 
@@ -58,16 +57,16 @@ orbis::SysResult orbis::sys_kenv(Thread *thread, sint what,
     if (it == kenv.end()) {
       return ErrorCode::NOENT;
     }
-    const char *buf = it->second;
-    ORBIS_RET_ON_ERROR(uwriteRaw(value, buf, std::min(len, 128)));
+    ORBIS_RET_ON_ERROR(uwriteRaw(value, it->second.data(), it->second.size()));
     break;
   }
   case kenv_set: {
     if (len < 1) {
       return ErrorCode::INVAL;
     }
-    char *_value_buf = kenv[kstring(_name)];
-    ORBIS_RET_ON_ERROR(ureadString(_value_buf, 128, value));
+    auto &_value_buf = kenv[kstring(_name)];
+    ORBIS_RET_ON_ERROR(
+        ureadString(_value_buf.data(), _value_buf.max_size() + 1, value));
     break;
   }
   case kenv_unset: {

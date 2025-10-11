@@ -24,7 +24,7 @@ orbis::SysResult orbis::sys_rtprio_thread(Thread *thread, sint function,
   ORBIS_LOG_ERROR(__FUNCTION__, function, lwpid, rtp->prio, rtp->type);
   thread->where();
 
-  Thread *targetThread;
+  rx::Ref<Thread> targetThread;
   if (lwpid == thread->tid || lwpid == -1) {
     targetThread = thread;
   } else {

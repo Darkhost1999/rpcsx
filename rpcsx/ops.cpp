@@ -537,13 +537,14 @@ SysResult thr_new(orbis::Thread *thread, orbis::ptr<thr_param> param,
     return result;
   }
 
-  auto proc = thread->tproc;
-  std::lock_guard lock(proc->mtx);
-  auto [baseId, childThread] = proc->threadsMap.emplace();
-  std::lock_guard lockThr(childThread->mtx);
-  childThread->tproc = proc;
-  childThread->tid = proc->pid + baseId;
-  childThread->state = orbis::ThreadState::RUNQ;
+  char _name[32]{};
+  if (_param.name != 0) {
+    ORBIS_RET_ON_ERROR(ureadString(_name, sizeof(_name), _param.name));
+  }
+
+  auto childThread = orbis::createThread(thread->tproc, _name);
+
+  std::lock_guard lock(childThread->mtx);
   childThread->stackStart = _param.stack_base;
   childThread->stackEnd = _param.stack_base + _param.stack_size;
   childThread->fsBase = reinterpret_cast<std::uintptr_t>(_param.tls_base);
@@ -559,11 +560,6 @@ SysResult thr_new(orbis::Thread *thread, orbis::ptr<thr_param> param,
   ORBIS_LOG_NOTICE("Starting child thread", thread->tid, childThread->tid,
                    childThread->stackStart, _param.rtp, _param.name,
                    _param.spare[0], _param.spare[1]);
-
-  if (_param.name != 0) {
-    ORBIS_RET_ON_ERROR(
-        ureadString(childThread->name, sizeof(childThread->name), _param.name));
-  }
 
   if (_param.rtp != 0) {
     rtprio _rtp;
@@ -760,7 +756,7 @@ SysResult processNeeded(Thread *thread) {
 }
 
 SysResult fork(Thread *thread, slong flags) {
-  auto childPid = g_context->allocatePid() * 10000 + 1;
+  auto childPid = orbis::allocatePid();
   ORBIS_LOG_TODO(__FUNCTION__, flags, childPid, thread->tid);
   thread->where();
   auto flag = knew<std::atomic<bool>>();
@@ -783,13 +779,12 @@ SysResult fork(Thread *thread, slong flags) {
     return {};
   }
 
-  auto process = g_context->createProcess(childPid);
+  auto process = orbis::createProcess(thread->tproc, childPid);
   process->hostPid = ::getpid();
   process->sysent = thread->tproc->sysent;
   process->onSysEnter = thread->tproc->onSysEnter;
   process->onSysExit = thread->tproc->onSysExit;
   process->ops = thread->tproc->ops;
-  process->parentProcess = thread->tproc;
   process->authInfo = thread->tproc->authInfo;
   process->sdkVersion = thread->tproc->sdkVersion;
   process->type = thread->tproc->type;
@@ -813,11 +808,8 @@ SysResult fork(Thread *thread, slong flags) {
 
   *flag = true;
 
-  auto [baseId, newThread] = process->threadsMap.emplace();
-  newThread->tproc = process;
+  auto newThread = orbis::createThread(process, thread->name);
   newThread->hostTid = ::gettid();
-  newThread->tid = process->pid + baseId;
-  newThread->state = orbis::ThreadState::RUNNING;
   newThread->context = thread->context;
   newThread->fsBase = thread->fsBase;
 

@@ -940,7 +940,7 @@ orbis::SysResult orbis::sys_dmem_container(Thread *thread, uint id) {
 orbis::SysResult orbis::sys_get_authinfo(Thread *thread, pid_t pid,
                                          ptr<AuthInfo> info) {
 
-  auto process = pid > 0 ? g_context->findProcessById(pid) : thread->tproc;
+  auto process = pid > 0 ? findProcessById(pid) : thread->tproc;
   if (process == nullptr) {
     return ErrorCode::SRCH;
   }
@@ -1188,21 +1188,20 @@ orbis::SysResult orbis::sys_randomized_path(Thread *thread, sint type,
 }
 orbis::SysResult orbis::sys_rdup(Thread *thread, sint pid, sint fd) {
   ORBIS_LOG_TODO(__FUNCTION__, pid, fd);
-  for (auto it = g_context->getProcessList(); it != nullptr; it = it->next) {
-    auto &p = it->object;
-    if (p.pid != pid) {
-      continue;
-    }
+  auto process = pid == -1 || pid == thread->tproc->pid ? thread->tproc
+                                                        : findProcessById(pid);
 
-    auto file = p.fileDescriptors.get(fd);
-    if (file == nullptr) {
-      return ErrorCode::BADF;
-    }
-
-    thread->retval[0] = thread->tproc->fileDescriptors.insert(std::move(file));
-    return {};
+  if (!process) {
+    return ErrorCode::SRCH;
   }
-  return ErrorCode::SRCH;
+
+  auto file = process->fileDescriptors.get(fd);
+  if (file == nullptr) {
+    return ErrorCode::BADF;
+  }
+
+  thread->retval[0] = thread->tproc->fileDescriptors.insert(std::move(file));
+  return {};
 }
 orbis::SysResult orbis::sys_dl_get_metadata(Thread *thread /* TODO */) {
   return ErrorCode::NOSYS;
@@ -1297,7 +1296,7 @@ orbis::SysResult orbis::sys_budget_get_ptype(Thread *thread, sint pid) {
   if (pid < 0 || pid == thread->tproc->pid) {
     process = thread->tproc;
   } else {
-    process = g_context->findProcessById(pid);
+    process = findProcessById(pid);
 
     if (!process) {
       return ErrorCode::SRCH;
@@ -1337,14 +1336,14 @@ orbis::SysResult orbis::sys_get_resident_fmem_count(Thread *thread, pid_t pid) {
 }
 orbis::SysResult orbis::sys_thr_get_name(Thread *thread, lwpid_t lwpid,
                                          char *buf, size_t buflen) {
-  Thread *searchThread;
+  rx::Ref<Thread> searchThread;
   if (thread->tid == lwpid || lwpid == -1) {
     searchThread = thread;
   } else {
     searchThread = thread->tproc->threadsMap.get(lwpid - thread->tproc->pid);
 
     if (searchThread == nullptr) {
-      if (auto process = g_context->findProcessById(lwpid)) {
+      if (auto process = findProcessById(lwpid)) {
         searchThread = process->threadsMap.get(lwpid - process->pid);
       }
     }
@@ -1354,11 +1353,11 @@ orbis::SysResult orbis::sys_thr_get_name(Thread *thread, lwpid_t lwpid,
     }
   }
 
-  auto namelen = std::strlen(searchThread->name);
+  auto namelen = searchThread->name.length();
 
   auto writeLen = std::min(namelen + 1, buflen);
   if (writeLen > 0) {
-    ORBIS_RET_ON_ERROR(uwriteRaw(buf, searchThread->name, writeLen - 1));
+    ORBIS_RET_ON_ERROR(uwriteRaw(buf, searchThread->name.data(), writeLen - 1));
     buf[writeLen] = 0;
   }
 

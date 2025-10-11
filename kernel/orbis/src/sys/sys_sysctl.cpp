@@ -225,7 +225,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
       ORBIS_LOG_ERROR("KERN_PROC_PROC 2");
 
       if (namelen >= 4) {
-        auto process = g_context->findProcessById(name[3]);
+        auto process = findProcessById(name[3]);
         if (process == nullptr || process->exitStatus.has_value()) {
           return ErrorCode::SRCH;
         }
@@ -259,7 +259,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     if (name[0] == kern && name[1] == proc && name[2] == 36) {
       Process *process = thread->tproc;
       if (process->pid != name[3]) {
-        process = g_context->findProcessById(name[3]);
+        process = findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("get sdk version by pid: process not found", name[3],
                           thread->tproc->pid);
@@ -290,7 +290,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
       // 1 - 14 - 35 - pid
       Process *process = thread->tproc;
       if (process->pid != name[3] && name[3] != -1) {
-        process = g_context->findProcessById(name[3]);
+        process = findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("appinfo process not found", name[3],
                           thread->tproc->pid);
@@ -461,7 +461,7 @@ SysResult kern_sysctl(Thread *thread, ptr<sint> name, uint namelen,
     if (name[0] == kern && name[1] == proc && name[2] == 68) {
       Process *process = thread->tproc;
       if (process->pid != name[3]) {
-        process = g_context->findProcessById(name[3]);
+        process = findProcessById(name[3]);
         if (process == nullptr) {
           ORBIS_LOG_ERROR("get ps5 sdk version by pid: process not found",
                           name[3], thread->tproc->pid);

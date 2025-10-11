@@ -4,6 +4,7 @@
 #include "cpuset.hpp"
 #include "orbis-config.hpp"
 #include "rx/Serializer.hpp"
+#include "rx/StaticString.hpp"
 #include "types.hpp"
 
 #include "../KernelAllocator.hpp"
@@ -23,6 +24,8 @@ struct Thread final {
       kernel::StaticKernelObjectStorage<OrbisNamespace,
                                         kernel::detail::ThreadScope>;
 
+  ~Thread();
+
   rx::shared_mutex mtx;
   Process *tproc = nullptr;
   std::byte *storage = nullptr;
@@ -33,7 +36,7 @@ struct Thread final {
   ptr<void> stackEnd;
   uint64_t fsBase{};
   uint64_t gsBase{};
-  char name[32]{};
+  rx::StaticString<32> name;
 
   cpuset affinity{~0u};
   SigSet sigMask = {0x7fff'ffff, ~0u, ~0u, ~0u};
@@ -82,19 +85,6 @@ struct Thread final {
   void notifyUnblockedSignal(int signo);
   void setSigMask(SigSet newSigMask);
 
-  void allocate() {
-    if (auto size = Storage::GetSize()) {
-      storage = (std::byte *)kalloc(size, Storage::GetAlignment());
-    }
-  }
-
-  void deallocate() {
-    if (auto size = Storage::GetSize()) {
-      kfree(storage, size);
-      storage = nullptr;
-    }
-  }
-
   template <rx::Serializable T>
   T *get(kernel::StaticObjectRef<OrbisNamespace, kernel::detail::ThreadScope, T>
              ref) {
@@ -105,6 +95,8 @@ struct Thread final {
   void incRef() {}
   void decRef() {}
 };
+
+Thread *createThread(Process *process, std::string_view name);
 
 extern thread_local Thread *g_currentThread;
 

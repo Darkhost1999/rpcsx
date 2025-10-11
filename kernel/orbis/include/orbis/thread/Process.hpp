@@ -59,6 +59,8 @@ struct Process final {
       kernel::StaticKernelObjectStorage<OrbisNamespace,
                                         kernel::detail::ProcessScope>;
 
+  ~Process();
+
   KernelContext *context = nullptr;
   std::byte *storage = nullptr;
 
@@ -97,7 +99,7 @@ struct Process final {
   rx::RcIdMap<EventFlag, sint, 4097, 1> evfMap;
   rx::RcIdMap<Semaphore, sint, 4097, 1> semMap;
   rx::RcIdMap<Module, ModuleHandle> modulesMap;
-  rx::OwningIdMap<Thread, lwpid_t> threadsMap;
+  rx::RcIdMap<Thread, lwpid_t> threadsMap;
   rx::RcIdMap<orbis::File, sint> fileDescriptors;
 
   // Named objects for debugging
@@ -115,18 +117,8 @@ struct Process final {
   void incRef() {}
   void decRef() {}
 
-  void allocate() {
-    if (auto size = Storage::GetSize()) {
-      storage = (std::byte *)kalloc(size, Storage::GetAlignment());
-    }
-  }
-
-  void deallocate() {
-    if (auto size = Storage::GetSize()) {
-      kfree(storage, size);
-      storage = nullptr;
-    }
-  }
+  void serialize(rx::Serializer &) const;
+  void deserialize(rx::Deserializer &);
 
   template <rx::Serializable T>
   T *get(
@@ -135,4 +127,10 @@ struct Process final {
     return ref.get(storage);
   }
 };
+
+pid_t allocatePid();
+Process *createProcess(Process *parentProcess = nullptr, pid_t pid = -1);
+void deleteProcess(Process *proc);
+Process *findProcessById(pid_t pid);
+Process *findProcessByHostId(std::uint64_t pid);
 } // namespace orbis

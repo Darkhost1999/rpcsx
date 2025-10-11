@@ -4,6 +4,7 @@
 #include "io-device.hpp"
 #include "orbis/KernelContext.hpp"
 #include "orbis/osem.hpp"
+#include "orbis/thread/Process.hpp"
 #include "orbis/utils/Logs.hpp"
 #include "rx/format.hpp"
 #include "rx/hexdump.hpp"
@@ -357,7 +358,7 @@ ipmi::IpmiServer &ipmi::createIpmiServer(orbis::Process *process,
       if ((packet.info.type & ~0x8010) == 0x41) {
         auto msgHeader = std::bit_cast<orbis::IpmiSyncMessageHeader *>(
             packet.message.data());
-        auto process = orbis::g_context->findProcessById(msgHeader->pid);
+        auto process = orbis::findProcessById(msgHeader->pid);
         if (process == nullptr) {
           continue;
         }
@@ -378,7 +379,7 @@ ipmi::IpmiServer &ipmi::createIpmiServer(orbis::Process *process,
 
       if ((packet.info.type & ~0x10) == 0x43) {
         auto msgHeader = (orbis::IpmiAsyncMessageHeader *)packet.message.data();
-        auto process = orbis::g_context->findProcessById(msgHeader->pid);
+        auto process = orbis::findProcessById(msgHeader->pid);
         if (process == nullptr) {
           continue;
         }
