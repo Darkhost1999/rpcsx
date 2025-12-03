@@ -718,6 +718,9 @@ static void collectGamePaths(std::vector<std::string> &paths,
       rootPath = rootPath.parent_path();
     }
 
+    if (rootPath.filename().starts_with("PS3_GM")) {
+      rootPath = rootPath.parent_path();
+    }
     workList.push_back(rootPath);
   } else {
     workList.push_back(rootDir);
@@ -763,6 +766,15 @@ static std::string locateEbootPath(std::string_view root) {
     }
   }
 
+  for (auto &entry : std::filesystem::directory_iterator(root)) {
+    if (entry.is_directory() && entry.path().filename().starts_with("PS3_GM")) {
+      auto tryPath = entry.path() / "USRDIR" / "EBOOT.BIN";
+      if (std::filesystem::is_regular_file(tryPath)) {
+        return tryPath.string();
+      }
+    }
+  }
+
   return {};
 }
 
@@ -780,6 +792,15 @@ static std::string locateParamSfoPath(std::string_view root) {
 
     if (std::filesystem::is_regular_file(tryPath)) {
       return tryPath;
+    }
+  }
+
+  for (auto &entry : std::filesystem::directory_iterator(root)) {
+    if (entry.is_directory() && entry.path().filename().starts_with("PS3_GM")) {
+      auto tryPath = entry.path() / "PARAM.SFO";
+      if (std::filesystem::is_regular_file(tryPath)) {
+        return tryPath.string();
+      }
     }
   }
 
@@ -817,6 +838,9 @@ fetchGameInfo(const psf::registry &psf,
         psfRootPath = psfRootPath.parent_path();
       }
 
+      if (psfRootPath.filename().starts_with("PS3_GM")) {
+        psfRootPath = psfRootPath.parent_path();
+      }
       path = psfRootPath;
       if (!path.ends_with('/')) {
         path += '/';
