@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.9)
 project("rpcsx-android")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 set(FFMPEG_VERSION 5.1)

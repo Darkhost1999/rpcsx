@@ -11,20 +11,22 @@ on:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            arch: armv8-a
 
     env:
-      NDK_VERSION: "29.0.13113456"
-      CMAKE_VERSION: "3.31.6"
+      ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/29.0.14206865
+      RX_VERSION: 'Unknown'
+      RX_SHA: 'Unknown'
+
+    runs-on: ubuntu-24.04
 
     steps:
-    - name: Free disk space
-      run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo apt-get clean
-
-    - name: Checkout RPCSX
+    - name: Checkout repo
       uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -34,30 +36,21 @@ jobs:
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
-        distribution: temurin
+        distribution: 'temurin'
         java-version: 17
-
-    - name: Install Ninja
-      run: |
-        sudo apt update
-        sudo apt install -y ninja-build
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install packages
-      run: yes | sdkmanager "cmake;${{ env.CMAKE_VERSION }}" "ndk;${{ env.NDK_VERSION }}"
-
     - name: Configure
       run: |
-        $ANDROID_SDK_ROOT/cmake/${{ env.CMAKE_VERSION }}/bin/cmake \
-        -B build -S android -DANDROID_ABI=arm64-v8a \
-        -DUSE_ARCH=armv8-a \
-        -DANDROID_PLATFORM=android-29 \
-        -DANDROID_NDK=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }} \
-        -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}/build/cmake/android.toolchain.cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -G Ninja
+        cmake \
+          -B build -S android -DANDROID_ABI=${{ matrix.abi }} \
+          -DUSE_ARCH=${{ matrix.arch }} \
+          -DANDROID_PLATFORM=android-29 \
+          -DANDROID_NDK=$ANDROID_NDK_HOME \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+          -DCMAKE_BUILD_TYPE=Release -G Ninja
         RX_VERSION=$(awk -F'-' '{print $1}' android/.rx.version)
         RX_SHA=$(awk -F'-' '{print $5}' android/.rx.version)
         echo "RX_VERSION=$RX_VERSION" >> "${{ github.env }}"
@@ -65,9 +58,9 @@ jobs:
 
     - name: Build
       run: |
-        $ANDROID_SDK_ROOT/cmake/${{ env.CMAKE_VERSION }}/bin/cmake --build build
-        $ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip build/librpcsx-android.so
-        mv build/librpcsx-android.so librpcsx-android-arm64-v8a-armv8-a.so
+        cmake --build build -- -j4
+        $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip build/librpcsx-android.so
+        mv build/librpcsx-android.so librpcsx-android-${{ matrix.abi }}-${{ matrix.arch }}.so
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -75,3 +68,9 @@ jobs:
         name: librpcsx-android
         path: librpcsx-android-arm64-v8a-armv8-a.so
         if-no-files-found: error
+
+    - name: Cleanup
+      if: always()
+      run: |
+        rm -rf build
+        git submodule deinit -f --all
