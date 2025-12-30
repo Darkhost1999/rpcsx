@@ -30,7 +30,7 @@ bool rx::isDebuggerPresent() {
       CTL_KERN,
       KERN_PROC,
       KERN_PROC_PID,
-      getpid(),
+      GetCurrentProcessId(),
 #if defined(__NetBSD__) || defined(__OpenBSD__)
       sizeof(struct kinfo_proc),
       1,
@@ -73,7 +73,7 @@ void rx::waitForDebugger() {
     return;
   }
 
-  rx::println(stderr, "waiting for debugger, pid {}", ::getpid());
+  rx::println(stderr, "waiting for debugger, pid {}", GetCurrentProcessId());
 
   while (!isDebuggerPresent()) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -86,7 +86,7 @@ void rx::waitForDebugger() {
 
 void rx::runDebugger() {
 #ifdef __linux__
-  int pid = ::getpid();
+  int pid = GetCurrentProcessId();
   char path[PATH_MAX];
   ::readlink("/proc/self/exe", path, sizeof(path));
   if (fork()) {

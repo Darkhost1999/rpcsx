@@ -1,6 +1,5 @@
 #include "SharedMutex.hpp"
 #include "asm.hpp"
-#include <syscall.h>
 #include <unistd.h>
 
 namespace rx {

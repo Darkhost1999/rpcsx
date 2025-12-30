@@ -23,6 +23,7 @@ using std::vformat;
 using std::vformat_to;
 } // namespace rx
 #else
+#define fmt FMT_3rdparty
 #include <fmt/format.h>
 #include <type_traits>
 
@@ -57,6 +58,7 @@ using fmt::format_to_n;
 using fmt::formatter;
 using fmt::vformat;
 using fmt::vformat_to;
+#undef fmt
 } // namespace rx
 #endif
 
