@@ -19,7 +19,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include <Psapi.h>
+#include <psapi.h>
 #include <process.h>
 #include <sysinfoapi.h>
 
