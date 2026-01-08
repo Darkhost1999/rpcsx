@@ -30,7 +30,7 @@ bool rx::isDebuggerPresent() {
       CTL_KERN,
       KERN_PROC,
       KERN_PROC_PID,
-      getpid(),
+      GetCurrentProcessId(),
 #if defined(__NetBSD__) || defined(__OpenBSD__)
       sizeof(struct kinfo_proc),
       1,

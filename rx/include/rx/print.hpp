@@ -13,6 +13,7 @@ using std::vprint_nonunicode;
 using std::vprint_unicode;
 } // namespace rx
 #else
+#define fmt FMT_3rdparty
 #include <fmt/format.h>
 
 namespace rx {
@@ -28,5 +29,6 @@ inline void vprint_unicode(FILE *stream, std::string_view fmt,
                            fmt::format_args args) {
   fmt::vprint(stream, fmt, args);
 }
+#undef fmt
 } // namespace rx
 #endif

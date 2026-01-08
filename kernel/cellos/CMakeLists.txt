@@ -68,3 +68,7 @@ target_link_libraries(cellos-kernel PUBLIC
     3rdparty::libusb  # FIXME: remove
     3rdparty::rtmidi  # FIXME: remove
 )
+
+if (WIN32 AND NOT MSVC)
+    target_compile_options(cellos-kernel PUBLIC -municode)
+endif()
