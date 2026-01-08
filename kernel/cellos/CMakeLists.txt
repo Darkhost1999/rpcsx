@@ -60,6 +60,7 @@ PRIVATE
 )
 
 target_link_libraries(cellos-kernel PUBLIC
+    kernel
     rpcs3_core # FIXME: remove
     3rdparty::soundtouch # FIXME: remove
     3rdparty::flatbuffers # FIXME: remove

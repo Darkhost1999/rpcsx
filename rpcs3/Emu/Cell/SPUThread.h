@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cellos/KernelObject.hpp"
+
 #include "Emu/CPU/CPUThread.h"
 #include "Emu/CPU/Hypervisor.h"
 #include "Emu/Cell/SPUInterpreter.h"
@@ -21,6 +23,15 @@ LOG_CHANNEL(spu_log, "SPU");
 struct lv2_event_queue;
 struct lv2_spu_group;
 struct lv2_int_tag;
+
+struct spu_waiter_state
+{
+    atomic_t<u64> waiters[6];
+};
+
+constexpr usz g_spu_waiter_state_count = 6;
+
+extern cellos::GlobalObjectRef<std::array<spu_waiter_state, g_spu_waiter_state_count>> g_spu_waiters_by_value;
 
 namespace utils
 {
@@ -907,9 +918,6 @@ public:
 	static atomic_t<u32> g_raw_spu_ctr;
 	static atomic_t<u32> g_raw_spu_id[5];
 	static atomic_t<u32> g_spu_work_count;
-
-	static atomic_t<u64> g_spu_waiters_by_value[6];
-
 	static u32 find_raw_spu(u32 id)
 	{
 		if (id < std::size(g_raw_spu_id)) [[likely]]

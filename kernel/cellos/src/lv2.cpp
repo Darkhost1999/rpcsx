@@ -52,6 +52,7 @@
 #include "sys_uart.h"
 #include "sys_usbd.h"
 #include "sys_vm.h"
+#include "cellos/KernelObject.hpp"
 
 #include "rx/tsc.hpp"
 #include "util/atomic_bit_set.h"
@@ -2452,9 +2453,9 @@ void lv2_obj::notify_all() noexcept {
 
   std::optional<vm::writer_lock> lock;
 
-  constexpr usz total_waiters = std::size(spu_thread::g_spu_waiters_by_value);
+  constexpr usz total_waiters = g_spu_waiter_state_count;
 
-  u32 notifies[total_waiters]{};
+  std::array<u32, total_waiters> notifies{};
 
   // There may be 6 waiters, but checking them all may be performance expensive
   // Instead, check 2 at max, but use the CPU ID index to tell which index to
@@ -2463,8 +2464,10 @@ void lv2_obj::notify_all() noexcept {
   atomic_t<u64, 64> *range_lock = nullptr;
 
   for (usz i = 0, checked = 0; checked < 3 && i < total_waiters; i++) {
-    auto &waiter =
-        spu_thread::g_spu_waiters_by_value[(i + cpu->id) % total_waiters];
+    auto& state = (*g_spu_waiters_by_value)[(i + cpu->id) % total_waiters];
+
+    auto& waiter = state.waiters[0];
+
     const u64 value = waiter.load();
     u32 raddr = static_cast<u32>(value) & -128;
 

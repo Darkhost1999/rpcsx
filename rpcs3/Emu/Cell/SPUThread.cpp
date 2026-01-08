@@ -23,6 +23,7 @@
 #include "Emu/Cell/SPUThread.h"
 #include "Emu/Cell/SPURecompiler.h"
 #include "Emu/Cell/timers.hpp"
+#include "cellos/KernelObject.hpp"
 
 #include "Emu/RSX/Core/RSXReservationLock.hpp"
 
@@ -46,6 +47,10 @@
 #include <x86intrin.h>
 #endif
 #endif
+
+cellos::GlobalObjectRef<std::array<spu_waiter_state, g_spu_waiter_state_count>>
+    g_spu_waiters_by_value =
+        cellos::createGlobalObject<std::array<spu_waiter_state, g_spu_waiter_state_count>>();
 
 // LUTs for SPU instructions
 
@@ -5436,9 +5441,15 @@ usz spu_thread::register_cache_line_waiter(u32 addr)
 {
 	const u64 value = u64{compute_rdata_hash32(rdata)} << 32 | addr;
 
-	for (usz i = 0; i < std::size(g_spu_waiters_by_value); i++)
+	for (usz i = 0; i < g_spu_waiter_state_count; i++)
 	{
-		auto [old, ok] = g_spu_waiters_by_value[i].fetch_op([value](u64& x)
+		auto& state = g_spu_waiters_by_value->at(i);
+
+		for (usz w = 0; w < std::size(state.waiters); w++)
+		{
+			auto& waiter = state.waiters[w];
+
+			auto [old, ok] = waiter.fetch_op([value](u64& x)
 			{
 				if (x == 0)
 				{
@@ -5459,6 +5470,7 @@ usz spu_thread::register_cache_line_waiter(u32 addr)
 		{
 			return i;
 		}
+		}
 	}
 
 	return umax;
@@ -5471,7 +5483,7 @@ void spu_thread::deregister_cache_line_waiter(usz index)
 		return;
 	}
 
-	g_spu_waiters_by_value[index].fetch_op([](u64& x)
+	g_spu_waiters_by_value->waiters[index].fetch_op([](u64& x)
 		{
 			x--;
 
@@ -5862,7 +5874,7 @@ s64 spu_thread::get_ch_value(u32 ch)
 				return true;
 			}
 
-			if ((g_spu_waiters_by_value[cache_line_waiter_index] & -128) == 0)
+			if ((g_spu_waiters_by_value->waiters[cache_line_waiter_index] & -128) == 0)
 			{
 				deregister_cache_line_waiter(cache_line_waiter_index);
 				cache_line_waiter_index = umax;
@@ -5880,7 +5892,7 @@ s64 spu_thread::get_ch_value(u32 ch)
 			{
 				if (cache_line_waiter_index != umax)
 				{
-					g_spu_waiters_by_value[cache_line_waiter_index].release(0);
+					g_spu_waiters_by_value->waiters[cache_line_waiter_index].release(0);
 				}
 
 				return -1;
@@ -7639,4 +7651,3 @@ void fmt_class_string<spu_channel_4_t>::format(std::string& out, u64 arg)
 DECLARE(spu_thread::g_raw_spu_ctr){};
 DECLARE(spu_thread::g_raw_spu_id){};
 DECLARE(spu_thread::g_spu_work_count){};
-DECLARE(spu_thread::g_spu_waiters_by_value){};
