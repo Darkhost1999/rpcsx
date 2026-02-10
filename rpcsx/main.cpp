@@ -885,6 +885,9 @@ static orbis::SysResult launchDaemon(orbis::Thread *thread, std::string path,
 }
 
 int main(int argc, const char *argv[]) {
+#ifdef ARCH_ARM64
+    utils::init_arm_timer_scale();
+#endif
   if (argc == 2) {
     if (std::strcmp(argv[1], "-h") == 0 ||
         std::strcmp(argv[1], "--help") == 0) {
